@@ -127,30 +127,12 @@ Public Class Form1
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
 
-        WebData.LoadWebPlayers(My.Application.Info.DirectoryPath & "\web\" & CStr(year) & "\data\players-quote.txt")
-
-        'Dim line() As String = IO.File.ReadAllLines(My.Application.Info.DirectoryPath & "\web\" & CStr(year) & "\data\pform-gazzetta-player.txt")
-        'Dim str As New System.Text.StringBuilder
-
-        'For i As Integer = 0 To line.Length - 1
-        '    Dim s() As String = line(i).Split(CChar("|"))
-        '    If s.Length = 2 Then
-        '        Dim pm As WebData.PlayerMatch = WebData.CheckName(s(0))
-        '        str.AppendLine(pm.OriName & "|" & pm.NewName)
-        '        'If pm.NewName <> "" Then
-        '        '    str.AppendLine(pm.OriName & "|" & pm.NewName)
-        '        'End If
-        '    End If
-        'Next
-        'IO.File.WriteAllText(My.Application.Info.DirectoryPath & "\web\" & CStr(year) & "\data\pform-gazzetta-player-res.txt", str.ToString)
-
-        'Dim res As WebData.PlayerMatch = WebData.CheckName("PAQUETA’")
-        'res = res
+        Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
 
     End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-        Dim data As String = WebData.GetRoseTorneo(My.Application.Info.DirectoryPath, year, 1)
+        Dim data As String = DataTorneo.GetRoseTorneo(My.Application.Info.DirectoryPath, year, 1)
         data = ""
     End Sub
 

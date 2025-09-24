@@ -144,7 +144,7 @@ Partial Class Form1
         Me.Button11.Name = "Button11"
         Me.Button11.Size = New System.Drawing.Size(153, 36)
         Me.Button11.TabIndex = 10
-        Me.Button11.Text = "Test check name"
+        Me.Button11.Text = "Test check data"
         Me.Button11.UseVisualStyleBackColor = True
         '
         'Button12
