@@ -1,0 +1,276 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2C688FA2-E3C9-4DDE-8DC1-8C797407A3DF}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>setup.My.MyApplication</StartupObject>
+    <RootNamespace>setup</RootNamespace>
+    <AssemblyName>setup</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>WindowsForms</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>setup.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>setup.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>InstallIcon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Form1.designer.vb">
+      <DependentUpon>Form1.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Form1.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="iButton.designer.vb">
+      <DependentUpon>iButton.vb</DependentUpon>
+    </Compile>
+    <Compile Include="iButton.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="iFormControl.designer.vb">
+      <DependentUpon>iFormControl.vb</DependentUpon>
+    </Compile>
+    <Compile Include="iFormControl.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="iLabel.designer.vb">
+      <DependentUpon>iLabel.vb</DependentUpon>
+    </Compile>
+    <Compile Include="iLabel.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="iLine.designer.vb">
+      <DependentUpon>iLine.vb</DependentUpon>
+    </Compile>
+    <Compile Include="iLine.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="iProgressBar.designer.vb">
+      <DependentUpon>iProgressBar.vb</DependentUpon>
+    </Compile>
+    <Compile Include="iProgressBar.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Module1.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="iButton.resx">
+      <DependentUpon>iButton.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="iFormControl.resx">
+      <DependentUpon>iFormControl.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="iLabel.resx">
+      <DependentUpon>iLabel.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="iLine.resx">
+      <DependentUpon>iLine.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="iProgressBar.resx">
+      <DependentUpon>iProgressBar.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="folder16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="InstallIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="InstallIcon96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f5.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f6.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f7.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\m3f.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\maxdis.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\maxsel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\maxuns.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\minsel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\minuns.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n0.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n5.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n6.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\n7.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bar1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bar2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\closesel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\closeuns.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f0.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\f3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\theme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\themeflat.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\reload16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\closer16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="InstallIcon.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+</Project>

@@ -1,0 +1,2 @@
+﻿ <br />
+<b>Warning</b>:  file_get_contents(): Filename cannot be empty in <b>D:\inetpub\webs\ifantacalcioit\public\ifanta\getpage.php</b> on line <b>4</b><br />

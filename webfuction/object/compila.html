@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+	<meta name="robots" content="noarchive">
+	<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+	<META HTTP-EQUIV="PRAGMA" CONTENT="NO-CACHE">
+	
+	<title>Compila formazione</title>
+    
+	<style>
+
+        .header{color:red;background-color: #f2f280}
+
+        body,table,select,input{
+            font-size: 2.2rem;
+        }
+
+        body{margin:15pt;}
+
+        table {
+          border-collapse: collapse;
+          border-spacing: 0;
+          width: 100%;
+          border: 1px solid #808080;
+        }
+
+        th, td {
+          text-align: left;
+          padding: 10px;
+        }
+
+        tr:nth-child(even){background-color: #f2f2f2}
+        .auto-style1 {
+            height: 60px;
+        }
+    </style>
+	
+	<script type="text/javascript" src="script/gen_function.js"></script>
+	<script type="text/javascript" src="script/exp_function.js"></script>
+	
+</head>
+<body onload="">
+
+	<script type="text/javascript">
+
+	function LoadPage(){
+		LoadRosa(document.getElementById('cmbteam').selectedIndex);  //Caricamento rosa squadra
+		document.getElementById("divtb1").innerHTML=GetHtmlPlayersList(); //Compilazione lista giocatori
+		document.getElementById("divtb2").innerHTML=GetHtmlPanchinaList(); //Compilazione lista panchina
+	}
+	
+	function tit_click(ele){
+		
+		var ind=ele.id.replace("imgtit", "");
+		
+		if (players[ind].type == 2 || players[ind].type == 0){
+			if (CheckMudule(players[ind].ruolo, np, nd, nc, na) == 1){
+				players[ind].type = 1;
+				ele.src="img/oka.png";
+				document.getElementById("imgpanc" + ind).src="img/okdis.png";
+				var indp = GetIndicePanchina(ind);
+				if (indp != -1){
+					players[ind].idform = 0;
+					panchina[indp] = -1;
+				}
+			}
+		} else if (players[ind].type == 1) {
+			players[ind].type = 0;
+			ele.src="img/okdis.png";
+		}
+		DisplayPanchina();
+		document.getElementById("lbmodulo").innerText=GetModule();
+	}
+	
+	function panc_click(ele){
+
+		var ind=ele.id.replace("imgpanc", "");
+		
+		if (players[ind].type == 1 || players[ind].type == 0){
+			var indp = GetPrimaRigaLiberaPanchina(players[ind].ruolo);
+			if (indp != -1){
+				players[ind].type = 2;
+				players[ind].idform = indp + 12;
+				panchina[indp] = ind;
+				ele.src="img/okb.png";
+				document.getElementById("imgtit" + ind).src="img/okdis.png";
+			}
+		}else if (players[ind].type == 2) {
+			players[ind].type = 0;
+			ele.src="img/okdis.png";
+			var indp = GetIndicePanchina(ind);
+			if (indp != -1){
+				players[ind].idform = 0;
+				panchina[indp] = -1;
+			}
+		}
+		DisplayPanchina();
+		document.getElementById("lbmodulo").innerText=GetModule();
+	}
+	
+	function panc_up_click(ele){
+
+		var ind=ele.id.replace("imgpancup", "");
+		
+		if (ind>0){
+		
+			var id1 = panchina[ind - 1];
+			var id2 = panchina[ind];
+
+			if (id1 != -1 && id2 != -1){
+				if (ind > 1 || players[panchina[ind]].ruolo == "P"){
+					panchina[ind] = id1;
+					panchina[ind - 1] = id2;
+					players[panchina[ind]].idform = ind + 12;
+					players[panchina[ind - 1]].idform = ind - 1 + 12;
+					DisplayPanchina();
+				}
+			}
+		}
+	}
+	
+	function panc_down_click(ele){
+
+		var ind=parseInt(ele.id.replace("imgpancdown", ""));
+		
+		console.log("press=" + ind); 
+		for (i = 0 ; i < panchina.length; i++){
+			console.log("panchina[" + i + "]=" + panchina[i]); 
+		}
+		
+		if (ind<9){
+		
+			var id1 = panchina[parseInt(ind + 1)];
+			var id2 = panchina[ind];
+			
+			console.log("id1=" + id1); 
+			console.log("id2=" + id2); 
+			
+			if (id1 != -1 && id2 != -1){
+				panchina[ind] = id1;
+				panchina[parseInt(ind + 1)] = id2;
+				players[panchina[ind]].idform = ind + 12;
+				players[panchina[parseInt(ind + 1)]].idform = ind + 1 + 12;
+				DisplayPanchina();
+			}
+		}	
+	}
+	
+	function DisplayPanchina(){
+		for (i = 0 ; i < panchina.length; i++){
+			if (panchina[i] != -1){
+				document.getElementById("t2ruolo" + i).style.color=GetRuoloForeColor(players[panchina[i]].ruolo);
+				document.getElementById("t2ruolo" + i).innerText=players[panchina[i]].ruolo;
+				document.getElementById("t2nome" + i).innerText=players[panchina[i]].nome;
+				document.getElementById("t2squadra" + i).innerText=players[panchina[i]].squadra;
+			}else{
+				document.getElementById("t2ruolo" + i).innerText="";
+				document.getElementById("t2nome" + i).innerText="";
+				document.getElementById("t2squadra" + i).innerText="";
+			}
+		}
+	}
+	
+	function download_file() {
+		
+		var t = document.getElementById('cmbteam');
+		var g = document.getElementById('cmbgio');
+		var team = t.options[t.selectedIndex].text;
+		var gio = g.options[g.selectedIndex].text;
+		var fname = "FORMAZIONE-" + pad(t.selectedIndex,2) + "-" + team.replace(" ", "-") + "-2022-2023-GIO-" + gio + ".html";
+		var html = GetHtmlFile(t.selectedIndex,team,gio);
+		
+		var blob = new Blob([html], {type: "text/plain"});
+		
+		var dlink = document.createElement('a');
+		dlink.download = fname;
+		dlink.href = window.URL.createObjectURL(blob);
+		dlink.onclick = function(e) {
+			// revokeObjectURL needs a delay to work properly
+			var that = this;
+			setTimeout(function() {
+				window.URL.revokeObjectURL(that.href);
+			}, 1500);
+		};
+
+		dlink.click();
+		dlink.remove();
+	}
+	</script>
+
+	<div>
+		<div style="margin-bottom:20px;">
+			<table width='100%' id='tb1' border='0' style="background-color:#FF5300;border: 1px solid #800000;box-shadow: 0px 5px 5px #888888;" >
+				<tr>
+					<td style="padding:20px;">
+						<select id="cmbteam" onchange="LoadPage()" ></select>
+						<select name="cmbgio" id="cmbgio"></select>
+						<input type="submit" name="btnsalva" value="Salva" id="btnsalva" onclick='download_file()'/>
+					</td>
+					<td width="70pt"><span style="color:#FFF;">Modulo:</span></td>
+					<td width="110pt"><span id="lbmodulo" style="color:white;font-weight:bold;">0-0-0</span></td>
+				</tr>
+			</table>
+		</div>
+		<div id='divtb1' style='box-shadow: 0px 5px 5px #888888;'></div>
+		<div style="margin-top:20px; color:blue;">Gestione lista panchinari</div>
+		<div id='divtb2' style='box-shadow: 0px 5px 5px #888888;'></div>
+	</div>
+	
+	<script type="text/javascript">
+		GetRose();
+		SetTeamList(document.getElementById('cmbteam'));
+		SetDaysList(document.getElementById('cmbgio'));
+		LoadPage();
+	</script>
+	
+</body>
+</html>

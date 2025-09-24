@@ -1,0 +1,240 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F53DC61D-78E3-4371-8DA2-4A204E88C3FA}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>ifup.My.MyApplication</StartupObject>
+    <RootNamespace>ifup</RootNamespace>
+    <AssemblyName>ifup</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>WindowsForms</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>ifup.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>ifup.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</NoWarn>
+    <WarningsAsErrors>
+    </WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AppSettings.vb" />
+    <Compile Include="ClsUpdate.vb" />
+    <Compile Include="Form1.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.vb">
+      <DependentUpon>Form1.vb</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="iFormControl.designer.vb">
+      <DependentUpon>iFormControl.vb</DependentUpon>
+    </Compile>
+    <Compile Include="iFormControl.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="iProgressBar.designer.vb">
+      <DependentUpon>iProgressBar.vb</DependentUpon>
+    </Compile>
+    <Compile Include="iProgressBar.vb">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Zip.vb" />
+    <Compile Include="Module1.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="iFormControl.resx">
+      <DependentUpon>iFormControl.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="iProgressBar.resx">
+      <DependentUpon>iProgressBar.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f5.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f6.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f7.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\m3f.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\maxdis.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\maxsel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\maxuns.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\minsel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\minuns.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n0.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n5.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n6.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\n7.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\bar1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\bar2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\closesel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\closeuns.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f0.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\f3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\txt\theme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\txt\themeflat.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\8.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+</Project>

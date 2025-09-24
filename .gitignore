@@ -1,0 +1,36 @@
+# Cartelle di build
+[Bb]in/
+[Oo]bj/
+
+# File utente e impostazioni locali
+*.user
+*.suo
+*.sln.docstates
+*.vspscc
+*.vssscc
+
+# Cache e log
+*.log
+*.tmp
+*.cache
+*.pdb
+
+# Cartelle Visual Studio
+.vs/
+.vscode/
+
+# File di pubblicazione
+publish/
+*.pubxml
+*.publishproj
+
+# File di test
+TestResult.xml
+*.coverage
+*.coveragexml
+
+# Ignora la cartella packages
+**/[Pp]ackages/*
+
+# Eccezione: se usi MSBuild targets
+!**/[Pp]ackages/build/

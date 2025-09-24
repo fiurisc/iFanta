@@ -1,0 +1,931 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1C105CE8-067B-49C6-8B9F-06B2BD40E9C4}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <StartupObject>iFanta.avvio</StartupObject>
+    <RootNamespace>iFanta</RootNamespace>
+    <AssemblyName>iFanta</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>WindowsFormsWithCustomSubMain</MyType>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>iFanta.xml</DocumentationFile>
+    <NoWarn>
+    </NoWarn>
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>iFanta.xml</DocumentationFile>
+    <NoWarn>
+    </NoWarn>
+    <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>On</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>bin\app.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="iChart">
+      <HintPath>..\dll\iChart.dll</HintPath>
+    </Reference>
+    <Reference Include="iControl">
+      <HintPath>..\dll\iControl.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPython, Version=2.7.12.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\IronPython.2.7.12\lib\net45\IronPython.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPython.Modules, Version=2.7.12.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\IronPython.2.7.12\lib\net45\IronPython.Modules.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPython.SQLite, Version=2.7.12.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\IronPython.2.7.12\lib\net45\IronPython.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPython.Wpf, Version=2.7.12.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\IronPython.2.7.12\lib\net45\IronPython.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Dynamic, Version=1.3.1.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicLanguageRuntime.1.3.1\lib\net45\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting, Version=1.3.1.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicLanguageRuntime.1.3.1\lib\net45\Microsoft.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.Metadata, Version=1.3.1.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
+      <HintPath>..\packages\DynamicLanguageRuntime.1.3.1\lib\net45\Microsoft.Scripting.Metadata.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.SQLite, Version=1.0.116.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.116.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.EF6, Version=1.0.116.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.EF6.1.0.116.0\lib\net46\System.Data.SQLite.EF6.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.SQLite.Linq, Version=1.0.116.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Data.SQLite.Linq.1.0.116.0\lib\net46\System.Data.SQLite.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows.Forms" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Threading.Tasks" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AppList.vb" />
+    <Compile Include="avvio.vb" />
+    <Compile Include="backup.vb" />
+    <Compile Include="comune.vb" />
+    <Compile Include="forms\edit\frmcompformazioni.designer.vb">
+      <DependentUpon>frmcompformazioni.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\edit\frmcompformazioni.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\edit\frmcompila.designer.vb">
+      <DependentUpon>frmcompila.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\edit\frmcompila.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\edit\frmcopyrosa.designer.vb">
+      <DependentUpon>frmcopyrosa.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\edit\frmcopyrosa.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\edit\frmeditcoppa.designer.vb">
+      <DependentUpon>frmeditcoppa.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\edit\frmeditcoppa.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\edit\frmeditvoti.designer.vb">
+      <DependentUpon>frmeditvoti.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\edit\frmeditvoti.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\edit\frmmail.designer.vb">
+      <DependentUpon>frmmail.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\edit\frmmail.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmclassifica.designer.vb">
+      <DependentUpon>frmclassifica.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmclassifica.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmcoppa.designer.vb">
+      <DependentUpon>frmcoppa.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmcoppa.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmformazioni.designer.vb">
+      <DependentUpon>frmformazioni.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmformazioni.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmgenerale.designer.vb">
+      <DependentUpon>frmgenerale.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmgenerale.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmrose.designer.vb">
+      <DependentUpon>frmrose.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmrose.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmroseall.designer.vb">
+      <DependentUpon>frmroseall.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmroseall.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmstat.designer.vb">
+      <DependentUpon>frmstat.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmstat.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\frmsvincolati.designer.vb">
+      <DependentUpon>frmsvincolati.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\frmsvincolati.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmbackup.designer.vb">
+      <DependentUpon>frmbackup.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmbackup.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmchart.designer.vb">
+      <DependentUpon>frmchart.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmchart.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmimpexp.designer.vb">
+      <DependentUpon>frmimpexp.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmimpexp.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmload.designer.vb">
+      <DependentUpon>frmload.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmload.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmrestore.designer.vb">
+      <DependentUpon>frmrestore.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmrestore.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmsettings.designer.vb">
+      <DependentUpon>frmsettings.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmsettings.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmupdateprobforma.designer.vb">
+      <DependentUpon>frmupdateprobforma.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmupdateprobforma.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmupdateserver.designer.vb">
+      <DependentUpon>frmupdateserver.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmupdateserver.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\frmwait.designer.vb">
+      <DependentUpon>frmwait.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\frmwait.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="forms\system\iFantaForm.designer.vb">
+      <DependentUpon>iFantaForm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="forms\system\iFantaForm.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ImpExp\ImpExp.vb" />
+    <Compile Include="ImpExp\ImpExpCup.vb" />
+    <Compile Include="ImpExp\ImpExpFormazioni.vb" />
+    <Compile Include="ImpExp\ImpExpRating.vb" />
+    <Compile Include="ImpExp\ImpExpRose.vb" />
+    <Compile Include="ImpExp\ImpExpStatistic.vb" />
+    <Compile Include="ImpExp\MakeWedDataFiles.vb" />
+    <Compile Include="lega_obj\classifica.vb" />
+    <Compile Include="lega_obj\coppa.vb" />
+    <Compile Include="lega_obj\formazione.vb" />
+    <Compile Include="lega_obj\Leghe.vb" />
+    <Compile Include="lega_obj\settings\bonus_settings.vb" />
+    <Compile Include="lega_obj\settings\coppa_settings.vb" />
+    <Compile Include="lega_obj\settings\jolly_settings.vb" />
+    <Compile Include="lega_obj\settings\lega_settings.vb" />
+    <Compile Include="lega_obj\settings\load_save_settings.vb" />
+    <Compile Include="lega_obj\settings\points_settings.vb" />
+    <Compile Include="lega_obj\team.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="NetworkConnection.vb" />
+    <Compile Include="Settings\AppSettings\AppSettings.vb" />
+    <Compile Include="Settings\AppSettings\BackupSettings.vb" />
+    <Compile Include="Settings\AppSettings\MainWindowSettings.vb" />
+    <Compile Include="Settings\AppSettings\PersonalSettings.vb" />
+    <Compile Include="Settings\AppSettings\SessionSettings.vb" />
+    <Compile Include="Settings\AppSettings\UpdateSettings.vb" />
+    <Compile Include="Settings\GeneralSettings.vb" />
+    <Compile Include="SystemFunction\Convertion.vb" />
+    <Compile Include="SystemFunction\Cryptography.vb" />
+    <Compile Include="SystemFunction\Database.vb" />
+    <Compile Include="SystemFunction\DrawingAndImage.vb" />
+    <Compile Include="SystemFunction\FileAndDirectory.vb" />
+    <Compile Include="SystemFunction\General.vb" />
+    <Compile Include="SystemFunction\Gui.vb" />
+    <Compile Include="SystemFunction\mail.vb" />
+    <Compile Include="SystemFunction\Zip.vb" />
+    <Compile Include="webdata\gen-function.vb" />
+    <Compile Include="webdata\load-data.vb" />
+    <Compile Include="webdata\ThreadItem.vb" />
+    <Compile Include="webdata\wData.vb" />
+    <Compile Include="webdata\wGet.vb" />
+    <Compile Include="webdata\wPlayer.vb" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="forms\edit\frmcompformazioni.resx">
+      <DependentUpon>frmcompformazioni.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\edit\frmcompila.resx">
+      <DependentUpon>frmcompila.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\edit\frmcopyrosa.resx">
+      <DependentUpon>frmcopyrosa.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\edit\frmeditcoppa.resx">
+      <DependentUpon>frmeditcoppa.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\edit\frmeditvoti.resx">
+      <DependentUpon>frmeditvoti.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\edit\frmmail.resx">
+      <DependentUpon>frmmail.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmclassifica.resx">
+      <DependentUpon>frmclassifica.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmcoppa.resx">
+      <DependentUpon>frmcoppa.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmformazioni.resx">
+      <DependentUpon>frmformazioni.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmgenerale.resx">
+      <DependentUpon>frmgenerale.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmrose.resx">
+      <DependentUpon>frmrose.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmroseall.resx">
+      <DependentUpon>frmroseall.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmstat.resx">
+      <DependentUpon>frmstat.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\frmsvincolati.resx">
+      <DependentUpon>frmsvincolati.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmbackup.resx">
+      <DependentUpon>frmbackup.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmchart.resx">
+      <DependentUpon>frmchart.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmimpexp.resx">
+      <DependentUpon>frmimpexp.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmload.resx">
+      <DependentUpon>frmload.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmrestore.resx">
+      <DependentUpon>frmrestore.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmsettings.resx">
+      <DependentUpon>frmsettings.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmupdateprobforma.resx">
+      <DependentUpon>frmupdateprobforma.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmupdateserver.resx">
+      <DependentUpon>frmupdateserver.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\frmwait.resx">
+      <DependentUpon>frmwait.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="forms\system\iFantaForm.resx">
+      <DependentUpon>iFantaForm.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\add-remove.psd" />
+    <None Include="bin\Image\icons.psd" />
+    <None Include="My Project\app.manifest" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\8.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\10.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\12.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\23.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\103.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\110.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\1347274431_search.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\ammonito.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\arrow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\ass.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\autogoal16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\back.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\backup16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\backup48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\backup128.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\b-normal.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\Build.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\calendar16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\campo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\campo-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\campo-auto-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\campo-s.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\chart_black.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\chart16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\chartb16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\chart-line16png.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\closeb16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\closer16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\colorize.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\compile96.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\connect-notok16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\connect-ok16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\connect-refresh-dark16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\Copy of reload16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\copy16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\copy116.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\copy-white16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\dark-forma.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\database.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\del12.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\del14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\del16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\del-torneo16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\del-white16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\detail.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\detail-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\edit_48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\edit_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\edit16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\editcopy.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\edit-dark.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\editpaste.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\editvote16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\editvoti16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\empty.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\espulso.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\export14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\export16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\exportb16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\favorites16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\fileedit16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\find16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\finduser16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\folder16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\folder32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\folder-app12.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\folder-white.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\font-size16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\gallery.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\help16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\history32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\import14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\import16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\importb16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\infortunato.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\items16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\large-win-white.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\link2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\load-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\mail-send16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\mailsend32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\mod-torneo16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\modulo16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\monotone_arrow_right.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\Network-Online128.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\new-torneo16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\next16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\not-favorites16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\ok_dis16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\ok_disable16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\ok16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\pallone.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\pallone16.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\pallone16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\PC Case.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\point.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\previeus16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\prob48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\processing.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\reload_page16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\reload16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\resetplayer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\restore16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\restore48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\restore128.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\rigp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\rigs.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\save16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\saveb16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\search.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\search.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\search1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\serttings-16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\settings-white.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\small-win-white.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\soccer_field_icon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\sport_soccer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\star10.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\star10r.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\star-sel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\star-uns.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\table16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\table-black16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\table-block.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\t-flat.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\t-normal.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\top.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\unk16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\unk24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\unk32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\unk48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\update14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\user16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\user24.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\vardown16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\varup16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\voti-dark.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\w1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\w4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\w7.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\windws-size-white.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\del-black-14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\edit-black-14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\edit-forma-black-14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\edit-voti-black-14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\export-black-14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\import-black-14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\last-color.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\last-color.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\last-color.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\14x14\mail-send14.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\theme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\themeflat.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ok16b.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Image\campo-botton.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ifupdll\ifupdll.vbproj">
+      <Project>{df1039fb-20b5-43f4-8513-42b649845bbc}</Project>
+      <Name>ifupdll</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Questo progetto fa riferimento a uno o più pacchetti NuGet che non sono presenti in questo computer. Usare lo strumento di ripristino dei pacchetti NuGet per scaricarli. Per altre informazioni, vedere http://go.microsoft.com/fwlink/?LinkID=322105. Il file mancante è {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.props'))" />
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.targets'))" />
+    <Error Condition="!Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.116.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.116.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
+  </Target>
+  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.targets" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" />
+  <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.116.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.116.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+</Project>
