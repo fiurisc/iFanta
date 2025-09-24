@@ -11,6 +11,8 @@ Partial Class WebData
         Private dird As String = ""
         Private strdata As New SortedDictionary(Of Integer, System.Text.StringBuilder)
         Private year As Integer = -1
+
+        Private matchs As New SortedDictionary(Of Integer, SortedDictionary(Of Integer, Match))
         Private matchsdetails As New SortedDictionary(Of Integer, SortedDictionary(Of Integer, Dictionary(Of String, Dictionary(Of String, Player))))
 
         Sub New(YearLega As Integer)
@@ -34,7 +36,7 @@ Partial Class WebData
 
                 'Creo la lista di thread da eseguire'
                 thrmatch.Clear()
-                For i As Integer = 1 To 38
+                For i As Integer = 1 To 6
                     Dim t As New Threading.Thread(AddressOf GetMatchsDay)
                     t.Name = CStr(i)
                     thrmatch.Add(t)
@@ -48,6 +50,10 @@ Partial Class WebData
                     thrmatch(i).Join()
                     System.Threading.Thread.Sleep(100)
                 Next
+
+                If DataTorneo.DataOnDb Then
+                    DataTorneo.UpdateMatchData(ServerPath, year, matchs)
+                End If
 
                 For Each key As Integer In strdata.Keys
                     strdataall.Append(strdata(key).ToString)
@@ -132,7 +138,20 @@ Partial Class WebData
                                     goal2 = ""
                                 End If
 
-                                If datamatch.ContainsKey(d & "-" & mtach) = False Then datamatch.Add(d & "-" & mtach, d & "|" & matchid & "|" & mtach.Replace("-", "|") & "|" & dt.ToString("yyyy/MM/dd HH:mm:ss") & "|" & goal1 & "|" & goal2)
+                                If datamatch.ContainsKey(d & "-" & mtach) = False Then
+                                    datamatch.Add(d & "-" & mtach, d & "|" & matchid & "|" & mtach.Replace("-", "|") & "|" & dt.ToString("yyyy/MM/dd HH:mm:ss") & "|" & goal1 & "|" & goal2)
+                                    If matchs.ContainsKey(d) = False Then matchs.Add(d, New SortedDictionary(Of Integer, Match))
+                                    If matchs(d).ContainsKey(matchid) = False Then
+                                        Dim teams() As String = mtach.Split("-")
+                                        Dim m As New Match
+                                        m.TeamA = teams(0)
+                                        m.TeamB = teams(1)
+                                        m.Time = dt
+                                        m.GoalA = goal1
+                                        m.GoalB = goal2
+                                        matchs(d).Add(matchid, m)
+                                    End If
+                                End If
 
                                 If matchplayed Then
                                     Dim linktab As String = Regex.Match(line(i), "(?<=content="").*(?="" />)").Value
@@ -392,6 +411,15 @@ Partial Class WebData
             End If
         End Sub
 
+        Public Class Match
+            Public Property TeamA As String = ""
+            Public Property TeamB As String = ""
+            Public Property Time As DateTime = Now
+            Public Property GoalA As String = ""
+            Public Property GoalB As String = ""
+
+        End Class
+
         Public Class Player
             Public Property Ruolo As String = ""
             Public Property Player As String = ""
@@ -409,11 +437,5 @@ Partial Class WebData
             Public Property RigoriSbagliati As Integer = 0
         End Class
 
-        Public Class CronacaItem
-            Public Property Minuto = ""
-            Public Property TipoEvento = ""
-            Public Property NomePlayer = ""
-            Public Property ExtraInfo = ""
-        End Class
     End Class
 End Class

@@ -127,8 +127,8 @@ Public Class Form1
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
 
-        Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
-
+        'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
+        'DataTorneo.UpdateMatchData(My.Application.Info.DirectoryPath, "2025")
     End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click

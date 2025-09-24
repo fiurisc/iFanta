@@ -1,7 +1,10 @@
 ﻿Imports System.Data.OleDb
-Imports System.Windows
+Imports System.Reflection
+Imports System.Web.Script.Serialization
 
 Public Class DataTorneo
+
+    Public Shared DataOnDb As Boolean = True
 
     Public Shared Function GetMatchYear(ServerPath As String, year As String, Day As String) As String
 
@@ -182,22 +185,71 @@ Public Class DataTorneo
 
     End Function
 
-    Public Shared Sub ExecuteSql(ServerPath As String, year As String, ByVal Sql As String)
+    Public Shared Sub UpdateMatchData(ServerPath As String, year As String, newdata As SortedDictionary(Of Integer, SortedDictionary(Of Integer, WebData.MatchData.Match)))
+        Try
+            Dim ds As System.Data.DataSet = ExecuteSqlReturnDataSet(ServerPath, year, "SELECT * FROM tbmatch")
+            Dim olddata As New SortedDictionary(Of Integer, SortedDictionary(Of Integer, WebData.MatchData.Match))
+            If ds.Tables.Count > 0 Then
+                For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                    Dim row As DataRow = ds.Tables(0).Rows(i)
+                    Dim g As Integer = CInt(row.Item("gio").ToString())
+                    Dim mi As Integer = CInt(row.Item("idmatch").ToString())
+                    If olddata.ContainsKey(g) = False Then olddata.Add(g, New SortedDictionary(Of Integer, WebData.MatchData.Match))
+                    If olddata(g).ContainsKey(mi) = False Then
+                        Dim m As New WebData.MatchData.Match
+                        m.TeamA = row.Item("teama").ToString()
+                        m.TeamB = row.Item("teamb").ToString()
+                        m.Time = CDate(row.Item("timem"))
+                        m.GoalA = row.Item("goala").ToString()
+                        m.GoalB = row.Item("goalb").ToString()
+                        olddata(g).Add(mi, m)
+                    End If
+                Next
+
+                Dim sqlinsert As New List(Of String)
+                Dim sqlupdate As New List(Of String)
+
+                For Each g In newdata.Keys
+                    For Each mi In newdata(g).Keys
+                        If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(mi) = False Then
+                            sqlinsert.Add("INSERT INTO tbmatch (teama,teamb,timem,goala,goalb) values ('" & newdata(g)(mi).TeamA & "','" & newdata(g)(mi).TeamB & "','" & newdata(g)(mi).Time.ToString("yyyy/MM/dd HH:mm:ss") & "','" & newdata(g)(mi).GoalA & "','" & newdata(g)(mi).GoalB & "')")
+                        ElseIf GetCustomHashCode(olddata(g)(mi)) <> GetCustomHashCode(newdata(g)(mi)) Then
+                            sqlupdate.Add("UPDATE tbmatch SET teama='" & newdata(g)(mi).TeamA & "',teamb='" & newdata(g)(mi).TeamB & "',timem='" & newdata(g)(mi).Time.ToString("yyyy/MM/dd HH:mm:ss") & "',goala='" & newdata(g)(mi).GoalA & "',goalb='" & newdata(g)(mi).GoalB & "' WHERE gio=" & g & " AND idmatch=" & mi)
+                        End If
+                    Next
+                Next
+                ExecuteSql(ServerPath, year, sqlinsert)
+                ExecuteSql(ServerPath, year, sqlupdate)
+
+            End If
+        Catch ex As Exception
+            Debug.WriteLine(ex.Message)
+        End Try
+    End Sub
+
+    Public Shared Sub ExecuteSql(ServerPath As String, year As String, ByVal SqlString As String)
+        ExecuteSql(ServerPath, year, New List(Of String) From {SqlString})
+    End Sub
+
+    Public Shared Sub ExecuteSql(ServerPath As String, year As String, ByVal SqlString As List(Of String))
+        If SqlString.Count = 0 Then Exit Sub
         Using conn As New OleDbConnection(GetDbConnectionString(ServerPath, year))
             conn.Open()
-            Using cmd As New OleDbCommand(Sql, conn)
-                cmd.ExecuteNonQuery()
-            End Using
+            For Each s In SqlString
+                Using cmd As New OleDbCommand(s, conn)
+                    cmd.ExecuteNonQuery()
+                End Using
+            Next
         End Using
     End Sub
 
-    Public Shared Function ExecuteSqlReturnDataSet(ServerPath As String, year As String, ByVal Sql As String) As System.Data.DataSet
+    Public Shared Function ExecuteSqlReturnDataSet(ServerPath As String, year As String, ByVal SqlString As String) As System.Data.DataSet
 
         Dim ds As New System.Data.DataSet
 
         Using conn As New OleDbConnection(GetDbConnectionString(ServerPath, year))
             conn.Open()
-            Using da As New OleDbDataAdapter(Sql, conn)
+            Using da As New OleDbDataAdapter(SqlString, conn)
                 da.Fill(ds, "tabella")
             End Using
         End Using
@@ -207,7 +259,7 @@ Public Class DataTorneo
     End Function
 
     Private Shared Function GetDbConnectionString(ServerPath As String, year As String)
-        Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ServerPath & year & ".accdb;"
+        Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ServerPath & "\" & year & ".accdb;"
     End Function
 
     Public Shared Sub WriteError(ByVal Form As String, ByVal SubName As String, ByVal ErrMsg As String)
@@ -228,6 +280,25 @@ Public Class DataTorneo
         Else
             Return ""
         End If
+    End Function
+
+    Public Shared Function GetCustomHashCode(obj As Object) As Long
+
+        If obj Is Nothing Then Return 0
+
+        Dim hash As Long = 17 ' Usa Long per evitare overflow immediato
+        Dim props As PropertyInfo() = obj.GetType().GetProperties(BindingFlags.Public Or BindingFlags.Instance)
+
+        For Each prop In props
+            Dim value = prop.GetValue(obj, Nothing)
+            If value IsNot Nothing Then
+                hash = hash * 23 + value.GetHashCode()
+            End If
+        Next
+
+        ' Riduci il valore a Integer in modo sicuro
+        Return Math.Abs(CLng(hash Mod Long.MaxValue))
+
     End Function
 
 End Class
