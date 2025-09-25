@@ -1,0 +1,90 @@
+﻿Imports System.Data.OleDb
+
+Namespace Torneo
+    Public Class Functions
+
+        Public Shared Function ExecuteSqlReturnJSON(ServerPath As String, year As String, ByVal SqlString As String) As String
+
+            Dim risultati As New List(Of Dictionary(Of String, Object))()
+
+            Try
+                Dim ds As System.Data.DataSet = ExecuteSqlReturnDataSet(ServerPath, year, SqlString)
+
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim record As New Dictionary(Of String, Object)()
+                        For c As Integer = 0 To ds.Tables(0).Columns.Count - 1
+                            record.Add(ds.Tables(0).Columns(c).ColumnName, ds.Tables(0).Rows(i).Item(c))
+                        Next
+                        risultati.Add(record)
+                    Next
+                End If
+            Catch ex As Exception
+                Call WebData.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
+
+            Return WebData.SerializzaOggetto(risultati)
+
+        End Function
+
+        Public Shared Function GetRecordIdFromUpdate(ServerPath As String, year As String, table As String, lastRecordId As Integer) As Integer
+
+            Dim query As String = "SELECT max(id) as lastid FROM " & table & " WHERE id<=" & lastRecordId & ";"
+            Dim lastId As Integer = -1
+
+            Using conn As New OleDbConnection(Functions.GetDbConnectionString(ServerPath, year))
+                Try
+                    conn.Open()
+                    Using cmd As New OleDbCommand(query, conn)
+                        Using reader As OleDbDataReader = cmd.ExecuteReader()
+                            While reader.Read()
+                                lastId = CInt(reader("lastid"))
+                            End While
+                        End Using
+                    End Using
+                Catch ex As Exception
+                    Call WebData.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                End Try
+            End Using
+
+            Return lastId
+
+        End Function
+
+        Public Shared Sub ExecuteSql(ServerPath As String, year As String, ByVal SqlString As String)
+            ExecuteSql(ServerPath, year, New List(Of String) From {SqlString})
+        End Sub
+
+        Public Shared Sub ExecuteSql(ServerPath As String, year As String, ByVal SqlString As List(Of String))
+            If SqlString.Count = 0 Then Exit Sub
+            Using conn As New OleDbConnection(GetDbConnectionString(ServerPath, year))
+                conn.Open()
+                For Each s In SqlString
+                    Using cmd As New OleDbCommand(s, conn)
+                        cmd.ExecuteNonQuery()
+                    End Using
+                Next
+            End Using
+        End Sub
+
+        Public Shared Function ExecuteSqlReturnDataSet(ServerPath As String, year As String, ByVal SqlString As String) As System.Data.DataSet
+
+            Dim ds As New System.Data.DataSet
+
+            Using conn As New OleDbConnection(GetDbConnectionString(ServerPath, year))
+                conn.Open()
+                Using da As New OleDbDataAdapter(SqlString, conn)
+                    da.Fill(ds, "tabella")
+                End Using
+            End Using
+
+            Return ds
+
+        End Function
+
+        Public Shared Function GetDbConnectionString(ServerPath As String, year As String)
+            Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ServerPath & "\" & year & ".accdb;"
+        End Function
+    End Class
+End Namespace
+

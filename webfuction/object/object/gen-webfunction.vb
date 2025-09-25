@@ -1,4 +1,10 @@
-﻿Module PublicData
+﻿Imports System.Data.OleDb
+Imports System.Reflection
+Imports System.Security.Cryptography
+Imports System.Text
+Imports System.Web.Script.Serialization
+
+Module PublicData
 
     Public makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
     Public webplayers As New Dictionary(Of String, Dictionary(Of String, List(Of String)))
@@ -437,14 +443,14 @@ Public Class WebData
         Return natcode
     End Function
 
-   Public Shared Sub WriteLog(dirs As String,ByVal Form As String, ByVal SubName As String, ByVal Text As String)
+    Public Shared Sub WriteLog(dirs As String, ByVal Form As String, ByVal SubName As String, ByVal Text As String)
         Try
             If IO.Directory.Exists(dirs) Then IO.File.AppendAllText(dirs & "\debug.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & Form & "|" & SubName & "|" & Text & System.Environment.NewLine)
         Catch ex As Exception
 
         End Try
     End Sub
-	
+
     Public Shared Sub WriteError(ByVal Form As String, ByVal SubName As String, ByVal ErrMsg As String)
         Try
             If IO.Directory.Exists(dirs) Then IO.File.AppendAllText(dirs & "\error.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & Form & "|" & SubName & "|" & ErrMsg & System.Environment.NewLine)
@@ -529,6 +535,99 @@ Public Class WebData
             Call WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
         End Try
     End Sub
+
+    Public Shared Function ConvertListStringToString(List As List(Of String), Separator As String) As String
+        Dim str As String = ""
+        For i As Integer = 0 To List.Count - 1
+            str = str & Separator & List(i)
+        Next
+        If str.Length > 0 Then
+            Return str.Substring(1)
+        Else
+            Return ""
+        End If
+    End Function
+
+    Public Shared Function ComputeSHA256Hash(ByVal rawData As String) As String
+        Using sha256Hash As SHA256 = SHA256.Create()
+            ' Convert the input string to a byte array and compute the hash.
+            Dim bytes As Byte() = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData))
+
+            ' Convert byte array to a hexadecimal string.
+            Dim builder As New StringBuilder()
+            For Each b As Byte In bytes
+                builder.Append(b.ToString("x2"))
+            Next
+            Return builder.ToString()
+        End Using
+    End Function
+
+    Public Shared Function GetCustomHashCode(obj As Object) As Long
+
+        If obj Is Nothing Then Return 0
+
+        Dim hash As Long = 17 ' Usa Long per evitare overflow immediato
+        Dim props As PropertyInfo() = obj.GetType().GetProperties(BindingFlags.Public Or BindingFlags.Instance)
+
+        For Each prop In props
+            Dim value = prop.GetValue(obj, Nothing)
+            If value IsNot Nothing Then
+                hash = hash * 23 + value.GetHashCode()
+            End If
+        Next
+
+        ' Riduci il valore a Integer in modo sicuro
+        Return Math.Abs(CLng(hash Mod Long.MaxValue))
+
+    End Function
+
+    Public Shared Function SerializzaOggetto(obj As Object) As String
+        If obj Is Nothing Then Return "{}"
+        Dim serializer As New JavaScriptSerializer()
+        Return serializer.Serialize(obj)
+    End Function
+
+    Public Shared Function FormatJson(json As String) As String
+
+        Dim indent As Integer = 0
+        Dim quoted As Boolean = False
+        Dim sb As New StringBuilder()
+
+        For Each ch As Char In json
+            Select Case ch
+                Case """"
+                    sb.Append(ch)
+                    quoted = Not quoted
+                Case "{"c, "["c
+                    sb.Append(ch)
+                    If Not quoted Then
+                        sb.AppendLine()
+                        indent += 1
+                        sb.Append(New String(" "c, indent * 2))
+                    End If
+                Case "}"c, "]"c
+                    If Not quoted Then
+                        sb.AppendLine()
+                        indent -= 1
+                        sb.Append(New String(" "c, indent * 2))
+                    End If
+                    sb.Append(ch)
+                Case ","c
+                    sb.Append(ch)
+                    If Not quoted Then
+                        sb.AppendLine()
+                        sb.Append(New String(" "c, indent * 2))
+                    End If
+                Case ":"c
+                    sb.Append(ch)
+                    If Not quoted Then sb.Append(" ")
+                Case Else
+                    sb.Append(ch)
+            End Select
+        Next
+
+        Return sb.ToString()
+    End Function
 
 
     Public Class PlayerMatch

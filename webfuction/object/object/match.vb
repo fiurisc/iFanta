@@ -51,8 +51,8 @@ Partial Class WebData
                     System.Threading.Thread.Sleep(100)
                 Next
 
-                If DataTorneo.DataOnDb Then
-                    DataTorneo.UpdateMatchData(ServerPath, year, matchs)
+                If Torneo.General.DataOnDb Then
+                    Torneo.General.UpdateMatchData(ServerPath, year, matchs)
                 End If
 
                 For Each key As Integer In strdata.Keys

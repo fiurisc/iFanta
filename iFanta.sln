@@ -11,7 +11,7 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ifupdll", "ifupdll\ifupdll.
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "setup", "setup\setup.vbproj", "{2C688FA2-E3C9-4DDE-8DC1-8C797407A3DF}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "webfuction", "webfuction\webfuction.vbproj", "{6A5446C9-84F9-4B00-A492-0EDE7834B231}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "webfunction", "webfuction\webfunction.vbproj", "{6A5446C9-84F9-4B00-A492-0EDE7834B231}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

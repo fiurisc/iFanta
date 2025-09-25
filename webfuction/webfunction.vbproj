@@ -121,7 +121,6 @@
     <Import Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="object\DataTorneo.vb" />
     <Compile Include="Form1.designer.vb">
       <DependentUpon>Form1.vb</DependentUpon>
     </Compile>
@@ -144,19 +143,21 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="object\gen-webfunction.vb" />
-    <Compile Include="object\match.vb" />
-    <Compile Include="object\players-data.vb" />
-    <Compile Include="object\players-quote.vb" />
-    <Compile Include="object\players.vb" />
-    <Compile Include="object\probable\get-corriere-ds.vb" />
-    <Compile Include="object\probable\get-fantacalcio.vb" />
-    <Compile Include="object\probable\get-gazzetta.vb" />
-    <Compile Include="object\probable\get-pianetafantacalcio.vb" />
-    <Compile Include="object\probable\get-sky.vb" />
-    <Compile Include="object\probable\probable-formations.vb" />
-    <Compile Include="object\ranking.vb" />
-    <Compile Include="object\webget.vb" />
+    <Compile Include="torneo\functions.vb" />
+    <Compile Include="torneo\general.vb" />
+    <Compile Include="torneo\rose.vb" />
+    <Compile Include="webdata\functions.vb" />
+    <Compile Include="webdata\match.vb" />
+    <Compile Include="webdata\players-data.vb" />
+    <Compile Include="webdata\players-quotes.vb" />
+    <Compile Include="webdata\players.vb" />
+    <Compile Include="webdata\probable\get-corriere-ds.vb" />
+    <Compile Include="webdata\probable\get-fantacalcio.vb" />
+    <Compile Include="webdata\probable\get-gazzetta.vb" />
+    <Compile Include="webdata\probable\get-pianetafantacalcio.vb" />
+    <Compile Include="webdata\probable\get-sky.vb" />
+    <Compile Include="webdata\probable\probable-formations.vb" />
+    <Compile Include="webdata\ranking.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
@@ -182,8 +183,6 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="object\update\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

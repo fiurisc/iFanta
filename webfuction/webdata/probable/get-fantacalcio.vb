@@ -1,0 +1,117 @@
+﻿Namespace WebData
+    Partial Class ProbableFormations
+
+        Shared Function GetFantacalcio(ServerPath As String, ReturnData As Boolean) As String
+
+            Dim dirt As String = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
+            Dim dird As String = ServerPath & "\web\" & CStr(Functions.Year) & "\data\pforma"
+            Dim filet As String = dirt & "\pform-fantacalcio.txt"
+            Dim filed As String = dird & "\pform-fantacalcio.txt"
+            Dim filep As String = dird & "\pform-fantacalcio-player.txt"
+            Dim filel As String = dird & "\pform-fantacalcio-log.txt"
+            Dim site As String = "Fantacalcio"
+            Dim enc As String = "iso-8859-1"
+            Dim currgg As Integer = -1
+            Dim sr As New IO.StreamWriter(filel)
+            Dim rmsg As String = ""
+
+            Functions.Dirs = ServerPath
+
+            Try
+
+                sr.WriteLine("Loading web player and matchs")
+                Players.Data.LoadPlayers(ServerPath & "\web\" & CStr(Functions.Year) & "\data\players-quote.txt", False)
+                MatchData.LoadWebMatchs(ServerPath & "\web\" & CStr(Functions.Year) & "\data\matchs\matchs-data.txt")
+
+                sr.WriteLine("Year -> " & Functions.Year)
+                sr.WriteLine("Calendario match:")
+                sr.WriteLine("---------------------------")
+                For Each t As String In MatchData.KeyMatchs.Keys
+                    sr.WriteLine(MatchData.KeyMatchs(t) & " -> " & t)
+                Next
+                sr.WriteLine("")
+
+                'Determino i link delle varie partite'
+                sr.WriteLine("Get Html page")
+                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/probabili-formazioni-serie-A", "POST", "")
+
+                If html <> "" Then
+
+                    sr.WriteLine("Reading html page")
+                    IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding(enc))
+
+                    Dim lines() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding(enc))
+                    Dim wpd As New Dictionary(Of String, wPlayer)
+                    Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
+                    Dim pstate As String = "Titolare"
+                    Dim sq As New List(Of String)
+                    Dim team As String = ""
+                    Dim name As String = ""
+                    Dim ruolo As String = ""
+                    Dim perc As Integer = 0
+                    Dim info As String = ""
+
+                    sr.WriteLine("lines => " & lines.Length)
+
+                    For i As Integer = 0 To lines.Length - 1
+
+                        Dim line As String = lines(i)
+
+                        If line <> "" Then
+
+                            If line.Contains("<h1 class=""h5"">Probabili formazioni Serie A</h1>") Then
+                                currgg = CInt(System.Text.RegularExpressions.Regex.Match(lines(i + 1), "\d+").Value)
+                            End If
+                            If line.Contains("match-info") Then
+                                pstate = "Titolare"
+                                sq.Clear()
+                            ElseIf line.Contains(">Panchina") Then
+                                pstate = "Panchina"
+                            ElseIf line.Contains(">Infortunati") Then
+                                pstate = "Infortunato"
+                            ElseIf line.Contains(">Squalificati") Then
+                                pstate = "Squalificato"
+                            ElseIf line.Contains("Dettaglio calciatori") Then
+                                pstate = ""
+                            End If
+
+                            If pstate <> "" AndAlso line.Contains("href=""https://www.fantacalcio.it/serie-a/squadre/") AndAlso lines(i + 2).Contains("</span>") Then
+                                team = Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=www\.fantacalcio\.it\/serie\-a\/squadre\/)\w+(?=\/)").Value.ToUpper())
+                                name = lines(i + 2).Replace("<span>", "").Replace("</span>", "").Trim().ToUpper().Replace("'", "’").Replace("&#X27;", "’")
+                                If pstate = "Titolare" OrElse pstate = "Panchina" Then
+                                    info = ""
+                                    Try
+                                        perc = CInt(System.Text.RegularExpressions.Regex.Match(lines(i + 6), "\d+").Value)
+                                    Catch ex As Exception
+                                        perc = 0
+                                    End Try
+                                ElseIf pstate = "Infortunato" Then
+                                    info = Functions.NormalizeText(lines(i + 5).Trim())
+                                End If
+                                name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
+                                Call AddInfo(name, team, site, pstate, info, perc, wpd)
+                                If sq.Contains(team) = False Then sq.Add(team)
+                            End If
+                        End If
+                    Next
+
+                    If currgg <> -1 Then
+                        Dim out As String = WriteData(currgg, wpd, filed)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filep)
+                        rmsg = out.Replace(System.Environment.NewLine, "</br>")
+                    End If
+                End If
+
+            Catch ex As Exception
+                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                rmsg = ex.Message
+            End Try
+
+            sr.Close()
+
+            Return rmsg
+
+        End Function
+
+    End Class
+End Namespace

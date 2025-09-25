@@ -13,109 +13,57 @@ Public Class Form1
         Dim dirs As String = My.Application.Info.DirectoryPath
         Dim str As New System.Text.StringBuilder
 
-        If data = "" Then data = "ALL"
-
-        'Dim dic As New Dictionary(Of Integer, Integer)
-        'dic.Add(0, 4)
-        'dic.Add(1, 2)
-        'dic.Add(2, 8)
-        'dic.Add(3, 0)
-        'dic.Add(4, 6)
-        'dic.Add(5, 3)
-        'dic.Add(6, 9)
-        'dic.Add(7, 7)
-        'dic.Add(8, 5)
-        'dic.Add(9, 1)
-
-        'For ind As Integer = 0 To 9
-        '    Dim files() As String = IO.Directory.GetFiles("D:\iFanta\tornei\2022-2023\stemmi", ind & "*")
-        '    For Each f As String In files
-        '        Dim fd As String = "D:\iFanta\tornei\2022-2023\stemmi\tmp\" & IO.Path.GetFileName(f).Replace(ind & "-", dic(ind) & "-")
-        '        IO.File.Copy(f, fd, True)
-        '    Next
-        'Next
-
-        data = data
-
-        'If Data = "MATCH" OrElse Data = "ALL" Then
-        '    Dim wData As New WebData.MatchData
-        '    Str.Append(wData.GetCalendarMatchs(dirs, Show))
-        'End If
-        'If data = "PLAYER-QUOTES" OrElse data = "ALL" Then
-        '    Dim wData As New WebData
-        '    str.Append(wData.GetPlayersQuote(dirs, show))
-        'End If
-        'If data = "PLAYER-DATA" OrElse data = "ALL" Then
-        '    Dim wData As New WebData
-        '    str.Append(wData.GetPlayersData(dirs, show))
-        ''End If
-        'If data = "FORMAZIONI" OrElse data = "ALL" Then
-        '    Dim wData As New WebData.ProbableFormations
-        '    str.Append(wData.GetGazzetta(My.Application.Info.DirectoryPath, show))
-        '    str.Append(wData.GetFantaGazzetta(My.Application.Info.DirectoryPath, show))
-        '    str.Append(wData.GetPianetaFantacalcio(My.Application.Info.DirectoryPath, show))
-        '    str.Append(wData.GetSky(My.Application.Info.DirectoryPath, show))
-        '    str.Append(wData.GetCds(My.Application.Info.DirectoryPath, show))
-        'End If
-
-        'Dim s As String = str.ToString
-        's = s
-
-        'If show Then
-        '    'Response.Write(str.ToString)
-        'End If
-
     End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
-        Dim wData As New WebData(year)
-        wData.GetPlayersQuote(My.Application.Info.DirectoryPath, True, True)
+        WebData.Functions.Year = year
+        WebData.PlayersQuotes.GetPlayersQuotes(My.Application.Info.DirectoryPath, True, True)
     End Sub
 
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
-        Dim wData As New WebData(year)
-        wData.GetPlayersData(My.Application.Info.DirectoryPath, False)
+        WebData.Functions.Year = year
+        WebData.PlayersData.GetPlayersData(My.Application.Info.DirectoryPath, False)
     End Sub
 
     Private Sub Button3_Click(sender As Object, e As EventArgs) Handles Button3.Click
-        Dim wData As New WebData.MatchData(year)
-        wData.GetCalendarMatchs(My.Application.Info.DirectoryPath, True)
+        WebData.Functions.Year = year
+        WebData.MatchData.GetCalendarMatchs(My.Application.Info.DirectoryPath, True)
     End Sub
 
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        Dim wData As New WebData(year)
-        wData.GetRanking(My.Application.Info.DirectoryPath, False)
+        WebData.Functions.Year = year
+        WebData.Ranking.GetRanking(My.Application.Info.DirectoryPath, False)
     End Sub
 
     Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
-        Dim wData As New WebData.ProbableFormations(year)
-        wData.GetGazzetta(My.Application.Info.DirectoryPath, False)
+        WebData.Functions.Year = year
+        WebData.ProbableFormations.GetGazzetta(My.Application.Info.DirectoryPath, False)
     End Sub
 
     Private Sub Button6_Click(sender As Object, e As EventArgs) Handles Button6.Click
-        Dim wData As New WebData.ProbableFormations(year)
-        wData.GetFantacalcio(My.Application.Info.DirectoryPath, False)
+        WebData.Functions.Year = year
+        WebData.ProbableFormations.GetFantacalcio(My.Application.Info.DirectoryPath, False)
     End Sub
 
     Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click
-        Dim wData As New WebData.ProbableFormations(year)
-        wData.GetSky(My.Application.Info.DirectoryPath, False)
+        WebData.Functions.Year = year
+        WebData.ProbableFormations.GetSky(My.Application.Info.DirectoryPath, False)
     End Sub
 
     Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
-        Dim wData As New WebData.ProbableFormations(year)
-        wData.GetPianetaFantacalcio(My.Application.Info.DirectoryPath, False)
+        WebData.Functions.Year = year
+        WebData.ProbableFormations.GetPianetaFantacalcio(My.Application.Info.DirectoryPath, False)
     End Sub
 
     Private Sub Button9_Click(sender As Object, e As EventArgs) Handles Button9.Click
-        Dim wData As New WebData.ProbableFormations(year)
-        wData.GetCds(My.Application.Info.DirectoryPath, False)
+        WebData.Functions.Year = year
+        WebData.ProbableFormations.GetCds(My.Application.Info.DirectoryPath, False)
     End Sub
 
     Private Sub Button10_Click(sender As Object, e As EventArgs) Handles Button10.Click
         'Determino i link delle varie partite'
         Dim enc As String = "utf-8"
-        Dim html As String = WebData.GetPage("https://sport.sky.it/calcio/serie-a/probabili-formazioni/", "POST", "", enc)
+        Dim html As String = WebData.Functions.GetPage("https://sport.sky.it/calcio/serie-a/probabili-formazioni/", "POST", "", enc)
 
         If html <> "" Then
 
@@ -126,13 +74,13 @@ Public Class Form1
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-
+        Torneo.General.GetYearsAct(My.Application.Info.DirectoryPath)
         'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
         'DataTorneo.UpdateMatchData(My.Application.Info.DirectoryPath, "2025")
     End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-        Dim data As String = DataTorneo.GetRoseTorneo(My.Application.Info.DirectoryPath, year, 1)
+        Dim data As String = Torneo.Rose.GetRoseTorneo(My.Application.Info.DirectoryPath, year, 1)
         data = ""
     End Sub
 
@@ -140,7 +88,7 @@ Public Class Form1
         'Determino i link delle varie partite'
         Dim year = "2025-26"
         Dim enc As String = "utf-8"
-        Dim html As String = WebData.GetPage("https://www.legaseriea.it/api/stats/live/Classificacompleta?CAMPIONATO=A&STAGIONE=" & year & "&TURNO=UNICO&GIRONE=UNI", "POST", "", enc)
+        Dim html As String = WebData.Functions.GetPage("https://www.legaseriea.it/api/stats/live/Classificacompleta?CAMPIONATO=A&STAGIONE=" & year & "&TURNO=UNICO&GIRONE=UNI", "POST", "", enc)
         Dim strout As New System.Text.StringBuilder
         If html <> "" Then
             Dim jss As New System.Web.Script.Serialization.JavaScriptSerializer()
