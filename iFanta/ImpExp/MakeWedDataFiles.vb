@@ -12,7 +12,8 @@ Public Class MakeWedDataFiles
         flist.Add(MakePlayersFile(currlega.Teams.SelectMany(Function(x) x.Players.ToList).ToList(), GetTempDirectory() & "\rose.txt"))
 
         'Salvo la lista dei team'
-        flist.Add(MakeTeamsFile(currlega.Teams, GetTempDirectory() & "\team.txt"))
+        flist.Add(MakeTeamsFile(currlega.Teams, GetTempDirectory() & "\teams.json"))
+        'flist.Add(MakeTeamsFile(currlega.Teams, GetTempDirectory() & "\team.txt"))
 
         'Salvo la lista degli svincolati'
         flist.Add(MakePlayersFile(currlega.Teams(0).GetPlayer("SVINCOLATI", ""), GetTempDirectory() & "\svincolati.txt"))
@@ -61,11 +62,22 @@ Public Class MakeWedDataFiles
 
     Private Shared Function MakeTeamsFile(teams As List(Of Team), fname As String) As String
         'Salvo la lista dei team'
-        Dim sb As New System.Text.StringBuilder
+        Dim wteams As New Dictionary(Of Integer, WebTeam)
         For i As Integer = 0 To teams.Count - 1
-            sb.AppendLine(i & "|" & teams(i).Nome & "|" & teams(i).Allenatore & "|" & SystemFunction.Convertion.ConvertFileToBase64String(GetLegaCoatOfArmsLegsDirectory() & "\" & teams(i).IdTeam & "-16x16.png") & "|" & SystemFunction.Convertion.ConvertFileToBase64String(GetLegaCoatOfArmsLegsDirectory() & "\" & teams(i).IdTeam & "-24x24.png"))
+            Dim team As New WebTeam
+            team.idTeam = i
+            team.Name = teams(i).Nome
+            team.Coach = teams(i).Allenatore
+            team.President = teams(i).Presidente
+            wteams.Add(i, team)
         Next
-        IO.File.WriteAllText(fname, sb.ToString())
+        IO.File.WriteAllText(fname, JsonConvert.SerializeObject(wteams, Formatting.Indented))
+
+        'Dim sb As New System.Text.StringBuilder
+        'For i As Integer = 0 To teams.Count - 1
+        '    sb.AppendLine(i & "|" & teams(i).Nome & "|" & teams(i).Allenatore & "|" & SystemFunction.Convertion.ConvertFileToBase64String(GetLegaCoatOfArmsLegsDirectory() & "\" & teams(i).IdTeam & "-16x16.png") & "|" & SystemFunction.Convertion.ConvertFileToBase64String(GetLegaCoatOfArmsLegsDirectory() & "\" & teams(i).IdTeam & "-24x24.png"))
+        'Next
+        'IO.File.WriteAllText(fname, sb.ToString())
         Return fname
     End Function
 
@@ -143,5 +155,12 @@ Public Class MakeWedDataFiles
         IO.File.WriteAllText(fcup, JsonConvert.SerializeObject(cup, Formatting.Indented))
         Return fcup
     End Function
+
+    Public Class WebTeam
+        Public Property idTeam As Integer
+        Public Property Name As String
+        Public Property Coach As String
+        Public Property President As String
+    End Class
 
 End Class
