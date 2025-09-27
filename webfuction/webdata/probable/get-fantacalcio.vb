@@ -1,10 +1,12 @@
-﻿Namespace WebData
+﻿Imports webfuction.Torneo
+
+Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetFantacalcio(ServerPath As String, ReturnData As Boolean) As String
+        Shared Function GetFantacalcio(ReturnData As Boolean) As String
 
-            Dim dirt As String = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
-            Dim dird As String = ServerPath & "\web\" & CStr(Functions.Year) & "\data\pforma"
+            Dim dirt As String = Functions.DataPath & "\temp"
+            Dim dird As String = Functions.DataPath & "\data\pforma"
             Dim filet As String = dirt & "\pform-fantacalcio.txt"
             Dim filed As String = dird & "\pform-fantacalcio.txt"
             Dim filep As String = dird & "\pform-fantacalcio-player.txt"
@@ -15,25 +17,23 @@
             Dim sr As New IO.StreamWriter(filel)
             Dim rmsg As String = ""
 
-            Functions.Dirs = ServerPath
-
             Try
 
                 sr.WriteLine("Loading web player and matchs")
-                Players.Data.LoadPlayers(ServerPath & "\web\" & CStr(Functions.Year) & "\data\players-quote.txt", False)
-                MatchData.LoadWebMatchs(ServerPath & "\web\" & CStr(Functions.Year) & "\data\matchs\matchs-data.txt")
+                Players.Data.LoadPlayers(False)
+                MatchsData.LoadWebMatchs()
 
                 sr.WriteLine("Year -> " & Functions.Year)
                 sr.WriteLine("Calendario match:")
                 sr.WriteLine("---------------------------")
-                For Each t As String In MatchData.KeyMatchs.Keys
-                    sr.WriteLine(MatchData.KeyMatchs(t) & " -> " & t)
+                For Each t As String In MatchsData.KeyMatchs.Keys
+                    sr.WriteLine(MatchsData.KeyMatchs(t) & " -> " & t)
                 Next
                 sr.WriteLine("")
 
                 'Determino i link delle varie partite'
                 sr.WriteLine("Get Html page")
-                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/probabili-formazioni-serie-A", "POST", "")
+                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/probabili-formazioni-serie-A")
 
                 If html <> "" Then
 

@@ -2,19 +2,17 @@
 
     Public Class Ranking
 
-        Public Shared Function GetRanking(ServerPath As String, ReturnData As Boolean) As String
+        Public Shared Function GetRanking(ReturnData As Boolean) As String
 
-            Dim dirt As String = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
-            Dim dird As String = ServerPath & "\web\" & CStr(Functions.Year) & "\data"
+            Dim dirt As String = Functions.DataPath & "\temp"
+            Dim dird As String = Functions.DataPath & "\data"
             Dim filet As String = dirt & "\ranking-data.txt"
             Dim filed As String = dird & "\ranking-data.txt"
             Dim strdata As New System.Text.StringBuilder
 
-            Functions.Dirs = ServerPath
-
             Try
 
-                Dim html As String = Functions.GetPage("http://www.gazzetta.it/calcio/serie-a/classifica/", "POST", "")
+                Dim html As String = Functions.GetPage("http://www.gazzetta.it/calcio/serie-a/classifica/")
 
                 If html <> "" Then
 

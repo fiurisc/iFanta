@@ -1,35 +1,35 @@
-﻿Imports System.Text
+﻿Imports System.IO
+Imports System.Runtime.InteropServices.ComTypes
+Imports System.Text
 
 Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetGazzetta(ServerPath As String, ReturnData As Boolean) As String
+        Shared Function GetGazzetta(ReturnData As Boolean) As String
 
-            Dim dirt As String = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
-            Dim dird As String = ServerPath & "\web\" & CStr(Functions.Year) & "\data\pforma"
-            Dim filet As String = dirt & "\pform-gazzetta.txt"
-            Dim filed As String = dird & "\pform-gazzetta.txt"
-            Dim filep As String = dird & "\pform-gazzetta-player.txt"
-            Dim filel As String = dird & "\pform-gazzetta-log.txt"
             Dim site As String = "Gazzetta"
-            Dim currgg As Integer = -1
-            Dim sr As New IO.StreamWriter(filel)
-            Dim rmsg As String = ""
+            Dim fileJson As String = GetDataFileName(site)
+            Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
+            Dim fileData As String = dirData & site.ToLower() & ".txt"
+            Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
+            Dim fileLog As String = dirData & site.ToLower() & ".log"
 
-            Functions.Dirs = ServerPath
+            Dim currgg As Integer = -1
+            Dim sr As New IO.StreamWriter(fileLog)
+            Dim rmsg As String = ""
 
             Try
 
-                Players.Data.LoadPlayers(ServerPath & "\web\" & CStr(Functions.Year) & "\data\players-quote.txt", False)
-                MatchData.LoadWebMatchs(ServerPath & "\web\" & CStr(Functions.Year) & "\data\matchs\matchs-data.txt")
+                Players.Data.LoadPlayers(False)
+                MatchsData.LoadWebMatchs()
 
-                Dim html As String = Functions.GetPage("http://www.gazzetta.it/Calcio/prob_form/", "POST", "", "UTF-8")
+                Dim html As String = Functions.GetPage("http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
 
                 If html <> "" Then
 
-                    IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding("UTF-8"))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding("UTF-8"))
 
-                    Dim line() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding("UTF-8"))
+                    Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("UTF-8"))
                     Dim start As Boolean = False
                     Dim wpd As New Dictionary(Of String, wPlayer)
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
@@ -41,8 +41,8 @@ Namespace WebData
                     sr.WriteLine("Year -> " & Functions.Year)
                     sr.WriteLine("Calendario match:")
                     sr.WriteLine("---------------------------")
-                    For Each t As String In MatchData.KeyMatchs.Keys
-                        sr.WriteLine(MatchData.KeyMatchs(t) & " -> " & t)
+                    For Each t As String In MatchsData.KeyMatchs.Keys
+                        sr.WriteLine(MatchsData.KeyMatchs(t) & " -> " & t)
                     Next
                     sr.WriteLine("")
 
@@ -66,9 +66,9 @@ Namespace WebData
 
                                     sr.WriteLine("match trovato -> " & match)
 
-                                    For Each key As String In MatchData.KeyMatchs.Keys
+                                    For Each key As String In MatchsData.KeyMatchs.Keys
                                         If key = match Then
-                                            currgg = MatchData.KeyMatchs(key)
+                                            currgg = MatchsData.KeyMatchs(key)
                                             sr.WriteLine("giornata associata -> " & CStr(currgg))
                                             Exit For
                                         End If
@@ -114,7 +114,7 @@ Namespace WebData
                                 End If
 
                                 If value <> "" AndAlso value.Contains("Nessuno") = False Then
-                                    Dim list() As String = value.Trim().Split(",")
+                                    Dim list() As String = value.Trim().Split(CChar(","))
                                     For Each nome In list
                                         Try
                                             Dim info As String = ""
@@ -139,8 +139,8 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(currgg, wpd, filed)
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filep)
+                        Dim out As String = WriteData(currgg, wpd, fileData)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
 
@@ -153,7 +153,11 @@ Namespace WebData
 
             sr.Close()
 
-            Return rmsg
+            If ReturnData Then
+                Return "</br><span style=color:red;font-size:bold;'>Probabili formazioni gazzetta:</span></br>" & rmsg.Replace(System.Environment.NewLine, "</br>") & "</br>"
+            Else
+                Return "</br><span style=color:red;font-size:bold;'>Probabili formazioni gazzetta:</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>"
+            End If
 
         End Function
     End Class

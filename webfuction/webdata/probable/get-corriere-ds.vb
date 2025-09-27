@@ -1,10 +1,12 @@
-﻿Namespace WebData
+﻿Imports webfuction.Torneo
+
+Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetCds(ServerPath As String, ReturnData As Boolean) As String
+        Shared Function GetCds(ReturnData As Boolean) As String
 
-            Dim dirt As String = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
-            Dim dird As String = ServerPath & "\web\" & CStr(Functions.Year) & "\data\pforma"
+            Dim dirt As String = Functions.DataPath & "\temp"
+            Dim dird As String = Functions.DataPath & "\data\pforma"
             Dim filet As String = dirt & "\pform-cds.txt"
             Dim filed As String = dird & "\pform-cds.txt"
             Dim filep As String = dird & "\pform-cds-player.txt"
@@ -15,19 +17,16 @@
             Dim currgg As Integer = -1
             Dim sr As New IO.StreamWriter(filel)
             Dim rmsg As String = ""
-
-            Functions.Dirs = ServerPath
-
             Try
 
-                Players.Data.LoadPlayers(ServerPath & "\web\" & CStr(Functions.Year) & "\data\players-quote.txt", False)
-                MatchData.LoadWebMatchs(ServerPath & "\web\" & CStr(Functions.Year) & "\data\matchs\matchs-data.txt")
+                Players.Data.LoadPlayers(False)
+                MatchsData.LoadWebMatchs()
 
                 sr.WriteLine("Year -> " & Functions.Year)
                 sr.WriteLine("Calendario match:")
                 sr.WriteLine("---------------------------")
-                For Each t As String In MatchData.KeyMatchs.Keys
-                    sr.WriteLine(MatchData.KeyMatchs(t) & " -> " & t)
+                For Each t As String In MatchsData.KeyMatchs.Keys
+                    sr.WriteLine(MatchsData.KeyMatchs(t) & " -> " & t)
                 Next
                 sr.WriteLine("")
 
@@ -36,7 +35,7 @@
                 Dim linkp As New List(Of String)
 
                 'Determino i link delle varie partite'
-                Dim html As String = Functions.GetPage("https://www.corrieredellosport.it/calcio/serie-a/probabili-formazioni", "POST", "")
+                Dim html As String = Functions.GetPage("https://www.corrieredellosport.it/calcio/serie-a/probabili-formazioni")
 
                 If html <> "" Then
 
@@ -63,9 +62,9 @@
 
                                         sr.WriteLine("match trovato -> " & match)
 
-                                        For Each key As String In MatchData.KeyMatchs.Keys
+                                        For Each key As String In MatchsData.KeyMatchs.Keys
                                             If key = match Then
-                                                currgg = MatchData.KeyMatchs(key)
+                                                currgg = MatchsData.KeyMatchs(key)
                                                 sr.WriteLine("giornata associata -> " & CStr(currgg))
                                                 Exit For
                                             End If
@@ -109,12 +108,12 @@
 
             Try
 
-                Dim dirt As String = Functions.Dirs & "\web\" & CStr(Functions.Year) & "\temp"
+                Dim dirt As String = Functions.DataPath & "\temp"
                 Dim filet As String = dirt & "\pform-cds-ind-" & indmatch & ".txt"
                 Dim enc As String = "utf-8"
 
                 'Determino i link delle varie partite'
-                Dim html As String = Functions.GetPage(link, "POST", "", enc)
+                Dim html As String = Functions.GetPage(link, enc)
 
                 If html <> "" Then
 

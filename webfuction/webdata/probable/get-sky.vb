@@ -1,10 +1,10 @@
 ﻿Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetSky(ServerPath As String, ReturnData As Boolean) As String
+        Shared Function GetSky(ReturnData As Boolean) As String
 
-            Dim dirt As String = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
-            Dim dird As String = ServerPath & "\web\" & CStr(Functions.Year) & "\data\pforma"
+            Dim dirt As String = Functions.DataPath & "\temp"
+            Dim dird As String = Functions.DataPath & "\data\pforma"
             Dim filet As String = dirt & "\pform-sky.txt"
             Dim filed As String = dird & "\pform-sky.txt"
             Dim filep As String = dird & "\pform-sky-player.txt"
@@ -12,14 +12,12 @@
             Dim enc As String = "utf-8"
             Dim currgg As Integer = -1
 
-            Functions.Dirs = ServerPath
-
             Try
 
-                Players.Data.LoadPlayers(ServerPath & "\web\" & CStr(Functions.Year) & "\data\players-quote.txt", False)
-                MatchData.LoadWebMatchs(ServerPath & "\web\" & CStr(Functions.Year) & "\data\matchs\matchs-data.txt")
+                Players.Data.LoadPlayers(False)
+                MatchsData.LoadWebMatchs()
 
-                Dim html As String = Functions.GetPage("https://sport.sky.it/calcio/serie-a/probabili-formazioni", "POST", "")
+                Dim html As String = Functions.GetPage("https://sport.sky.it/calcio/serie-a/probabili-formazioni")
 
                 If html <> "" Then
 
@@ -28,7 +26,6 @@
                     Dim lines() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding(enc))
                     Dim wpd As New Dictionary(Of String, wPlayer)
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
-
                     Dim sq As New List(Of String)
                     Dim sqid As Integer = 0
                     Dim pstate As String = "Titolare"
@@ -45,7 +42,7 @@
                             If line.Contains("Titolari</td>") Then
                                 sez = "header"
                                 sq.Clear()
-                                Dim s() As String = line.Split("</div>")
+                                Dim s() As String = line.Split(New String() {"</div>"}, StringSplitOptions.None)
                                 s = s
                             ElseIf line.Contains("<div class=""content"">") Then
                                 sez = "player"
@@ -80,9 +77,9 @@
 
                                             Dim match As String = sq(0) & "-" & sq(1)
 
-                                            For Each key As String In MatchData.KeyMatchs.Keys
+                                            For Each key As String In MatchsData.KeyMatchs.Keys
                                                 If key = match Then
-                                                    currgg = MatchData.KeyMatchs(key)
+                                                    currgg = MatchsData.KeyMatchs(key)
                                                     Exit For
                                                 End If
                                             Next

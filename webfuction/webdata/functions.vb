@@ -9,10 +9,16 @@ Imports System.Web.Script.Serialization
 Namespace WebData
     Public Class Functions
 
-        Public Shared Property Year As Integer = -1
-        Public Shared Property Dirs As String = ""
+        Friend Shared Property Year As String = ""
+        Public Shared Property DataPath As String = ""
 
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
+
+        Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String)
+            DataPath = rootDataPath & "\" & Year & "\"
+            Torneo.Functions.Year = Year
+            Torneo.Functions.InitPath(rootDataPath, rootdatabasePath)
+        End Sub
 
         Public Shared Sub WriteLog(dirs As String, ByVal Form As String, ByVal SubName As String, ByVal Text As String)
             Try
@@ -24,18 +30,18 @@ Namespace WebData
 
         Public Shared Sub WriteError(ByVal Form As String, ByVal SubName As String, ByVal ErrMsg As String)
             Try
-                If IO.Directory.Exists(Dirs) Then IO.File.AppendAllText(Dirs & "\error.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & Form & "|" & SubName & "|" & ErrMsg & System.Environment.NewLine)
+                If IO.Directory.Exists(DataPath) Then IO.File.AppendAllText(DataPath & "\error.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & Form & "|" & SubName & "|" & ErrMsg & System.Environment.NewLine)
             Catch ex As Exception
 
             End Try
         End Sub
 
-        Public Shared Sub MakeDirectory(ServerPath As String, Year As Integer)
+        Public Shared Sub MakeDirectory()
 
-            Dim dirt As String = ServerPath & "\web\" & CStr(Year) & "\temp"
-            Dim dird As String = ServerPath & "\web\" & CStr(Year) & "\data"
-            Dim dirdpf As String = ServerPath & "\web\" & CStr(Year) & "\data\pforma"
-            Dim dirdmt As String = ServerPath & "\web\" & CStr(Year) & "\data\matchs"
+            Dim dirt As String = DataPath & "\temp"
+            Dim dird As String = DataPath & "\data"
+            Dim dirdpf As String = DataPath & "\data\pforma"
+            Dim dirdmt As String = DataPath & "\data\matchs"
 
             If IO.Directory.Exists(dirt) = False Then IO.Directory.CreateDirectory(dirt)
             If IO.Directory.Exists(dird) = False Then IO.Directory.CreateDirectory(dird)
@@ -43,6 +49,18 @@ Namespace WebData
             If IO.Directory.Exists(dirdmt) = False Then IO.Directory.CreateDirectory(dirdmt)
 
         End Sub
+
+        Public Shared Function ConvertListIntegerToString(List As List(Of Integer), Separator As String) As String
+            Dim str As String = ""
+            For i As Integer = 0 To List.Count - 1
+                str = str & Separator & List(i)
+            Next
+            If str.Length > 0 Then
+                Return str.Substring(1)
+            Else
+                Return ""
+            End If
+        End Function
 
         Public Shared Function ConvertListStringToString(List As List(Of String), Separator As String) As String
             Dim str As String = ""
@@ -70,32 +88,49 @@ Namespace WebData
             End Using
         End Function
 
-        Public Shared Function GetCustomHashCode(obj As Object) As Long
+        Public Shared Function GetCustomHashCode(obj As Object) As String
 
-            If obj Is Nothing Then Return 0
+            If obj Is Nothing Then Return ""
 
-            Dim hash As Long = 17 ' Usa Long per evitare overflow immediato
+            Dim hash As New StringBuilder
             Dim props As PropertyInfo() = obj.GetType().GetProperties(BindingFlags.Public Or BindingFlags.Instance)
 
             For Each prop In props
                 Dim value = prop.GetValue(obj, Nothing)
                 If value IsNot Nothing Then
-                    hash = hash * 23 + value.GetHashCode()
+                    hash.Append(value.ToString())
                 End If
             Next
 
             ' Riduci il valore a Integer in modo sicuro
-            Return Math.Abs(CLng(hash Mod Long.MaxValue))
+            Return hash.ToString()
 
         End Function
 
-        Public Shared Function SerializzaOggetto(obj As Object) As String
+
+        Public Shared Function DeserializeJson(Of T)(json As String) As T
+            Dim serializer As New JavaScriptSerializer()
+            Try
+                ' Esegue la deserializzazione JSON -> T
+                Dim obj As T = serializer.Deserialize(Of T)(json)
+                Return obj
+            Catch ex As Exception
+                Return Nothing
+            End Try
+        End Function
+
+        Public Shared Function SerializzaOggetto(obj As Object, compatta As Boolean) As String
             If obj Is Nothing Then Return "{}"
             Dim serializer As New JavaScriptSerializer()
-            Return serializer.Serialize(obj)
+            Dim json As String = serializer.Serialize(obj)
+            If compatta Then
+                Return serializer.Serialize(obj)
+            Else
+                Return FormatJson(serializer.Serialize(obj))
+            End If
         End Function
 
-        Public Shared Function FormatJson(json As String) As String
+        Private Shared Function FormatJson(json As String) As String
 
             Dim indent As Integer = 0
             Dim quoted As Boolean = False
@@ -103,7 +138,7 @@ Namespace WebData
 
             For Each ch As Char In json
                 Select Case ch
-                    Case """"
+                    Case """"c
                         sb.Append(ch)
                         quoted = Not quoted
                     Case "{"c, "["c
@@ -136,6 +171,30 @@ Namespace WebData
 
             Return sb.ToString()
         End Function
+
+        Public Shared Function CompactJson(jsonFormattato As String) As String
+            Dim risultato As New Text.StringBuilder()
+            Dim dentroStringa As Boolean = False
+
+            For Each c As Char In jsonFormattato
+                Select Case c
+                    Case """"c
+                        ' Toggle stato: dentro o fuori da una stringa
+                        risultato.Append(c)
+                        dentroStringa = Not dentroStringa
+                    Case " "c, vbTab(0), vbCr(0), vbLf(0)
+                        ' Ignora spazi e formattazione se fuori da una stringa
+                        If dentroStringa Then
+                            risultato.Append(c)
+                        End If
+                    Case Else
+                        risultato.Append(c)
+                End Select
+            Next
+
+            Return risultato.ToString()
+        End Function
+
 
         Public Shared Function NormalizeText(ByVal txt As String) As String
 
@@ -205,10 +264,46 @@ Namespace WebData
             Squadra = Squadra.ToUpper.Replace("HELLASVERONA", "VERONA").Trim
             Squadra = Squadra.ToUpper.Replace("HELLAS-VERONA", "VERONA").Trim
             Squadra = Squadra.ToUpper.Replace("HELLAS VERONA", "VERONA").Trim
-            If Squadra = "GEN" Then Squadra = Squadra = "GENOA"
-            If Squadra = "CAG" Then Squadra = Squadra = "CAGLIARI"
+            If Squadra = "GEN" Then Squadra = "GENOA"
+            If Squadra = "CAG" Then Squadra = "CAGLIARI"
             If Squadra.ToUpper = "JUVE" Then Squadra = "JUVENTUS"
             Return Squadra
+        End Function
+
+        Public Shared Function GetTeamNameFromCode(squadra As String) As String
+            Select Case squadra
+                Case "ATA" : squadra = "ATALANTA"
+                Case "BAR" : squadra = "BARI"
+                Case "BOL" : squadra = "BOLOGNA"
+                Case "CAG" : squadra = "CAGLIARI"
+                Case "CAT" : squadra = "CATANIA"
+                Case "COM" : squadra = "COMO"
+                Case "CRE" : squadra = "CREMONESE"
+                Case "EMP" : squadra = "EMPOLI"
+                Case "FIO" : squadra = "FIORENTINA"
+                Case "FRO" : squadra = "FROSINONE"
+                Case "GEN" : squadra = "GENOA"
+                Case "INT" : squadra = "INTER"
+                Case "JUV" : squadra = "JUVENTUS"
+                Case "LAZ" : squadra = "LAZIO"
+                Case "LEC" : squadra = "LECCE"
+                Case "MIL" : squadra = "MILAN"
+                Case "MON" : squadra = "MONZA"
+                Case "NAP" : squadra = "NAPOLI"
+                Case "PAL" : squadra = "PALERMO"
+                Case "PAR" : squadra = "PARMA"
+                Case "PIS" : squadra = "PISA"
+                Case "ROM" : squadra = "ROMA"
+                Case "SAL" : squadra = "SALERNITANA"
+                Case "SAM" : squadra = "SAMPDORIA"
+                Case "SAS" : squadra = "SASSUOLO"
+                Case "SPE" : squadra = "SPEZIA"
+                Case "TOR" : squadra = "TORINO"
+                Case "UDI" : squadra = "UDINESE"
+                Case "VEN" : squadra = "VENEZIA"
+                Case "VER" : squadra = "VERONA"
+            End Select
+            Return squadra
         End Function
 
         Public Shared Function GetNatCode(natcode As String) As String
@@ -358,9 +453,13 @@ Namespace WebData
             End Try
         End Sub
 
-        Public Shared Function GetPage(ByVal Url As String, ByVal Method As String, ByVal PostData As String, Optional Encoding As String = "ISO-8859-1") As String
+        Public Shared Function GetPage(ByVal Url As String, Optional Encoding As String = "ISO-8859-1") As String
 
             Dim responseFromServer As String = ""
+
+#If DEBUG Then
+            Url = "https://www.ifantacalcio.it/site.php?url=" & Url
+#End If
 
             Try
 

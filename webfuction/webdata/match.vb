@@ -1,16 +1,16 @@
 ﻿Imports System.Text.RegularExpressions
+
 Namespace WebData
-    Public Class MatchData
+    Public Class MatchsData
 
         Private Shared thrmatch As New List(Of Threading.Thread)
-        Private Shared diclinkday As New SortedDictionary(Of Integer, String)
-        Private Shared diclinkdaymatch As New SortedDictionary(Of Integer, Dictionary(Of Integer, String))
+        Private Shared diclinkdaymatch As New SortedDictionary(Of String, Dictionary(Of String, String))
         Private Shared dirt As String = ""
         Private Shared dird As String = ""
-        Private Shared strdata As New SortedDictionary(Of Integer, System.Text.StringBuilder)
 
-        Private Shared matchs As New SortedDictionary(Of Integer, SortedDictionary(Of Integer, Match))
-        Private Shared matchsdetails As New SortedDictionary(Of Integer, SortedDictionary(Of Integer, Dictionary(Of String, Dictionary(Of String, Player))))
+        Private Shared matchs As New SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match))
+        Private Shared matchsplayers As New SortedDictionary(Of String, SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
+        Private Shared matchsevent As New SortedDictionary(Of String, SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
 
         Public Shared Property KeyMatchs As New Dictionary(Of String, Integer)
 
@@ -18,26 +18,46 @@ Namespace WebData
             KeyMatchs.Clear()
         End Sub
 
-        Public Shared Sub LoadWebMatchs(fname As String)
+        Private Shared Sub SetFolder()
+            dirt = Functions.DataPath & "temp\"
+            dird = Functions.DataPath & "data\matchs\"
+        End Sub
+
+        Shared Function GetMatchFileName() As String
+            SetFolder()
+            Return dird & "matchs-data.json"
+        End Function
+
+        Shared Function GetMatchPlayersFileName() As String
+            SetFolder()
+            Return dird & "matchs-players-data.json"
+        End Function
+
+        Shared Function GetMatchPlayersDayFileName(day As String) As String
+            Return dird & "matchs-players-data-" & day & ".json"
+        End Function
+
+        Shared Function GetMatchEventFileName() As String
+            SetFolder()
+            Return dird & "matchs-events-data.json"
+        End Function
+
+        Public Shared Sub LoadWebMatchs()
 
             If KeyMatchs.Count = 0 Then
 
+                Dim fname As String = GetMatchFileName()
+
                 If IO.File.Exists(fname) Then
 
-                    Dim lines() As String = IO.File.ReadAllLines(fname)
+                    Dim j As String = IO.File.ReadAllText(fname)
+                    Dim dicdata As SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match)) = Functions.DeserializeJson(Of SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match)))(j)
 
-                    For i As Integer = 0 To lines.Length - 1
-                        Dim s() As String = lines(i).Split(CChar("|"))
-                        If s.Length > 3 Then
-
-                            Dim gg As Integer = CInt(s(0)) 'giornata'
-                            Dim t1 As String = s(2) 'squadra in casa'
-                            Dim t2 As String = s(3) 'squadra fuori casa'
-                            Dim key As String = t1 & "-" & t2
-
-                            If KeyMatchs.ContainsKey(key) = False Then KeyMatchs.Add(key, gg)
-
-                        End If
+                    For Each d As String In dicdata.Keys
+                        For Each mid As String In dicdata(d).Keys
+                            Dim key As String = dicdata(d)(mid).TeamA & "-" & dicdata(d)(mid).TeamB
+                            If KeyMatchs.ContainsKey(key) = False Then KeyMatchs.Add(key, CInt(d))
+                        Next
                     Next
                 End If
 
@@ -45,24 +65,37 @@ Namespace WebData
 
         End Sub
 
-        Shared Function GetCalendarMatchs(ServerPath As String, ReturnData As Boolean) As String
+        Shared Function GetDataMatchs(ReturnData As Boolean) As String
 
-            Dim filed As String = ""
-            Dim strdataall As New System.Text.StringBuilder
+            Dim strresp As New System.Text.StringBuilder
+            Dim year As String = Functions.Year
 
-            Functions.Dirs = ServerPath
-            dirt = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
-            dird = ServerPath & "\web\" & CStr(Functions.Year) & "\data\matchs"
-            filed = dird & "\matchs-data.txt"
+            Functions.MakeDirectory()
+            Players.Data.LoadPlayers(False)
 
-            Functions.MakeDirectory(ServerPath, Functions.Year)
-            Players.Data.LoadPlayers(ServerPath & "\web\" & CStr(Functions.Year) & "\data\players-quote.txt", False)
+            matchs.Clear()
+            matchsplayers.Clear()
+            matchsevent.Clear()
+
+            'Leggo il calendario delle partite con i risultati'
+            strresp.AppendLine(GetCalendarMatchs(ReturnData))
+
+            'Leggo i tabelli delle partite'
+            Call GetMatchsPlayersData()
+
+            Return strresp.ToString()
+
+        End Function
+
+        Private Shared Function GetCalendarMatchs(ReturnData As Boolean) As String
 
             Try
 
+                Dim filed As String = GetMatchFileName()
+
                 'Creo la lista di thread da eseguire'
                 thrmatch.Clear()
-                For i As Integer = 1 To 6
+                For i As Integer = 1 To 2
                     Dim t As New Threading.Thread(AddressOf GetMatchsDay)
                     t.Name = CStr(i)
                     thrmatch.Add(t)
@@ -77,44 +110,87 @@ Namespace WebData
                     System.Threading.Thread.Sleep(100)
                 Next
 
-                If Torneo.General.DataOnDb Then
-                    Torneo.General.UpdateMatchData(ServerPath, Functions.Year, matchs)
+                If Torneo.General.dataFromDatabase Then
+                    Torneo.MatchsData.UpdateMatchData(matchs)
                 End If
 
-                For Each key As Integer In strdata.Keys
-                    strdataall.Append(strdata(key).ToString)
-                Next
-
-                IO.File.WriteAllText(filed, strdataall.ToString)
+                IO.File.WriteAllText(filed, Functions.SerializzaOggetto(matchs, False))
 
             Catch ex As Exception
                 Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
                 Return ""
             End Try
 
-            Call GetMatchsScoresheet()
-
             If ReturnData Then
-                strdataall.Append("</br><span style=color:red;font-size:bold;'>Detail match data:</span></br>")
-                For Each key As Integer In strdata.Keys
-                    strdataall.Append(strdata(key).ToString)
-                Next
-                Return "</br><span style=color:red;font-size:bold;'>Match data (" & Functions.Year & "):</span></br>" & strdataall.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"
+                Return "</br><span style=color:red;font-size:bold;'>Match data (" & Functions.Year & "):</span></br>" & WebData.Functions.SerializzaOggetto(matchs, False).Replace(System.Environment.NewLine, "</br>") & "</br>"
             Else
                 Return ("</br><span style=color:red;font-size:bold;'>Match data (" & Functions.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br><span style=color:red;font-size:bold;'>Detail match data:</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
             End If
 
         End Function
 
+        Private Shared Sub GetMatchsPlayersData()
+
+            Try
+
+                Dim filedetd As String = GetMatchPlayersFileName()
+
+                'Carico i dati dell'ultima lettura'
+                Dim lastday As Integer = GetLastMatchsDayLoaded()
+
+                If diclinkdaymatch.Count > 0 Then
+
+                    'Creo la lista di thread da eseguire'
+                    thrmatch.Clear()
+                    For Each d As String In diclinkdaymatch.Keys
+                        'Ricarico i dati se nella precedente acquisizione non e' sono stati prelevati i tabellini della giornata
+                        'oppure se la giornata non e' piu' vecchia di di due giornate oppure se non tutti i match della giornata
+                        'stati disputati'
+                        If CInt(d) > lastday - 2 OrElse diclinkdaymatch(d).Count < 10 Then
+                            Dim t As New Threading.Thread(AddressOf GetMatchsPlayersDataByDay)
+                            t.Name = CStr(d)
+                            thrmatch.Add(t)
+                        End If
+                    Next
+
+                    'Lancio i vari Thread'
+                    For i As Integer = 0 To thrmatch.Count - 1
+                        thrmatch(i).Priority = Threading.ThreadPriority.Normal
+                        thrmatch(i).Start()
+                        thrmatch(i).Join()
+                        System.Threading.Thread.Sleep(100)
+                    Next
+
+                    Dim dicalldata As New SortedDictionary(Of String, SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
+
+                    For i As Integer = 1 To 38
+                        Dim fday As String = GetMatchPlayersDayFileName(i.ToString())
+                        If IO.File.Exists(fday) Then
+                            Dim dicdata As SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))) = Functions.DeserializeJson(Of SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))(IO.File.ReadAllText(fday))
+                            dicalldata.Add(CStr(i), dicdata)
+                        End If
+                    Next
+
+                    If Torneo.General.dataFromDatabase Then
+                        Torneo.MatchsData.UpdateMatchDataPlayers(matchsplayers)
+                    End If
+
+                    IO.File.WriteAllText(filedetd, Functions.SerializzaOggetto(dicalldata, False))
+
+                End If
+            Catch ex As Exception
+                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
+        End Sub
+
         Private Shared Sub GetMatchsDay()
             Try
                 'Determino la giornata di riferimento'
-                Dim d As Integer = CInt(Threading.Thread.CurrentThread.Name)
-
+                Dim d As String = Threading.Thread.CurrentThread.Name
                 Dim datamatch As New Dictionary(Of String, String)
-                Dim filet As String = dirt & "\match-day-" & CStr(d) & ".txt"
-                Dim filed As String = dirt & "\match-day-" & CStr(d) & ".txt"
-                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/serie-a/calendario/" & CStr(d), "POST", "")
+                Dim filet As String = dirt & "match-day-" & d & ".txt"
+                Dim filed As String = dirt & "match-day-" & d & ".txt"
+                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/serie-a/calendario/" & d)
 
                 If html <> "" Then
 
@@ -127,8 +203,6 @@ Namespace WebData
                     Dim matchplayed As Boolean = False
                     Dim goal1 As String = ""
                     Dim goal2 As String = ""
-
-                    strdata.Add(d, New System.Text.StringBuilder)
 
                     IO.File.WriteAllText(filet, html.Replace(vbCr, ""))
                     line = IO.File.ReadAllLines(filet)
@@ -164,25 +238,22 @@ Namespace WebData
                                     goal2 = ""
                                 End If
 
-                                If datamatch.ContainsKey(d & "-" & mtach) = False Then
-                                    datamatch.Add(d & "-" & mtach, d & "|" & matchid & "|" & mtach.Replace("-", "|") & "|" & dt.ToString("yyyy/MM/dd HH:mm:ss") & "|" & goal1 & "|" & goal2)
-                                    If matchs.ContainsKey(d) = False Then matchs.Add(d, New SortedDictionary(Of Integer, Match))
-                                    If matchs(d).ContainsKey(matchid) = False Then
-                                        Dim teams() As String = mtach.Split("-")
-                                        Dim m As New Match
-                                        m.TeamA = teams(0)
-                                        m.TeamB = teams(1)
-                                        m.Time = dt
-                                        m.GoalA = goal1
-                                        m.GoalB = goal2
-                                        matchs(d).Add(matchid, m)
-                                    End If
+                                If matchs.ContainsKey(d) = False Then matchs.Add(d, New SortedDictionary(Of String, Torneo.MatchsData.Match))
+                                If matchs(d).ContainsKey(matchid.ToString()) = False Then
+                                    Dim teams() As String = mtach.Split(CChar("-"))
+                                    Dim m As New Torneo.MatchsData.Match
+                                    m.TeamA = teams(0)
+                                    m.TeamB = teams(1)
+                                    m.Time = dt.ToString("yyyy/MM/dd HH:mm:ss")
+                                    m.GoalA = goal1
+                                    m.GoalB = goal2
+                                    matchs(d).Add(matchid.ToString(), m)
                                 End If
 
                                 If matchplayed Then
                                     Dim linktab As String = Regex.Match(line(i), "(?<=content="").*(?="" />)").Value
-                                    If diclinkdaymatch.ContainsKey(d) = False Then diclinkdaymatch.Add(d, New Dictionary(Of Integer, String))
-                                    If diclinkdaymatch(d).ContainsKey(matchid) = False Then diclinkdaymatch(d).Add(matchid, linktab)
+                                    If diclinkdaymatch.ContainsKey(d) = False Then diclinkdaymatch.Add(d, New Dictionary(Of String, String))
+                                    If diclinkdaymatch(d).ContainsKey(matchid.ToString()) = False Then diclinkdaymatch(d).Add(matchid.ToString(), linktab)
                                 End If
                                 matchid += 1
                                 goal1 = ""
@@ -193,63 +264,6 @@ Namespace WebData
                     Next
                 End If
 
-                For Each key As String In datamatch.Keys
-                    strdata(d).AppendLine(datamatch(key))
-                Next
-
-            Catch ex As Exception
-                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
-            End Try
-        End Sub
-
-        Private Shared Sub GetMatchsScoresheet()
-
-            Try
-                Dim strdataall As New System.Text.StringBuilder
-                Dim filedetd As String = dird & "\matchs-detail-data.txt"
-
-                strdata.Clear()
-
-                'Carico i dati dell'ultima lettura'
-                Dim lastday As Integer = GetLastMatchsDayLoaded()
-
-                If diclinkdaymatch.Count > 0 Then
-
-                    'Creo la lista di thread da eseguire'
-                    thrmatch.Clear()
-                    For Each d As Integer In diclinkdaymatch.Keys
-                        'Ricarico i dati se nella precedente acquisizione non e' sono stati prelevati i tabellini della giornata
-                        'oppure se la giornata non e' piu' vecchia di di due giornate oppure se non tutti i match della giornata
-                        'stati disputati'
-                        If d > lastday - 2 OrElse diclinkdaymatch(d).Count < 10 Then
-                            If strdata.ContainsKey(d) Then strdata.Remove(d)
-                            Dim t As New Threading.Thread(AddressOf GetDayMatchsScoresheet)
-                            t.Name = CStr(d)
-                            thrmatch.Add(t)
-                        End If
-                    Next
-
-                    'Lancio i vari Thread'
-                    For i As Integer = 0 To thrmatch.Count - 1
-                        thrmatch(i).Priority = Threading.ThreadPriority.Normal
-                        thrmatch(i).Start()
-                        thrmatch(i).Join()
-                        System.Threading.Thread.Sleep(100)
-                    Next
-
-                    For i As Integer = 1 To 38
-                        Dim fday As String = dird & "\matchs-detail-data-" & i & ".txt"
-                        If IO.File.Exists(fday) Then
-                            Dim line() As String = IO.File.ReadAllLines(fday)
-                            For j As Integer = 0 To line.Length - 1
-                                strdataall.AppendLine(line(j))
-                            Next
-                        End If
-                    Next
-
-                    IO.File.WriteAllText(filedetd, strdataall.ToString)
-
-                End If
             Catch ex As Exception
                 Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
@@ -257,45 +271,46 @@ Namespace WebData
 
         Private Shared Function GetLastMatchsDayLoaded() As Integer
             For i As Integer = 1 To 38
-                If IO.File.Exists(dird + "\matchs-detail-data-" & i & ".txt") = False Then
+                If IO.File.Exists(GetMatchPlayersDayFileName(i.ToString())) = False Then
                     Return i - 1
                 End If
             Next
             Return -1
         End Function
 
-        Private Shared Sub GetDayMatchsScoresheet()
+        Private Shared Sub GetMatchsPlayersDataByDay()
             Try
                 'Determino la giornata di riferimento'
-                Dim d As Integer = CInt(Threading.Thread.CurrentThread.Name)
+                Dim d As String = Threading.Thread.CurrentThread.Name
 
-                strdata.Add(d, New System.Text.StringBuilder)
-                If matchsdetails.ContainsKey(d) = False Then matchsdetails.Add(d, New SortedDictionary(Of Integer, Dictionary(Of String, Dictionary(Of String, Player))))
+                If matchsplayers.ContainsKey(d) = False Then matchsplayers.Add(d, New SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
+                If matchsevent.ContainsKey(d) = False Then matchsevent.Add(d, New SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
 
-                For Each m As Integer In diclinkdaymatch(d).Keys
-                    Call GetDayMatchScoresheet(d, m, diclinkdaymatch(d)(m))
+                For Each m As String In diclinkdaymatch(d).Keys
+                    Call GetMatchsPlayersDataByDayMatchId(d, m, diclinkdaymatch(d)(m))
                 Next
 
-                IO.File.WriteAllText(dird & "\matchs-detail-data-" & d & ".txt", strdata(d).ToString)
-                'IO.File.WriteAllText(dird & "\matchs-detail-data-" & d & ".json", JsonConvert.SerializeObject(matchsdetails(d), Formatting.Indented))
+                IO.File.WriteAllText(GetMatchPlayersDayFileName(d), WebData.Functions.SerializzaOggetto(matchsplayers(d), False))
 
             Catch ex As Exception
                 Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
         End Sub
 
-        Private Shared Sub GetDayMatchScoresheet(day As Integer, MatchId As Integer, Link As String)
+        Private Shared Sub GetMatchsPlayersDataByDayMatchId(day As String, MatchId As String, Link As String)
 
-            Dim filet As String = dirt & "\match-day-" & day & "-matchid-" & MatchId & ".txt"
+            Dim filet As String = dirt & "match-day-" & day & "-matchid-" & MatchId & ".txt"
             Dim str As New System.Text.StringBuilder
 
             Try
 
-                If matchsdetails(day).ContainsKey(MatchId) = False Then matchsdetails(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Player)))
+                If matchsplayers(day).ContainsKey(MatchId) = False Then matchsplayers(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+                If matchsevent(day).ContainsKey(MatchId) = False Then matchsevent(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)))
 
-                Dim match As Dictionary(Of String, Dictionary(Of String, Player)) = matchsdetails(day)(MatchId)
+                Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)(MatchId)
+                Dim matche As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)) = matchsevent(day)(MatchId)
 
-                Dim html As String = Functions.GetPage(Link, "POST", "")
+                Dim html As String = Functions.GetPage(Link)
 
                 If html <> "" Then
 
@@ -324,14 +339,14 @@ Namespace WebData
                                     name = name
                                 End If
                                 name = Players.Data.ResolveName("", name, team, False).GetName()
-                                AddPlayer(match, team, name, ruolo)
-                                match(team)(name).Minuti = 90
-                                match(team)(name).Titolare = 1
+                                AddPlayer(matchp, CInt(day), team, name)
+                                matchp(team)(name).Minuti = 90
+                                matchp(team)(name).Titolare = 1
                             End If
 
                             'Determino il minuto dell'evento'
                             If line(z).Contains("minute") AndAlso Regex.Match(line(z).Trim, "<div class=""minute"">\d+").Success Then
-                                min = Regex.Match(line(z).Trim, "\d+").Value
+                                min = Convert.ToInt32(Regex.Match(line(z).Trim, "\d+").Value)
                                 p.Clear()
                             End If
 
@@ -357,35 +372,33 @@ Namespace WebData
                                 Dim r2 As String = If(p.Count > 1, p(1).GetRole(), "")
 
                                 If line(z).Trim.Contains("Ammonizione") AndAlso p.Count > 0 Then
-                                    AddPlayer(match, team, n1, r1)
-                                    match(team)(n1).Ammonizione += 1
+                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    matchp(team)(n1).Ammonizione += 1
                                 End If
                                 If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
-                                    AddPlayer(match, team, n1, r1)
-                                    match(team)(n1).Espulsione += 1
+                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    matchp(team)(n1).Espulsione += 1
                                 End If
                                 If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
-                                    AddPlayer(match, team, n1, r1)
-                                    match(team)(n1).GoalSubiti += 1
+                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    matchp(team)(n1).GoalSubiti += 1
                                 End If
                                 If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
-                                    AddPlayer(match, team, n1, r1)
-                                    match(team)(n1).GoalFatti += 1
+                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    matchp(team)(n1).GoalFatti += 1
                                     If p.Count > 1 Then
-                                        AddPlayer(match, team, n2, r2)
-                                        match(team)(n2).Assists += 1
+                                        AddPlayer(matchp, CInt(day), team, n2)
+                                        matchp(team)(n2).Assists += 1
                                     End If
                                 End If
                                 If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
-                                    AddPlayer(match, team, n1, r1)
-                                    match(team)(n1).Subentrato = 1
-                                    match(team)(n1).Minuti = min
-                                    AddPlayer(match, team, n2, r2)
-                                    match(team)(n2).Sostituito = 1
-                                    match(team)(n2).Minuti = min
+                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    matchp(team)(n1).Subentrato = 1
+                                    matchp(team)(n1).Minuti = min
+                                    AddPlayer(matchp, CInt(day), team, n2)
+                                    matchp(team)(n2).Sostituito = 1
+                                    matchp(team)(n2).Minuti = min
                                 End If
-
-                                'p.Clear()
 
                             End If
 
@@ -394,29 +407,22 @@ Namespace WebData
                             End If
 
                             If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title="".*""></figure>").Success Then
-
                                 p.Clear()
                             End If
 
                         End If
                     Next
 
-                    For Each t As String In match.Keys
-                        For Each n As String In match(t).Keys
-                            If match(t)(n).Subentrato Then
+                    For Each t As String In matchp.Keys
+                        For Each n As String In matchp(t).Keys
+                            If matchp(t)(n).Subentrato = 1 Then
                                 If min > 90 Then
-                                    match(t)(n).Minuti = min - match(t)(n).Minuti
+                                    matchp(t)(n).Minuti = min - matchp(t)(n).Minuti
                                 Else
-                                    match(t)(n).Minuti = 90 - match(t)(n).Minuti
+                                    matchp(t)(n).Minuti = 90 - matchp(t)(n).Minuti
                                 End If
                             End If
-                            If match(t)(n).Minuti > 90 Then match(t)(n).Minuti = 90
-
-                            strdata(day).Append(day & "|" & MatchId & "|" & t & "|" & n & "|" & match(t)(n).Minuti)
-                            strdata(day).Append("|" & match(t)(n).Titolare & "|" & match(t)(n).Sostituito & "|" & match(t)(n).Subentrato)
-                            strdata(day).Append("|" & match(t)(n).Ammonizione & "|" & match(t)(n).Espulsione & "|" & match(t)(n).Assists)
-                            strdata(day).Append("|" & match(t)(n).GoalFatti & "|" & match(t)(n).GoalSubiti & "|" & match(t)(n).AutoGoal)
-                            strdata(day).AppendLine("|" & match(t)(n).RigoriParati & "|" & match(t)(n).RigoriSbagliati)
+                            If matchp(t)(n).Minuti > 90 Then matchp(t)(n).Minuti = 90
                         Next
                     Next
                 End If
@@ -427,41 +433,17 @@ Namespace WebData
 
         End Sub
 
-        Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Player)), team As String, name As String, ruolo As String)
-            If match.ContainsKey(team) = False Then match.Add(team, New Dictionary(Of String, Player))
+        Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)), giornata As Integer, team As String, name As String)
+            If match.ContainsKey(team) = False Then match.Add(team, New Dictionary(Of String, Torneo.MatchsData.MatchPlayer))
             If match(team).ContainsKey(name) = False Then
-                match(team).Add(name, New Player())
-                match(team)(name).Ruolo = ruolo
+                match(team).Add(name, New Torneo.MatchsData.MatchPlayer())
+                match(team)(name).Giornata = giornata
+                match(team)(name).Nome = name
+                match(team)(name).Squadra = team
             Else
                 name = name
             End If
         End Sub
-
-        Public Class Match
-            Public Property TeamA As String = ""
-            Public Property TeamB As String = ""
-            Public Property Time As DateTime = Now
-            Public Property GoalA As String = ""
-            Public Property GoalB As String = ""
-
-        End Class
-
-        Public Class Player
-            Public Property Ruolo As String = ""
-            Public Property Player As String = ""
-            Public Property Minuti As Integer = 90
-            Public Property Titolare As Integer = 0
-            Public Property Sostituito As Integer = 0
-            Public Property Subentrato As Integer = 0
-            Public Property Ammonizione As Integer = 0
-            Public Property Espulsione As Integer = 0
-            Public Property Assists As Integer = 0
-            Public Property GoalFatti As Integer = 0
-            Public Property GoalSubiti As Integer = 0
-            Public Property AutoGoal As Integer = 0
-            Public Property RigoriParati As Integer = 0
-            Public Property RigoriSbagliati As Integer = 0
-        End Class
 
     End Class
 End Namespace

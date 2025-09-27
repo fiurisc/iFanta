@@ -2,15 +2,15 @@
 Imports System.Data.SqlTypes
 
 Namespace Torneo
-    Public Class Rose
+    Public Class RoseData
 
-        Public Shared Function GetSvincolatiTorneo(ServerPath As String, year As String, role As String) As String
+        Public Shared Function GetSvincolatiTorneo(serverPath As String, year As String, role As String) As String
 
             Dim strdata As New System.Text.StringBuilder
 
             Try
 
-                Dim fname As String = ServerPath & "\web\" & CStr(year) & "\torneo\svincolati.txt"
+                Dim fname As String = serverPath & "\web\" & CStr(year) & "\torneo\svincolati.txt"
                 Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
                 For Each line As String In lines
                     If role = "Tutti" OrElse line.Split(Convert.ToChar("|"))(2) = role Then
@@ -25,42 +25,38 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function GetTeamsTorneo(ServerPath As String, year As String) As String
+        Public Shared Function GetTeamsTorneo() As String
 
             Dim strdata As New System.Text.StringBuilder
 
             Try
 
-                If Torneo.General.DataOnDb Then
+                If Torneo.General.dataFromDatabase Then
 
 
-                    Dim teams As New Dictionary(Of Integer, Object)
+                    Dim teams As New Dictionary(Of String, Object)
 
                     Try
-                        Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(ServerPath, year, "SELECT * FROM tbteam")
+                        Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbteam")
 
                         If ds.Tables.Count > 0 Then
                             For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                                 Dim team As New TeamItem
-                                team.idTeam = CInt(ds.Tables(0).Rows(0).Item("idteam"))
-                                team.Name = ds.Tables(0).Rows(0).Item("nome").ToString()
-                                team.Coach = ds.Tables(0).Rows(0).Item("allenatore").ToString()
-                                team.President = ds.Tables(0).Rows(0).Item("presidente").ToString()
-                                teams.Add(team.idTeam, team)
+                                team.idTeam = CInt(ds.Tables(0).Rows(i).Item("idteam"))
+                                team.Name = ds.Tables(0).Rows(i).Item("nome").ToString()
+                                team.Coach = ds.Tables(0).Rows(i).Item("allenatore").ToString()
+                                team.President = ds.Tables(0).Rows(i).Item("presidente").ToString()
+                                teams.Add(team.idTeam.ToString(), team)
                             Next
                         End If
                     Catch ex As Exception
                         WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
                     End Try
 
-                    Return WebData.Functions.SerializzaOggetto(teams)
+                    Return WebData.Functions.SerializzaOggetto(teams, True)
 
                 Else
-                    Dim fname As String = ServerPath & "\web\" & CStr(year) & "\torneo\team.txt"
-                    Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
-                    For Each line As String In lines
-                        strdata.AppendLine(line)
-                    Next
+                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(Functions.DataPath & "\torneo\teams.json"))
                 End If
 
             Catch ex As Exception
@@ -71,21 +67,21 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function GetRoseTorneo(ServerPath As String, year As String, teamId As String) As String
+        Public Shared Function GetRoseTorneo(serverPath As String, year As String, teamId As Integer) As String
 
             Dim strdata As New System.Text.StringBuilder
 
             Try
 
-                Dim fquota As String = ServerPath & "\web\" & CStr(year) & "\data\players-quote.txt"
-                Dim fname As String = ServerPath & "\web\" & CStr(year) & "\torneo\rose.txt"
+                Dim fquota As String = serverPath & "\web\" & CStr(year) & "\data\players-quote.txt"
+                Dim fname As String = serverPath & "\web\" & CStr(year) & "\torneo\rose.txt"
                 Dim quotes As New Dictionary(Of String, String)
                 Dim lines As List(Of String)
 
                 lines = IO.File.ReadAllLines(fquota).ToList()
 
                 For Each line As String In lines
-                    Dim s() As String = line.Split("|")
+                    Dim s() As String = line.Split(CChar("|"))
                     If s.Length = 5 Then
                         Dim key As String = s(0) & "|" & s(1) & "|" & s(2)
                         If quotes.ContainsKey(key) = False Then quotes.Add(key, s(4))
@@ -95,7 +91,7 @@ Namespace Torneo
                 lines = IO.File.ReadAllLines(fname).ToList()
 
                 For Each line As String In lines
-                    Dim s() As String = line.Split("|")
+                    Dim s() As String = line.Split(CChar("|"))
                     If s.Length > 5 Then
                         Dim key As String = s(2) & "|" & s(4) & "|" & s(5)
                         If quotes.ContainsKey(key) Then

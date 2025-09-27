@@ -3,12 +3,21 @@
 Namespace Torneo
     Public Class Functions
 
-        Public Shared Function ExecuteSqlReturnJSON(ServerPath As String, year As String, ByVal SqlString As String) As String
+        Friend Shared Property Year As String = ""
+        Public Shared Property databaseFileName As String = ""
+        Public Shared Property DataPath As String = ""
+
+        Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String)
+            DataPath = rootDataPath & "\" & Year & "\"
+            databaseFileName = rootdatabasePath & "\" & Year & ".accdb"
+        End Sub
+
+        Public Shared Function ExecuteSqlReturnJSON(ByVal SqlString As String) As String
 
             Dim risultati As New List(Of Dictionary(Of String, Object))()
 
             Try
-                Dim ds As System.Data.DataSet = ExecuteSqlReturnDataSet(ServerPath, year, SqlString)
+                Dim ds As System.Data.DataSet = ExecuteSqlReturnDataSet(SqlString)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -23,16 +32,16 @@ Namespace Torneo
                 Call WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
 
-            Return WebData.Functions.SerializzaOggetto(risultati)
+            Return WebData.Functions.SerializzaOggetto(risultati, True)
 
         End Function
 
-        Public Shared Function GetRecordIdFromUpdate(ServerPath As String, year As String, table As String, lastRecordId As Integer) As Integer
+        Public Shared Function GetRecordIdFromUpdate(table As String, lastRecordId As Integer) As Integer
 
             Dim query As String = "SELECT max(id) as lastid FROM " & table & " WHERE id<=" & lastRecordId & ";"
             Dim lastId As Integer = -1
 
-            Using conn As New OleDbConnection(Functions.GetDbConnectionString(ServerPath, year))
+            Using conn As New OleDbConnection(Functions.GetDbConnectionString())
                 Try
                     conn.Open()
                     Using cmd As New OleDbCommand(query, conn)
@@ -51,13 +60,13 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Sub ExecuteSql(ServerPath As String, year As String, ByVal SqlString As String)
-            ExecuteSql(ServerPath, year, New List(Of String) From {SqlString})
+        Public Shared Sub ExecuteSql(serverPath As String, year As String, ByVal SqlString As String)
+            ExecuteSql(New List(Of String) From {SqlString})
         End Sub
 
-        Public Shared Sub ExecuteSql(ServerPath As String, year As String, ByVal SqlString As List(Of String))
+        Public Shared Sub ExecuteSql(ByVal SqlString As List(Of String))
             If SqlString.Count = 0 Then Exit Sub
-            Using conn As New OleDbConnection(GetDbConnectionString(ServerPath, year))
+            Using conn As New OleDbConnection(GetDbConnectionString())
                 conn.Open()
                 For Each s In SqlString
                     Using cmd As New OleDbCommand(s, conn)
@@ -67,11 +76,11 @@ Namespace Torneo
             End Using
         End Sub
 
-        Public Shared Function ExecuteSqlReturnDataSet(ServerPath As String, year As String, ByVal SqlString As String) As System.Data.DataSet
+        Public Shared Function ExecuteSqlReturnDataSet(ByVal SqlString As String) As System.Data.DataSet
 
             Dim ds As New System.Data.DataSet
 
-            Using conn As New OleDbConnection(GetDbConnectionString(ServerPath, year))
+            Using conn As New OleDbConnection(GetDbConnectionString())
                 conn.Open()
                 Using da As New OleDbDataAdapter(SqlString, conn)
                     da.Fill(ds, "tabella")
@@ -82,8 +91,8 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function GetDbConnectionString(ServerPath As String, year As String)
-            Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & ServerPath & "\" & year & ".accdb;"
+        Public Shared Function GetDbConnectionString() As String
+            Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & databaseFileName & ";"
         End Function
     End Class
 End Namespace

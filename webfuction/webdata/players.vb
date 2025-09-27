@@ -1,4 +1,6 @@
-﻿Namespace WebData
+﻿Imports System.Windows.Forms.VisualStyles.VisualStyleElement
+
+Namespace WebData
     Namespace Players
 
         Public Class Data
@@ -11,50 +13,39 @@
                 players.Clear()
             End Sub
 
-            Public Shared Sub LoadPlayers(fname As String, forceRelod As Boolean)
+            Public Shared Sub LoadPlayers(forceRelod As Boolean)
+
+                Dim fdata As String = PlayersQuotes.GetDataFileName()
 
                 If forceRelod Then players.Clear()
 
                 If players.Count = 0 Then
 
-                    If IO.File.Exists(fname) Then
+                    If IO.File.Exists(fdata) Then
 
-                        Dim lines() As String = IO.File.ReadAllLines(fname, System.Text.Encoding.GetEncoding("ISO-8859-1"))
+                        Dim playersq As List(Of Torneo.Players.PlayerQuotesItem) = Functions.DeserializeJson(Of List(Of Torneo.Players.PlayerQuotesItem))(System.IO.File.ReadAllText(fdata))
 
-                        For i As Integer = 0 To lines.Length - 1
+                        For Each p As Torneo.Players.PlayerQuotesItem In playersq
 
-                            Dim s() As String = lines(i).Split(CChar("|"))
-
-                            If i > 0 AndAlso s.Length = 5 Then
-
-                                Dim role As String = s(0)
-                                Dim name As String = Functions.NormalizeText(s(1))
-                                Dim team As String = s(2)
-
-                                If name.Contains("RANOCCHIA") Then
-                                    name = name
-                                End If
-                                If players.ContainsKey(team) = False Then players.Add(team, New Dictionary(Of String, List(Of String)))
-                                If players(team).ContainsKey(role) = False Then players(team).Add(role, New List(Of String))
-
-                                players(team)(role).Add(name)
-
-                                If keyplayers.ContainsKey(team) = False Then keyplayers.Add(team, New WebPlayerKey)
-
-                                Dim keylist As List(Of String) = GetKeyWordList(Functions.CleanSpecialChar(name))
-
-                                For k As Integer = 0 To keylist.Count - 1
-                                    Dim subkey() As String = keylist(k).Split(CChar("/"))
-                                    Call AddwPlayerWordKey(keyplayers(team), subkey, 0, name, role)
-                                Next
-
+                            If p.nome.Contains("RANOCCHIA") Then
+                                p.nome = p.nome
                             End If
+
+                            If players.ContainsKey(p.squadra) = False Then players.Add(p.squadra, New Dictionary(Of String, List(Of String)))
+                            If players(p.squadra).ContainsKey(p.ruolo) = False Then players(p.squadra).Add(p.ruolo, New List(Of String))
+                            players(p.squadra)(p.ruolo).Add(p.nome)
+
+                            If keyplayers.ContainsKey(p.squadra) = False Then keyplayers.Add(p.squadra, New WebPlayerKey)
+
+                            Dim keylist As List(Of String) = GetKeyWordList(Functions.CleanSpecialChar(p.nome))
+
+                            For k As Integer = 0 To keylist.Count - 1
+                                Dim subkey() As String = keylist(k).Split(CChar("/"))
+                                Call AddwPlayerWordKey(keyplayers(p.squadra), subkey, 0, p.nome, p.ruolo)
+                            Next
                         Next
                     End If
-
                 End If
-
-                fname = fname
 
             End Sub
 

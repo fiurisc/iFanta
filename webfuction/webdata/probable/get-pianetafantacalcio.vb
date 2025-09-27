@@ -1,24 +1,22 @@
 ﻿Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetPianetaFantacalcio(ServerPath As String, ReturnData As Boolean) As String
+        Shared Function GetPianetaFantacalcio(ReturnData As Boolean) As String
 
-            Dim dirt As String = ServerPath & "\web\" & CStr(Functions.Year) & "\temp"
-            Dim dird As String = ServerPath & "\web\" & CStr(Functions.Year) & "\data\pforma"
+            Dim dirt As String = Functions.DataPath & "\temp"
+            Dim dird As String = Functions.DataPath & "\data\pforma"
             Dim filet As String = dirt & "\pform-pianeta-fantacalcio.txt"
             Dim filed As String = dird & "\pform-pianeta-fantacalcio.txt"
             Dim filep As String = dird & "\pform-pianeta-fantacalcio-player.txt"
             Dim site As String = "PianetaFantacalcio"
             Dim currgg As Integer = -1
 
-            Functions.Dirs = ServerPath
-
             Try
 
-                Players.Data.LoadPlayers(ServerPath & "\web\" & CStr(Functions.Year) & "\data\players-quote.txt", False)
-                MatchData.LoadWebMatchs(ServerPath & "\web\" & CStr(Functions.Year) & "\data\matchs\matchs-data.txt")
+                Players.Data.LoadPlayers(False)
+                MatchsData.LoadWebMatchs()
 
-                Dim html As String = Functions.GetPage("https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp", "POST", "")
+                Dim html As String = Functions.GetPage("https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp")
 
                 If html <> "" Then
 
@@ -41,7 +39,7 @@
                         If line(i) <> "" Then
 
                             If line(i).Contains("><h4><strong>") Then
-                                currgg = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=\>)\d+(?=\s+Giornata)").Value
+                                currgg = Convert.ToInt32(System.Text.RegularExpressions.Regex.Match(line(i), "(?<=\>)\d+(?=\s+Giornata)").Value)
                             ElseIf line(i).Contains("top-squadre-selezionate") Then
                                 sq.Clear()
                             ElseIf line(i).Contains("<h2 class=""TeamNome"">") Then
