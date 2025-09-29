@@ -1,4 +1,6 @@
-﻿Namespace WebData
+﻿Imports webfuction.Torneo
+
+Namespace WebData
     Partial Class ProbableFormations
 
         Shared Function GetPianetaFantacalcio(ReturnData As Boolean) As String
@@ -29,7 +31,7 @@
                     Dim team As String = ""
 
                     Dim line() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding("iso-8859-1"))
-                    Dim wpd As New Dictionary(Of String, wPlayer)
+                    Dim wpd As New Dictionary(Of String, ProbablePlayer.Player)
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
 
                     For i As Integer = 0 To line.Length - 1

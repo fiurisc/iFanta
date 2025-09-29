@@ -15,7 +15,7 @@ Namespace WebData
             Dim fileLog As String = dirData & site.ToLower() & ".log"
 
             Dim currgg As Integer = -1
-            Dim sr As New IO.StreamWriter(fileLog)
+            Dim srLog As New IO.StreamWriter(fileLog)
             Dim rmsg As String = ""
 
             Try
@@ -31,22 +31,21 @@ Namespace WebData
 
                     Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("UTF-8"))
                     Dim start As Boolean = False
-                    Dim wpd As New Dictionary(Of String, wPlayer)
-                    Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
+                    Dim plaryersData As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
+                    Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)
                     Dim sq As New List(Of String)
                     Dim sqid As Integer = 0
                     Dim pstate As String = "Titolare"
                     Dim team As String = ""
 
-                    sr.WriteLine("Year -> " & Functions.Year)
-                    sr.WriteLine("Calendario match:")
-                    sr.WriteLine("---------------------------")
+                    srLog.WriteLine("Year -> " & Functions.Year)
+                    srLog.WriteLine("Calendario match:")
+                    srLog.WriteLine("---------------------------")
                     For Each t As String In MatchsData.KeyMatchs.Keys
-                        sr.WriteLine(MatchsData.KeyMatchs(t) & " -> " & t)
+                        srLog.WriteLine(MatchsData.KeyMatchs(t) & " -> " & t)
                     Next
-                    sr.WriteLine("")
-
-                    sr.WriteLine("linee file html => " & CStr(line.Length))
+                    srLog.WriteLine("")
+                    srLog.WriteLine("linee file html => " & CStr(line.Length))
 
                     For i As Integer = 0 To line.Length - 1
                         If line(i) <> "" Then
@@ -64,12 +63,12 @@ Namespace WebData
 
                                     Dim match As String = sq(0) & "-" & sq(1)
 
-                                    sr.WriteLine("match trovato -> " & match)
+                                    srLog.WriteLine("match trovato -> " & match)
 
                                     For Each key As String In MatchsData.KeyMatchs.Keys
                                         If key = match Then
                                             currgg = MatchsData.KeyMatchs(key)
-                                            sr.WriteLine("giornata associata -> " & CStr(currgg))
+                                            srLog.WriteLine("giornata associata -> " & CStr(currgg))
                                             Exit For
                                         End If
                                     Next
@@ -94,8 +93,8 @@ Namespace WebData
                                 name = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=""lineup-team__name\"">)[\w\s+]{1,}(?=\<)").Value.Replace("-", " ").ToUpper().Replace("'", "’")
                                 If name = "LAUTARO" Then name = "MARTINEZ L."
                                 If name <> "" Then
-                                    name = Players.Data.ResolveName("", name, sq(sqid), wpl, False).GetName()
-                                    Call AddInfo(name, sq(sqid), site, "Titolare", "", 100, wpd)
+                                    name = Players.Data.ResolveName("", name, sq(sqid), playersLog, False).GetName()
+                                    Call AddInfo(name, sq(sqid), site, "Titolare", "", 100, plaryersData)
                                 End If
 
                             ElseIf RegularExpressions.Regex.Match(line(i), "\<strong\>(Panchina|Ballottaggio|Squalificati|Indisponibili):\s+\<\/strong\>").Value <> "" Then
@@ -127,8 +126,8 @@ Namespace WebData
                                                 nome = nome.Substring(0, nome.IndexOf("("))
                                             End If
                                             nome = nome.Trim().ToUpper()
-                                            nome = Players.Data.ResolveName("", nome, sq(sqid), wpl, False).GetName()
-                                            Call AddInfo(nome, sq(sqid), site, pstate, info, 0, wpd)
+                                            nome = Players.Data.ResolveName("", nome, sq(sqid), playersLog, False).GetName()
+                                            Call AddInfo(nome, sq(sqid), site, pstate, info, 0, plaryersData)
                                         Catch ex As Exception
 
                                         End Try
@@ -139,8 +138,8 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(currgg, wpd, fileData)
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filePlayers)
+                        Dim out As String = WriteData(currgg, plaryersData, fileData)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
 
@@ -151,7 +150,7 @@ Namespace WebData
                 rmsg = ex.Message
             End Try
 
-            sr.Close()
+            srLog.Close()
 
             If ReturnData Then
                 Return "</br><span style=color:red;font-size:bold;'>Probabili formazioni gazzetta:</span></br>" & rmsg.Replace(System.Environment.NewLine, "</br>") & "</br>"

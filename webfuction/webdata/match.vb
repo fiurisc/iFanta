@@ -8,9 +8,9 @@ Namespace WebData
         Private Shared dirt As String = ""
         Private Shared dird As String = ""
 
-        Private Shared matchs As New SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match))
-        Private Shared matchsplayers As New SortedDictionary(Of String, SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
-        Private Shared matchsevent As New SortedDictionary(Of String, SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
+        Private Shared matchs As New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.Match))
+        Private Shared matchsplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+        Private Shared matchsevent As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
 
         Public Shared Property KeyMatchs As New Dictionary(Of String, Integer)
 
@@ -95,11 +95,13 @@ Namespace WebData
 
                 'Creo la lista di thread da eseguire'
                 thrmatch.Clear()
-                For i As Integer = 1 To 2
+                For i As Integer = 1 To 38
                     Dim t As New Threading.Thread(AddressOf GetMatchsDay)
                     t.Name = CStr(i)
                     thrmatch.Add(t)
-                    'If i > 1 Then Exit For
+#If DEBUG Then
+                    'If i > 2 Then Exit For
+#End If
                 Next
 
                 'Lancio i vari Thread'
@@ -161,17 +163,17 @@ Namespace WebData
                         System.Threading.Thread.Sleep(100)
                     Next
 
-                    Dim dicalldata As New SortedDictionary(Of String, SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
+                    Dim dicalldata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
 
                     For i As Integer = 1 To 38
                         Dim fday As String = GetMatchPlayersDayFileName(i.ToString())
                         If IO.File.Exists(fday) Then
-                            Dim dicdata As SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))) = Functions.DeserializeJson(Of SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))(IO.File.ReadAllText(fday))
+                            Dim dicdata As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))(IO.File.ReadAllText(fday))
                             dicalldata.Add(CStr(i), dicdata)
                         End If
                     Next
 
-                    If Torneo.General.dataFromDatabase Then
+                    If Torneo.General.dataFromDatabase AndAlso matchsplayers.Count > 0 Then
                         Torneo.MatchsData.UpdateMatchDataPlayers(matchsplayers)
                     End If
 
@@ -227,7 +229,6 @@ Namespace WebData
                                 goal2 = Regex.Match(line(i), "\d+(?=\</span)").Value.ToUpper()
                             ElseIf line(i).Contains("<meta itemprop=""url"" content=") AndAlso line(i).Contains("https://www.fantacalcio.it/serie-a/calendario") Then
 
-                                Dim f As String = line(2057)
                                 Dim mtach As String = Regex.Match(line(i), "(?<=\d+-\d+\/)\w+-\w+(?=\/\d+)").Value.ToUpper()
 
                                 If dt < Date.Now Then
@@ -238,10 +239,12 @@ Namespace WebData
                                     goal2 = ""
                                 End If
 
-                                If matchs.ContainsKey(d) = False Then matchs.Add(d, New SortedDictionary(Of String, Torneo.MatchsData.Match))
+                                If matchs.ContainsKey(d) = False Then matchs.Add(d, New Dictionary(Of String, Torneo.MatchsData.Match))
                                 If matchs(d).ContainsKey(matchid.ToString()) = False Then
                                     Dim teams() As String = mtach.Split(CChar("-"))
                                     Dim m As New Torneo.MatchsData.Match
+                                    m.Giornata = CInt(d)
+                                    m.MatchId = matchid
                                     m.TeamA = teams(0)
                                     m.TeamB = teams(1)
                                     m.Time = dt.ToString("yyyy/MM/dd HH:mm:ss")
@@ -283,8 +286,8 @@ Namespace WebData
                 'Determino la giornata di riferimento'
                 Dim d As String = Threading.Thread.CurrentThread.Name
 
-                If matchsplayers.ContainsKey(d) = False Then matchsplayers.Add(d, New SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
-                If matchsevent.ContainsKey(d) = False Then matchsevent.Add(d, New SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
+                If matchsplayers.ContainsKey(d) = False Then matchsplayers.Add(d, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+                If matchsevent.ContainsKey(d) = False Then matchsevent.Add(d, New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
 
                 For Each m As String In diclinkdaymatch(d).Keys
                     Call GetMatchsPlayersDataByDayMatchId(d, m, diclinkdaymatch(d)(m))
@@ -304,10 +307,9 @@ Namespace WebData
 
             Try
 
-                If matchsplayers(day).ContainsKey(MatchId) = False Then matchsplayers(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
                 If matchsevent(day).ContainsKey(MatchId) = False Then matchsevent(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)))
 
-                Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)(MatchId)
+                Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)
                 Dim matche As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)) = matchsevent(day)(MatchId)
 
                 Dim html As String = Functions.GetPage(Link)

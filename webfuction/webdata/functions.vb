@@ -458,7 +458,9 @@ Namespace WebData
             Dim responseFromServer As String = ""
 
 #If DEBUG Then
-            Url = "https://www.ifantacalcio.it/site.php?url=" & Url
+            If Url.Contains("www.fantacalcio.it") Then
+                Url = "https://www.ifantacalcio.it/site.php?url=" & Url
+            End If
 #End If
 
             Try

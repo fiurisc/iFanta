@@ -161,6 +161,7 @@
     <Compile Include="torneo\general.vb" />
     <Compile Include="torneo\matchs.vb" />
     <Compile Include="torneo\players.vb" />
+    <Compile Include="torneo\probable.vb" />
     <Compile Include="torneo\rose.vb" />
     <Compile Include="webdata\functions.vb" />
     <Compile Include="webdata\match.vb" />

@@ -41,7 +41,7 @@ Namespace WebData
                     IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding(enc))
 
                     Dim lines() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding(enc))
-                    Dim wpd As New Dictionary(Of String, wPlayer)
+                    Dim wpd As New Dictionary(Of String, ProbablePlayer.Player)
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                     Dim pstate As String = "Titolare"
                     Dim sq As New List(Of String)

@@ -1,13 +1,46 @@
-﻿Imports System.Linq
-
-Namespace Torneo
+﻿Namespace Torneo
     Public Class MatchsData
+
+        Public Shared Function GetMatchCurrentDayJson() As String
+
+            Dim cday As String = "38"
+
+            Try
+                If Torneo.General.dataFromDatabase Then
+                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM current_championship_day")
+                    If ds.Tables.Count > 0 Then
+                        cday = ds.Tables(0).Rows(0).Item("gio").ToString()
+                    End If
+                Else
+
+                    Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
+                    Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(GetMatchDataJson("-1"))
+
+                    For d As Integer = 38 To 1 Step -1
+                        Dim ds As String = d.ToString()
+                        If dicdata.ContainsKey(ds) Then
+                            For Each mid As String In dicdata(ds).Keys
+                                Dim dt As Date = CDate(dicdata(ds)(mid).Time).AddHours(-2)
+                                If dt < Now Then
+                                    cday = ds
+                                End If
+                            Next
+                        End If
+                    Next
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
+
+            Return "{" & cday & "}"
+
+        End Function
 
         Public Shared Function GetMatchDataJson(Day As String) As String
 
             If Torneo.General.dataFromDatabase Then
 
-                Dim dicdata As New SortedDictionary(Of String, SortedDictionary(Of String, Match))
+                Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Match))
                 Dim mtxdata As List(Of Match) = GetMatchData(Day)
 
                 For Each m As Match In mtxdata
@@ -15,7 +48,7 @@ Namespace Torneo
                     Dim g As String = m.Giornata.ToString()
                     Dim mi As String = m.MatchId.ToString()
 
-                    If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New SortedDictionary(Of String, Match))
+                    If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New Dictionary(Of String, Match))
                     If dicdata(g).ContainsKey(mi) = False Then
                         dicdata(g).Add(mi, m)
                     End If
@@ -26,7 +59,7 @@ Namespace Torneo
             Else
 
                 Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
-                Dim dicdata As SortedDictionary(Of String, SortedDictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of SortedDictionary(Of String, SortedDictionary(Of String, Match)))(j)
+                Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(j)
 
                 If Day <> "-1" Then
                     Dim chiaviDaRimuovere = dicdata.Keys.Where(Function(k) k <> Day).ToList()
@@ -47,8 +80,8 @@ Namespace Torneo
 
             If General.dataFromDatabase Then
 
-                Dim dicdata As New SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer)))
-                Dim mtxdata As List(Of MatchPlayer) = GetMatchDataPlayers(New List(Of String) From {Day})
+                Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer)))
+                Dim mtxdata As List(Of MatchPlayer) = GetMatchDataPlayers(Day)
 
                 For Each m As MatchPlayer In mtxdata
 
@@ -68,7 +101,7 @@ Namespace Torneo
             Else
 
                 Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchPlayersFileName())
-                Dim dicdata As SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))) = WebData.Functions.DeserializeJson(Of SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))(j)
+                Dim dicdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))(j)
 
                 If Day <> "-1" Then
                     Dim chiaviDaRimuovere = dicdata.Keys.Where(Function(k) k <> Day).ToList()
@@ -83,18 +116,18 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Sub UpdateMatchData(newdata As SortedDictionary(Of String, SortedDictionary(Of String, Match)))
+        Public Shared Sub UpdateMatchData(newdata As Dictionary(Of String, Dictionary(Of String, Match)))
             Try
 
                 Dim mtxdata As List(Of Match) = GetMatchData(newdata.Keys.ToList())
-                Dim olddata As New SortedDictionary(Of String, SortedDictionary(Of String, Match))
+                Dim olddata As New Dictionary(Of String, Dictionary(Of String, Match))
 
                 For Each m As Match In mtxdata
 
                     Dim g As String = m.Giornata.ToString()
                     Dim mi As String = m.MatchId.ToString()
 
-                    If olddata.ContainsKey(g) = False Then olddata.Add(g, New SortedDictionary(Of String, Match))
+                    If olddata.ContainsKey(g) = False Then olddata.Add(g, New Dictionary(Of String, Match))
                     If olddata(m.Giornata.ToString()).ContainsKey(mi) = False Then
                         olddata(g).Add(mi, m)
                     End If
@@ -131,7 +164,7 @@ Namespace Torneo
             Dim mtxtdata As New List(Of Match)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbmatch " & If(days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbmatch " & If(days.Count > 0 AndAlso days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -155,11 +188,11 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Sub UpdateMatchDataPlayers(newdata As SortedDictionary(Of String, SortedDictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))))
+        Public Shared Sub UpdateMatchDataPlayers(newdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))
             Try
 
                 Dim mtxtdata As List(Of MatchPlayer) = GetMatchDataPlayers(newdata.Keys.ToList())
-                Dim olddata As New SortedDictionary(Of String, Dictionary(Of String, MatchPlayer))
+                Dim olddata As New Dictionary(Of String, Dictionary(Of String, MatchPlayer))
 
                 For Each data As MatchPlayer In mtxtdata
                     Dim g As String = data.Giornata.ToString()
@@ -174,17 +207,15 @@ Namespace Torneo
                 Dim sqlupdate As New List(Of String)
 
                 For Each g In newdata.Keys
-                    For Each mi In newdata(g).Keys
-                        For Each t In newdata(g)(mi).Keys
-                            For Each n In newdata(g)(mi)(t).Keys
-                                Dim mp As MatchPlayer = newdata(g)(mi)(t)(n)
-                                Dim key As String = n & "/" & t
-                                If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
-                                    sqlinsert.Add("INSERT INTO tbtabellini (gio,nome,squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & ",'" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
-                                ElseIf WebData.Functions.GetCustomHashCode(olddata(g)(key)) <> WebData.Functions.GetCustomHashCode(mp) Then
-                                    sqlupdate.Add("UPDATE tbtabellini SET nome='" & mp.Nome & "',squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND nome='" & mp.Nome & "' AND squadra='" & mp.Squadra & "'")
-                                End If
-                            Next
+                    For Each t In newdata(g).Keys
+                        For Each n In newdata(g)(t).Keys
+                            Dim mp As MatchPlayer = newdata(g)(t)(n)
+                            Dim key As String = n & "/" & t
+                            If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
+                                sqlinsert.Add("INSERT INTO tbtabellini (gio,nome,squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & ",'" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
+                            ElseIf WebData.Functions.GetCustomHashCode(olddata(g)(key)) <> WebData.Functions.GetCustomHashCode(mp) Then
+                                sqlupdate.Add("UPDATE tbtabellini SET nome='" & mp.Nome & "',squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND nome='" & mp.Nome & "' AND squadra='" & mp.Squadra & "'")
+                            End If
                         Next
                     Next
                 Next
@@ -206,7 +237,7 @@ Namespace Torneo
             Dim mtxtdata As New List(Of MatchPlayer)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbtabellini" & If(days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbtabellini" & If(days.Count > 0 AndAlso days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
