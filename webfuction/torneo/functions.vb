@@ -3,13 +3,10 @@
 Namespace Torneo
     Public Class Functions
 
-        Friend Shared Property Year As String = ""
-        Public Shared Property databaseFileName As String = ""
-        Public Shared Property DataPath As String = ""
-
-        Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String)
-            DataPath = rootDataPath & "\" & Year & "\"
-            databaseFileName = rootdatabasePath & "\" & Year & ".accdb"
+        Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String, year As String)
+            PublicVariables.DataPath = rootDataPath & year & "\"
+            PublicVariables.SettingsPath = rootDataPath & "update\tornei\" & year & "-" & CInt(year) + 1 & "\"
+            PublicVariables.DatabaseFileName = rootdatabasePath & year & ".accdb"
         End Sub
 
         Public Shared Function ExecuteSqlReturnJSON(ByVal SqlString As String) As String
@@ -36,7 +33,7 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function GetRecordIdFromUpdate(table As String, lastRecordId As Integer) As Integer
+        Public Shared Function apiGetRecordIdFromUpdate(table As String, lastRecordId As Integer) As Integer
 
             Dim query As String = "SELECT max(id) as lastid FROM " & table & " WHERE id<=" & lastRecordId & ";"
             Dim lastId As Integer = -1
@@ -92,8 +89,21 @@ Namespace Torneo
         End Function
 
         Public Shared Function GetDbConnectionString() As String
-            Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & databaseFileName & ";"
+            Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & PublicVariables.DatabaseFileName & ";"
         End Function
+
+        Public Shared Function ConvertListStringToString(List As List(Of String), Separator As String) As String
+            Dim str As String = ""
+            For i As Integer = 0 To List.Count - 1
+                str = str & "," & List(i)
+            Next
+            If str.Length > 0 Then
+                Return str.Substring(1)
+            Else
+                Return ""
+            End If
+        End Function
+
     End Class
 End Namespace
 

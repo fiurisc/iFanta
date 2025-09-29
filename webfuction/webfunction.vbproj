@@ -159,10 +159,17 @@
     <Compile Include="torneo\coppa.vb" />
     <Compile Include="torneo\functions.vb" />
     <Compile Include="torneo\general.vb" />
+    <Compile Include="torneo\make_version.vb" />
     <Compile Include="torneo\matchs.vb" />
     <Compile Include="torneo\players.vb" />
     <Compile Include="torneo\probable.vb" />
+    <Compile Include="torneo\public_variables.vb" />
     <Compile Include="torneo\rose.vb" />
+    <Compile Include="torneo\settings\bonus_settings.vb" />
+    <Compile Include="torneo\settings\coppa_settings.vb" />
+    <Compile Include="torneo\settings\jolly_settings.vb.vb" />
+    <Compile Include="torneo\settings\points_settings.vb" />
+    <Compile Include="torneo\settings\settings.vb" />
     <Compile Include="webdata\functions.vb" />
     <Compile Include="webdata\match.vb" />
     <Compile Include="webdata\players-data.vb" />

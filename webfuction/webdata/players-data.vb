@@ -1,6 +1,4 @@
-﻿Imports System.Net
-Imports System.IO
-Imports System.Text
+﻿Imports System.IO
 
 Namespace WebData
 
@@ -125,7 +123,7 @@ Namespace WebData
                     End If
                 Next
 
-                If Torneo.General.dataFromDatabase Then
+                If Torneo.PublicVariables.dataFromDatabase Then
                     Torneo.Players.UpdatePlayersData(playersd)
                 End If
 

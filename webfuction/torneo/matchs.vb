@@ -1,12 +1,14 @@
-﻿Namespace Torneo
+﻿Imports System.Data
+
+Namespace Torneo
     Public Class MatchsData
 
-        Public Shared Function GetMatchCurrentDayJson() As String
+        Public Shared Function apiGetMatchsCurrentDay() As String
 
             Dim cday As String = "38"
 
             Try
-                If Torneo.General.dataFromDatabase Then
+                If PublicVariables.dataFromDatabase Then
                     Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM current_championship_day")
                     If ds.Tables.Count > 0 Then
                         cday = ds.Tables(0).Rows(0).Item("gio").ToString()
@@ -14,7 +16,8 @@
                 Else
 
                     Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
-                    Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(GetMatchDataJson("-1"))
+                    Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(apiGetMatchsData("-1"))
+                    Dim found As Boolean = False
 
                     For d As Integer = 38 To 1 Step -1
                         Dim ds As String = d.ToString()
@@ -23,25 +26,28 @@
                                 Dim dt As Date = CDate(dicdata(ds)(mid).Time).AddHours(-2)
                                 If dt < Now Then
                                     cday = ds
+                                    found = True
+                                    Exit For
                                 End If
                             Next
                         End If
+                        If found Then Exit For
                     Next
                 End If
             Catch ex As Exception
                 WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
 
-            Return "{" & cday & "}"
+            Return cday
 
         End Function
 
-        Public Shared Function GetMatchDataJson(Day As String) As String
+        Public Shared Function apiGetMatchsData(Day As String) As String
 
-            If Torneo.General.dataFromDatabase Then
+            If PublicVariables.dataFromDatabase Then
 
                 Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Match))
-                Dim mtxdata As List(Of Match) = GetMatchData(Day)
+                Dim mtxdata As List(Of Match) = GetMatchsData(Day)
 
                 For Each m As Match In mtxdata
 
@@ -74,14 +80,12 @@
 
         End Function
 
-        Public Shared Function GetMatchDataPlayersJson(Day As String) As String
+        Public Shared Function apiGetMatchsDataPlayers(startDay As String, endDay As String) As String
 
-            General.dataFromDatabase = False
-
-            If General.dataFromDatabase Then
+            If PublicVariables.dataFromDatabase Then
 
                 Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer)))
-                Dim mtxdata As List(Of MatchPlayer) = GetMatchDataPlayers(Day)
+                Dim mtxdata As List(Of MatchPlayer) = GetMatchDataPlayers(startDay, endDay)
 
                 For Each m As MatchPlayer In mtxdata
 
@@ -103,12 +107,10 @@
                 Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchPlayersFileName())
                 Dim dicdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))(j)
 
-                If Day <> "-1" Then
-                    Dim chiaviDaRimuovere = dicdata.Keys.Where(Function(k) k <> Day).ToList()
-                    For Each chiave In chiaviDaRimuovere
-                        dicdata.Remove(chiave)
-                    Next
-                End If
+                Dim chiaviDaRimuovere = dicdata.Keys.Where(Function(k) k < startDay OrElse k > endDay).ToList()
+                For Each chiave In chiaviDaRimuovere
+                    dicdata.Remove(chiave)
+                Next
 
                 Return WebData.Functions.SerializzaOggetto(dicdata, True)
 
@@ -119,7 +121,7 @@
         Public Shared Sub UpdateMatchData(newdata As Dictionary(Of String, Dictionary(Of String, Match)))
             Try
 
-                Dim mtxdata As List(Of Match) = GetMatchData(newdata.Keys.ToList())
+                Dim mtxdata As List(Of Match) = GetMatchsData(newdata.Keys.ToList())
                 Dim olddata As New Dictionary(Of String, Dictionary(Of String, Match))
 
                 For Each m As Match In mtxdata
@@ -155,11 +157,11 @@
             End Try
         End Sub
 
-        Private Shared Function GetMatchData(day As String) As List(Of Match)
-            Return GetMatchData(New List(Of String) From {day})
+        Private Shared Function GetMatchsData(day As String) As List(Of Match)
+            Return GetMatchsData(New List(Of String) From {day})
         End Function
 
-        Private Shared Function GetMatchData(days As List(Of String)) As List(Of Match)
+        Private Shared Function GetMatchsData(days As List(Of String)) As List(Of Match)
 
             Dim mtxtdata As New List(Of Match)
 
@@ -191,7 +193,7 @@
         Public Shared Sub UpdateMatchDataPlayers(newdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))
             Try
 
-                Dim mtxtdata As List(Of MatchPlayer) = GetMatchDataPlayers(newdata.Keys.ToList())
+                Dim mtxtdata As List(Of MatchPlayer) = GetMatchDataPlayers(newdata.Keys.ToList().Select(Function(x) CInt(x)).Min.ToString(), newdata.Keys.ToList().Select(Function(x) CInt(x)).Max.ToString())
                 Dim olddata As New Dictionary(Of String, Dictionary(Of String, MatchPlayer))
 
                 For Each data As MatchPlayer In mtxtdata
@@ -228,16 +230,14 @@
             End Try
         End Sub
 
-        Private Shared Function GetMatchDataPlayers(day As String) As List(Of MatchPlayer)
-            Return GetMatchDataPlayers(New List(Of String) From {day})
-        End Function
-
-        Private Shared Function GetMatchDataPlayers(days As List(Of String)) As List(Of MatchPlayer)
+        Private Shared Function GetMatchDataPlayers(startDay As String, endDay As String) As List(Of MatchPlayer)
 
             Dim mtxtdata As New List(Of MatchPlayer)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbtabellini" & If(days.Count > 0 AndAlso days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
+
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, "SELECT * FROM tbtabellini WHERE gio >=" & startDay & " AND gio<=" & endDay)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbtabellini WHERE gio >=" & startDay & " AND gio<=" & endDay)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1

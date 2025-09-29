@@ -112,7 +112,7 @@ Namespace WebData
                     System.Threading.Thread.Sleep(100)
                 Next
 
-                If Torneo.General.dataFromDatabase Then
+                If Torneo.PublicVariables.dataFromDatabase Then
                     Torneo.MatchsData.UpdateMatchData(matchs)
                 End If
 
@@ -173,7 +173,7 @@ Namespace WebData
                         End If
                     Next
 
-                    If Torneo.General.dataFromDatabase AndAlso matchsplayers.Count > 0 Then
+                    If Torneo.PublicVariables.dataFromDatabase AndAlso matchsplayers.Count > 0 Then
                         Torneo.MatchsData.UpdateMatchDataPlayers(matchsplayers)
                     End If
 

@@ -1,6 +1,4 @@
-﻿Imports webfuction.Torneo
-
-Namespace WebData
+﻿Namespace WebData
     Partial Class ProbableFormations
 
         Shared Function GetSky(ReturnData As Boolean) As String
@@ -26,7 +24,7 @@ Namespace WebData
                     IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding(enc))
 
                     Dim lines() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding(enc))
-                    Dim wpd As New Dictionary(Of String, ProbablePlayer.Player)
+                    Dim wpd As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                     Dim sq As New List(Of String)
                     Dim sqid As Integer = 0

@@ -4,13 +4,13 @@ Imports System.Data.SqlTypes
 Namespace Torneo
     Public Class RoseData
 
-        Public Shared Function GetSvincolatiTorneo(serverPath As String, year As String, role As String) As String
+        Public Shared Function GetSvincolatiTorneo(role As String) As String
 
             Dim strdata As New System.Text.StringBuilder
 
             Try
 
-                Dim fname As String = serverPath & "\web\" & CStr(year) & "\torneo\svincolati.txt"
+                Dim fname As String = PublicVariables.DataPath & "\exp\svincolati.txt"
                 Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
                 For Each line As String In lines
                     If role = "Tutti" OrElse line.Split(Convert.ToChar("|"))(2) = role Then
@@ -25,13 +25,13 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function GetTeamsTorneo() As String
+        Public Shared Function apiGetTeamsTorneo() As String
 
             Dim strdata As New System.Text.StringBuilder
 
             Try
 
-                If Torneo.General.dataFromDatabase Then
+                If PublicVariables.dataFromDatabase Then
 
 
                     Dim teams As New Dictionary(Of String, Object)
@@ -56,7 +56,7 @@ Namespace Torneo
                     Return WebData.Functions.SerializzaOggetto(teams, True)
 
                 Else
-                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(Functions.DataPath & "\torneo\teams.json"))
+                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(PublicVariables.DataPath & "torneo\teams.json"))
                 End If
 
             Catch ex As Exception
@@ -67,14 +67,14 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function GetRoseTorneo(serverPath As String, year As String, teamId As Integer) As String
+        Public Shared Function apiGetRoseTorneo(teamId As Integer) As String
 
             Dim strdata As New System.Text.StringBuilder
 
             Try
 
-                Dim fquota As String = serverPath & "\web\" & CStr(year) & "\data\players-quote.txt"
-                Dim fname As String = serverPath & "\web\" & CStr(year) & "\torneo\rose.txt"
+                Dim fquota As String = PublicVariables.DataPath & "data\players-quote.txt"
+                Dim fname As String = PublicVariables.DataPath & "torneo\rose.txt"
                 Dim quotes As New Dictionary(Of String, String)
                 Dim lines As List(Of String)
 

@@ -1,6 +1,4 @@
-﻿Imports webfuction.Torneo
-
-Namespace WebData
+﻿Namespace WebData
     Partial Class ProbableFormations
 
         Shared Function GetCds(ReturnData As Boolean) As String
@@ -30,7 +28,7 @@ Namespace WebData
                 Next
                 sr.WriteLine("")
 
-                Dim wpd As New Dictionary(Of String, ProbablePlayer.Player)
+                Dim wpd As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
                 Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                 Dim linkp As New List(Of String)
 
@@ -104,7 +102,7 @@ Namespace WebData
 
         End Function
 
-        Private Shared Sub GetCdsSingleMatch(link As String, indmatch As Integer, site As String, wpd As Dictionary(Of String, ProbablePlayer.Player), wpl As Dictionary(Of String, Players.PlayerMatch))
+        Private Shared Sub GetCdsSingleMatch(link As String, indmatch As Integer, site As String, wpd As Dictionary(Of String, Torneo.ProbablePlayer.Player), wpl As Dictionary(Of String, Players.PlayerMatch))
 
             Try
 

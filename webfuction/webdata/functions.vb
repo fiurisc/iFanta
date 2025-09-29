@@ -9,15 +9,14 @@ Imports System.Web.Script.Serialization
 Namespace WebData
     Public Class Functions
 
-        Friend Shared Property Year As String = ""
+        Public Shared Property Year As String = ""
         Public Shared Property DataPath As String = ""
 
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
 
         Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String)
-            DataPath = rootDataPath & "\" & Year & "\"
-            Torneo.Functions.Year = Year
-            Torneo.Functions.InitPath(rootDataPath, rootdatabasePath)
+            DataPath = rootDataPath & Year & "\"
+            Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
         End Sub
 
         Public Shared Sub WriteLog(dirs As String, ByVal Form As String, ByVal SubName As String, ByVal Text As String)

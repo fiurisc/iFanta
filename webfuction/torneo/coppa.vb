@@ -1,95 +1,97 @@
-﻿Namespace Torneo
+﻿Imports System.Data
+
+Namespace Torneo
 
     Public Class CoppaData
 
 
-        'Sub Load()
+        Sub Load()
 
-        '    currlega.Classifica.LoadHistory()
+            '    currlega.Classifica.LoadHistory()
 
-        '    _tiposecondoturno = currlega.Settings.Coppa.TipoSecondoTurno
+            '    _tiposecondoturno = Variables.Settings.Coppa.TipoSecondoTurno
 
-        '    Dim cup As New Coppa
+            '    Dim cup As New Coppa
 
-        '    cup.GironiEliminatori.Add(New Coppa.Girone)
-        '    cup.GironiEliminatori.Add(New Coppa.Girone)
+            '    cup.GironiEliminatori.Add(New Coppa.Girone)
+            '    cup.GironiEliminatori.Add(New Coppa.Girone)
 
-        '    For i As Integer = 0 To 4
-        '        cup.GironiEliminatori(0).Clasa.Add(New Coppa.Girone.ClasaGirone(i, i))
-        '    Next
-        '    For i As Integer = 0 To 4
-        '        cup.GironiEliminatori(1).Clasa.Add(New Coppa.Girone.ClasaGirone(i, i + 5))
-        '    Next
+            '    For i As Integer = 0 To 4
+            '        cup.GironiEliminatori(0).Clasa.Add(New Coppa.Girone.ClasaGirone(i, i))
+            '    Next
+            '    For i As Integer = 0 To 4
+            '        cup.GironiEliminatori(1).Clasa.Add(New Coppa.Girone.ClasaGirone(i, i + 5))
+            '    Next
 
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, 2, 14, 0, 1, 0, 1))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 1, 2, 14, 2, 3, 2, 3))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, 3, 15, 0, 2, 0, 2))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 2, 3, 15, 4, 3, 4, 3))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, 7, 19, 3, 0, 3, 0))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 3, 7, 19, 1, 4, 1, 4))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 4, 8, 20, 0, 4, 0, 4))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 4, 8, 20, 2, 1, 2, 1))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 5, 10, 22, 3, 1, 3, 1))
-        '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 5, 10, 22, 4, 2, 4, 2))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, 2, 14, 0, 1, 0, 1))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 1, 2, 14, 2, 3, 2, 3))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, 3, 15, 0, 2, 0, 2))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 2, 3, 15, 4, 3, 4, 3))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, 7, 19, 3, 0, 3, 0))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 3, 7, 19, 1, 4, 1, 4))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 4, 8, 20, 0, 4, 0, 4))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 4, 8, 20, 2, 1, 2, 1))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 5, 10, 22, 3, 1, 3, 1))
+            '    cup.GironiEliminatori(0).Partite.Add(New Coppa.Girone.PartitaGirone(1, 5, 10, 22, 4, 2, 4, 2))
 
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, 2, 14, 3, 1, 8, 6))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 1, 2, 14, 0, 4, 5, 9))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, 3, 15, 0, 2, 5, 7))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 2, 3, 15, 4, 3, 9, 8))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, 7, 19, 4, 1, 9, 6))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 3, 7, 19, 3, 2, 8, 7))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 4, 8, 20, 1, 0, 6, 5))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 4, 8, 20, 2, 4, 7, 9))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 5, 10, 22, 2, 1, 7, 6))
-        '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 5, 10, 22, 0, 3, 5, 8))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, 2, 14, 3, 1, 8, 6))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 1, 2, 14, 0, 4, 5, 9))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, 3, 15, 0, 2, 5, 7))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 2, 3, 15, 4, 3, 9, 8))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, 7, 19, 4, 1, 9, 6))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 3, 7, 19, 3, 2, 8, 7))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 4, 8, 20, 1, 0, 6, 5))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 4, 8, 20, 2, 4, 7, 9))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 5, 10, 22, 2, 1, 7, 6))
+            '    cup.GironiEliminatori(1).Partite.Add(New Coppa.Girone.PartitaGirone(1, 5, 10, 22, 0, 3, 5, 8))
 
-        '    poff.Clear()
-        '    poff.Add(New Girone)
-        '    poff.Add(New Girone)
+            '    poff.Clear()
+            '    poff.Add(New Girone)
+            '    poff.Add(New Girone)
 
-        '    For i As Integer = 0 To currlega.Settings.Coppa.PlayOffGiorone1Team.Length - 1
-        '        poff(0).Clasa.Add(New Girone.ClasaGirone(i, currlega.Settings.Coppa.PlayOffGiorone1Team(i)))
-        '    Next
-        '    For i As Integer = 0 To currlega.Settings.Coppa.PlayOffGiorone2Team.Length - 1
-        '        poff(1).Clasa.Add(New Girone.ClasaGirone(i, currlega.Settings.Coppa.PlayOffGiorone2Team(i)))
-        '    Next
+            '    For i As Integer = 0 To Variables.Settings.Coppa.PlayOffGiorone1Team.Length - 1
+            '        poff(0).Clasa.Add(New Girone.ClasaGirone(i, Variables.Settings.Coppa.PlayOffGiorone1Team(i)))
+            '    Next
+            '    For i As Integer = 0 To Variables.Settings.Coppa.PlayOffGiorone2Team.Length - 1
+            '        poff(1).Clasa.Add(New Girone.ClasaGirone(i, Variables.Settings.Coppa.PlayOffGiorone2Team(i)))
+            '    Next
 
-        '    poff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.PlayOffGiorone1Match(0), -1, 0, 2, poff(0).Clasa(0).TeamId, poff(0).Clasa(2).TeamId))
-        '    poff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, currlega.Settings.Coppa.PlayOffGiorone1Match(1), -1, 1, 2, poff(0).Clasa(1).TeamId, poff(0).Clasa(2).TeamId))
-        '    poff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, currlega.Settings.Coppa.PlayOffGiorone1Match(2), -1, 0, 1, poff(0).Clasa(0).TeamId, poff(0).Clasa(1).TeamId))
+            '    poff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.PlayOffGiorone1Match(0), -1, 0, 2, poff(0).Clasa(0).TeamId, poff(0).Clasa(2).TeamId))
+            '    poff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, Variables.Settings.Coppa.PlayOffGiorone1Match(1), -1, 1, 2, poff(0).Clasa(1).TeamId, poff(0).Clasa(2).TeamId))
+            '    poff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, Variables.Settings.Coppa.PlayOffGiorone1Match(2), -1, 0, 1, poff(0).Clasa(0).TeamId, poff(0).Clasa(1).TeamId))
 
-        '    poff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.PlayOffGiorone2Match(0), -1, 0, 2, poff(1).Clasa(0).TeamId, poff(1).Clasa(2).TeamId))
-        '    poff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, currlega.Settings.Coppa.PlayOffGiorone2Match(1), -1, 1, 2, poff(1).Clasa(1).TeamId, poff(1).Clasa(2).TeamId))
-        '    poff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, currlega.Settings.Coppa.PlayOffGiorone2Match(2), -1, 0, 1, poff(1).Clasa(0).TeamId, poff(1).Clasa(1).TeamId))
+            '    poff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.PlayOffGiorone2Match(0), -1, 0, 2, poff(1).Clasa(0).TeamId, poff(1).Clasa(2).TeamId))
+            '    poff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, Variables.Settings.Coppa.PlayOffGiorone2Match(1), -1, 1, 2, poff(1).Clasa(1).TeamId, poff(1).Clasa(2).TeamId))
+            '    poff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, Variables.Settings.Coppa.PlayOffGiorone2Match(2), -1, 0, 1, poff(1).Clasa(0).TeamId, poff(1).Clasa(1).TeamId))
 
-        '    qf.Clear()
-        '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.QuartiDiFinale1Match(0), currlega.Settings.Coppa.QuartiDiFinale1Match(1), 0, 1, currlega.Settings.Coppa.QuartiDiFinale1Team(0), currlega.Settings.Coppa.QuartiDiFinale1Team(1)))
-        '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.QuartiDiFinale2Match(0), currlega.Settings.Coppa.QuartiDiFinale2Match(1), 0, 1, currlega.Settings.Coppa.QuartiDiFinale2Team(0), currlega.Settings.Coppa.QuartiDiFinale2Team(1)))
-        '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.QuartiDiFinale3Match(0), currlega.Settings.Coppa.QuartiDiFinale3Match(1), 0, 1, currlega.Settings.Coppa.QuartiDiFinale3Team(0), currlega.Settings.Coppa.QuartiDiFinale3Team(1)))
-        '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.QuartiDiFinale4Match(0), currlega.Settings.Coppa.QuartiDiFinale4Match(1), 0, 1, currlega.Settings.Coppa.QuartiDiFinale4Team(0), currlega.Settings.Coppa.QuartiDiFinale4Team(1)))
+            '    qf.Clear()
+            '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.QuartiDiFinale1Match(0), Variables.Settings.Coppa.QuartiDiFinale1Match(1), 0, 1, Variables.Settings.Coppa.QuartiDiFinale1Team(0), Variables.Settings.Coppa.QuartiDiFinale1Team(1)))
+            '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.QuartiDiFinale2Match(0), Variables.Settings.Coppa.QuartiDiFinale2Match(1), 0, 1, Variables.Settings.Coppa.QuartiDiFinale2Team(0), Variables.Settings.Coppa.QuartiDiFinale2Team(1)))
+            '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.QuartiDiFinale3Match(0), Variables.Settings.Coppa.QuartiDiFinale3Match(1), 0, 1, Variables.Settings.Coppa.QuartiDiFinale3Team(0), Variables.Settings.Coppa.QuartiDiFinale3Team(1)))
+            '    qf.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.QuartiDiFinale4Match(0), Variables.Settings.Coppa.QuartiDiFinale4Match(1), 0, 1, Variables.Settings.Coppa.QuartiDiFinale4Team(0), Variables.Settings.Coppa.QuartiDiFinale4Team(1)))
 
-        '    sem.Clear()
-        '    sem.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.Semifinale1Match(0), currlega.Settings.Coppa.Semifinale1Match(1), 0, 1, currlega.Settings.Coppa.Semifinale1Team(0), currlega.Settings.Coppa.Semifinale1Team(1)))
-        '    sem.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.Semifinale2Match(0), currlega.Settings.Coppa.Semifinale2Match(1), 0, 1, currlega.Settings.Coppa.Semifinale2Team(0), currlega.Settings.Coppa.Semifinale2Team(1)))
+            '    sem.Clear()
+            '    sem.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.Semifinale1Match(0), Variables.Settings.Coppa.Semifinale1Match(1), 0, 1, Variables.Settings.Coppa.Semifinale1Team(0), Variables.Settings.Coppa.Semifinale1Team(1)))
+            '    sem.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.Semifinale2Match(0), Variables.Settings.Coppa.Semifinale2Match(1), 0, 1, Variables.Settings.Coppa.Semifinale2Team(0), Variables.Settings.Coppa.Semifinale2Team(1)))
 
-        '    fin.Clear()
-        '    fin.Add(New Coppa.Girone.PartitaGirone(0, 1, currlega.Settings.Coppa.FinaleMatch(0), currlega.Settings.Coppa.FinaleMatch(1), 0, 1, currlega.Settings.Coppa.FinaleTeam(0), currlega.Settings.Coppa.FinaleTeam(1)))
+            '    fin.Clear()
+            '    fin.Add(New Coppa.Girone.PartitaGirone(0, 1, Variables.Settings.Coppa.FinaleMatch(0), Variables.Settings.Coppa.FinaleMatch(1), 0, 1, Variables.Settings.Coppa.FinaleTeam(0), Variables.Settings.Coppa.FinaleTeam(1)))
 
-        '    For Each gir As Girone In girel
-        '        SetRisultatiFinali(gir.Partite)
-        '        SetClassifica(gir.Partite, gir.Clasa)
-        '    Next
+            '    For Each gir As Girone In girel
+            '        SetRisultatiFinali(gir.Partite)
+            '        SetClassifica(gir.Partite, gir.Clasa)
+            '    Next
 
-        '    For Each p As Girone In poff
-        '        SetRisultatiFinali(p.Partite)
-        '        SetClassifica(p.Partite, p.Clasa)
-        '    Next
+            '    For Each p As Girone In poff
+            '        SetRisultatiFinali(p.Partite)
+            '        SetClassifica(p.Partite, p.Clasa)
+            '    Next
 
-        '    SetRisultatiFinali(qf)
-        '    SetRisultatiFinali(sem)
-        '    SetRisultatiFinali(fin)
+            '    SetRisultatiFinali(qf)
+            '    SetRisultatiFinali(sem)
+            '    SetRisultatiFinali(fin)
 
-        'End Sub
+        End Sub
 
         'Function GetGoalString(ByVal Goal As Integer) As String
         '    If Goal > -5 Then

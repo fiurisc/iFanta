@@ -1,7 +1,6 @@
-﻿Imports System.Net
-Imports System.IO
+﻿Imports System.IO
+Imports System.Net
 Imports System.Text
-Imports webfuction.Torneo.MatchsData
 
 Namespace WebData
 
@@ -64,7 +63,7 @@ Namespace WebData
                         End If
                     Next
 
-                    If Torneo.General.dataFromDatabase Then
+                    If Torneo.PublicVariables.dataFromDatabase Then
                         Torneo.Players.UpdatePlayersQuotes(playersq)
                     End If
 

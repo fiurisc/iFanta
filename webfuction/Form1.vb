@@ -14,8 +14,8 @@ Public Class Form1
         Dim str As New System.Text.StringBuilder
 
         WebData.Functions.Year = year
-        WebData.Functions.InitPath(My.Application.Info.DirectoryPath & "\web", My.Application.Info.DirectoryPath & "\web")
-        Torneo.General.dataFromDatabase = True
+        WebData.Functions.InitPath(My.Application.Info.DirectoryPath & "\web\", My.Application.Info.DirectoryPath & "\web\")
+        Torneo.PublicVariables.dataFromDatabase = False
 
     End Sub
 
@@ -69,7 +69,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-        Dim json As String = Torneo.RoseData.GetTeamsTorneo()
+        Dim json As String = Torneo.Classifica.apiGetClassifica("1", False)
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", json)
         json = ""
         'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
@@ -77,7 +77,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-        Dim data As String = Torneo.RoseData.GetRoseTorneo(My.Application.Info.DirectoryPath, year, 1)
+        Dim data As String = Torneo.RoseData.apiGetRoseTorneo(1)
         data = ""
     End Sub
 

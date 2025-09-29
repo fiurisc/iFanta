@@ -1,9 +1,11 @@
-﻿Namespace Torneo
+﻿Imports System.Data
+
+Namespace Torneo
     Public Class Players
 
-        Public Shared Function GetPlayersQuotesJson(Ruolo As String) As String
+        Public Shared Function apiGetPlayersQuotes(Ruolo As String) As String
 
-            If General.dataFromDatabase Then
+            If PublicVariables.dataFromDatabase Then
 
                 Dim mtxdata As List(Of PlayerQuotesItem) = GetPlayersQuotesData(Ruolo)
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
@@ -90,9 +92,9 @@
             End Try
         End Sub
 
-        Public Shared Function GetPlayersDataJson() As String
+        Public Shared Function apiGetPlayersData() As String
 
-            If General.dataFromDatabase Then
+            If PublicVariables.dataFromDatabase Then
                 Dim mtxdata As List(Of PlayerDataItem) = GetPlayersData()
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
             Else
