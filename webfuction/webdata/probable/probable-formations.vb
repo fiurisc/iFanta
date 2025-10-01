@@ -20,14 +20,14 @@
             End If
         End Sub
 
-        Shared Function WriteData(day As Integer, Data As Dictionary(Of String, Torneo.ProbablePlayer.Player), fileDestination As String) As String
+        Shared Function WriteData(day As Integer, Data As Dictionary(Of String, Torneo.ProbablePlayer.Player), fileDestiNazione As String) As String
 
             Dim json As String = ""
             Try
                 Dim dicData As New Dictionary(Of String, Dictionary(Of String, Torneo.ProbablePlayer.Player))
                 dicData.Add(day.ToString(), Data)
                 json = WebData.Functions.SerializzaOggetto(dicData, False)
-                IO.File.WriteAllText(fileDestination, json)
+                IO.File.WriteAllText(fileDestiNazione, json)
             Catch ex As Exception
                 Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try

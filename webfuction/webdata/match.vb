@@ -198,8 +198,8 @@ Namespace WebData
 
                     Dim day As String = ""
                     Dim dt As New Date(Date.Now.Year, Date.Now.Month, Date.Now.Day, 0, 0, 0)
-                    Dim squadraa As String = ""
-                    Dim squadrab As String = ""
+                    Dim Squadraa As String = ""
+                    Dim Squadrab As String = ""
                     Dim line() As String
                     Dim matchid As Integer = 1
                     Dim matchplayed As Boolean = False
@@ -334,7 +334,7 @@ Namespace WebData
 
                             If line(z).Contains("<div class=""player-role role"" data-value=") AndAlso line(z).Contains("data-value=""{{role}}""") = False Then
                                 Dim name As String = ""
-                                Dim ruolo As String = Regex.Match(line(z).Trim, "(?<=data-value="")\w+").Value.ToUpper()
+                                Dim Ruolo As String = Regex.Match(line(z).Trim, "(?<=data-value="")\w+").Value.ToUpper()
                                 team = Regex.Match(line(z + 2).Trim, "(?<=squadre\/)\w+(?=\/)").Value.ToUpper
                                 name = Regex.Match(line(z + 2).Trim.Replace("-", " "), "(?<=\/)[\w\s]{1,}(?=\/\d+)").Value.ToUpper
                                 If name.Contains("FOLORUNSHO") Then

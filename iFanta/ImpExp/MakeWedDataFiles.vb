@@ -13,7 +13,6 @@ Public Class MakeWedDataFiles
 
         'Salvo la lista dei team'
         flist.Add(MakeTeamsFile(currlega.Teams, GetTempDirectory() & "\teams.json"))
-        'flist.Add(MakeTeamsFile(currlega.Teams, GetTempDirectory() & "\team.txt"))
 
         'Salvo la lista degli svincolati'
         flist.Add(MakePlayersFile(currlega.Teams(0).GetPlayer("SVINCOLATI", ""), GetTempDirectory() & "\svincolati.txt"))
@@ -72,12 +71,6 @@ Public Class MakeWedDataFiles
             wteams.Add(i, team)
         Next
         IO.File.WriteAllText(fname, JsonConvert.SerializeObject(wteams, Formatting.Indented))
-
-        'Dim sb As New System.Text.StringBuilder
-        'For i As Integer = 0 To teams.Count - 1
-        '    sb.AppendLine(i & "|" & teams(i).Nome & "|" & teams(i).Allenatore & "|" & SystemFunction.Convertion.ConvertFileToBase64String(GetLegaCoatOfArmsLegsDirectory() & "\" & teams(i).IdTeam & "-16x16.png") & "|" & SystemFunction.Convertion.ConvertFileToBase64String(GetLegaCoatOfArmsLegsDirectory() & "\" & teams(i).IdTeam & "-24x24.png"))
-        'Next
-        'IO.File.WriteAllText(fname, sb.ToString())
         Return fname
     End Function
 

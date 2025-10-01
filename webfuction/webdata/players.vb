@@ -5,7 +5,7 @@ Namespace WebData
         Public Class Data
 
             Public Shared players As New Dictionary(Of String, Dictionary(Of String, List(Of String)))
-            'COGNOME NOME/NOME LENGHT/LIST NOME ASSOCIATI'
+            'COGNome Nome/Nome LENGHT/LIST Nome ASSOCIATI'
             Public Shared keyplayers As New Dictionary(Of String, WebPlayerKey)
 
             Public Shared Sub ResetCacheData()
@@ -26,21 +26,21 @@ Namespace WebData
 
                         For Each p As Torneo.Players.PlayerQuotesItem In playersq
 
-                            If p.nome.Contains("RANOCCHIA") Then
-                                p.nome = p.nome
+                            If p.Nome.Contains("RANOCCHIA") Then
+                                p.Nome = p.Nome
                             End If
 
-                            If players.ContainsKey(p.squadra) = False Then players.Add(p.squadra, New Dictionary(Of String, List(Of String)))
-                            If players(p.squadra).ContainsKey(p.ruolo) = False Then players(p.squadra).Add(p.ruolo, New List(Of String))
-                            players(p.squadra)(p.ruolo).Add(p.nome)
+                            If players.ContainsKey(p.Squadra) = False Then players.Add(p.Squadra, New Dictionary(Of String, List(Of String)))
+                            If players(p.Squadra).ContainsKey(p.Ruolo) = False Then players(p.Squadra).Add(p.Ruolo, New List(Of String))
+                            players(p.Squadra)(p.Ruolo).Add(p.Nome)
 
-                            If keyplayers.ContainsKey(p.squadra) = False Then keyplayers.Add(p.squadra, New WebPlayerKey)
+                            If keyplayers.ContainsKey(p.Squadra) = False Then keyplayers.Add(p.Squadra, New WebPlayerKey)
 
-                            Dim keylist As List(Of String) = GetKeyWordList(Functions.CleanSpecialChar(p.nome))
+                            Dim keylist As List(Of String) = GetKeyWordList(Functions.CleanSpecialChar(p.Nome))
 
                             For k As Integer = 0 To keylist.Count - 1
                                 Dim subkey() As String = keylist(k).Split(CChar("/"))
-                                Call AddwPlayerWordKey(keyplayers(p.squadra), subkey, 0, p.nome, p.ruolo)
+                                Call AddwPlayerWordKey(keyplayers(p.Squadra), subkey, 0, p.Nome, p.Ruolo)
                             Next
                         Next
                     End If

@@ -54,7 +54,7 @@ Namespace WebData
                                 sq.Clear()
                                 sqid = -1
                             ElseIf line(i).Contains("class=""details-team__name""") Then
-                                'Aggiungo la squadra alla lista di quelle che disputano il match'
+                                'Aggiungo la Squadra alla lista di quelle che disputano il match'
                                 sq.Add(System.Text.RegularExpressions.Regex.Match(line(i + 2).Trim(), "(?<=\>)\w+(?=\<\/a)").Value.ToUpper)
                             ElseIf line(i).Contains("class=""match-details__info"">") Then
 
@@ -114,20 +114,20 @@ Namespace WebData
 
                                 If value <> "" AndAlso value.Contains("Nessuno") = False Then
                                     Dim list() As String = value.Trim().Split(CChar(","))
-                                    For Each nome In list
+                                    For Each Nome In list
                                         Try
                                             Dim info As String = ""
-                                            nome = nome.Trim()
-                                            If RegularExpressions.Regex.Match(nome, "^\d+").Success Then
-                                                nome = nome.Substring(nome.IndexOf(" "))
+                                            Nome = Nome.Trim()
+                                            If RegularExpressions.Regex.Match(Nome, "^\d+").Success Then
+                                                Nome = Nome.Substring(Nome.IndexOf(" "))
                                             End If
-                                            If RegularExpressions.Regex.Match(nome, "\(").Success Then
-                                                info = nome.Substring(nome.IndexOf("(") + 1).Replace(")", "").Trim()
-                                                nome = nome.Substring(0, nome.IndexOf("("))
+                                            If RegularExpressions.Regex.Match(Nome, "\(").Success Then
+                                                info = Nome.Substring(Nome.IndexOf("(") + 1).Replace(")", "").Trim()
+                                                Nome = Nome.Substring(0, Nome.IndexOf("("))
                                             End If
-                                            nome = nome.Trim().ToUpper()
-                                            nome = Players.Data.ResolveName("", nome, sq(sqid), playersLog, False).GetName()
-                                            Call AddInfo(nome, sq(sqid), site, pstate, info, 0, plaryersData)
+                                            Nome = Nome.Trim().ToUpper()
+                                            Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
+                                            Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData)
                                         Catch ex As Exception
 
                                         End Try

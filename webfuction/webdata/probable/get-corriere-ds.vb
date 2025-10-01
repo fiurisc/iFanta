@@ -155,13 +155,13 @@
 
                             If line.Contains("<td class=""a-right"">") Then
 
-                                'Giorcatore squadra in casa'
+                                'Giorcatore Squadra in casa'
                                 name = System.Text.RegularExpressions.Regex.Match(line, "(?<=\>).*(?=\<\/)").Value.ToUpper.Replace("'", "’")
                                 If name <> "" Then
                                     name = Players.Data.ResolveName("", name, sq(0), wpl, False).GetName()
                                     Call AddInfo(name, sq(0), site, pstate, info, perc, wpd)
                                 End If
-                                'Giorcatore squadra fuori casa'
+                                'Giorcatore Squadra fuori casa'
                                 name = System.Text.RegularExpressions.Regex.Match(lines(i + 3), "(?<=\>).*(?=\<\/)").Value.ToUpper.Replace("'", "’")
                                 If name <> "" Then
                                     name = Players.Data.ResolveName("", name, sq(1), wpl, False).GetName()
@@ -170,7 +170,7 @@
 
                             ElseIf line.Contains("<th colspan=""2"">") Then
 
-                                'Giorcatore squadra in casa'
+                                'Giorcatore Squadra in casa'
                                 Dim s1() As String = System.Text.RegularExpressions.Regex.Match(lines(i - 1), "(?<=\>).*(?=\<\/)").Value.Split(CChar(","))
                                 For k As Integer = 0 To s1.Length - 1
                                     name = s1(k).Trim.ToUpper
@@ -180,7 +180,7 @@
                                     End If
                                 Next
 
-                                'Giorcatore squadra fuori casa'
+                                'Giorcatore Squadra fuori casa'
                                 Dim s2() As String = System.Text.RegularExpressions.Regex.Match(lines(i + 1), "(?<=\>).*(?=\<\/)").Value.Split(CChar(","))
                                 For k As Integer = 0 To s2.Length - 1
                                     name = s2(k).Trim.ToUpper

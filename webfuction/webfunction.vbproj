@@ -157,6 +157,7 @@
     </Compile>
     <Compile Include="torneo\classifica.vb" />
     <Compile Include="torneo\coppa.vb" />
+    <Compile Include="torneo\formazioni.vb" />
     <Compile Include="torneo\functions.vb" />
     <Compile Include="torneo\general.vb" />
     <Compile Include="torneo\make_version.vb" />

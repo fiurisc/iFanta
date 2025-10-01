@@ -3,9 +3,9 @@
 Namespace Torneo
     Public Class Players
 
-        Public Shared Function apiGetPlayersQuotes(Ruolo As String) As String
+        Public Shared Function ApiGetPlayersQuotes(Ruolo As String) As String
 
-            If PublicVariables.dataFromDatabase Then
+            If PublicVariables.DataFromDatabase Then
 
                 Dim mtxdata As List(Of PlayerQuotesItem) = GetPlayersQuotesData(Ruolo)
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
@@ -15,16 +15,16 @@ Namespace Torneo
                 Dim j As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
                 Dim mtxdata As List(Of PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(j)
 
-                If Ruolo <> "" Then mtxdata.RemoveAll(Function(x) x.ruolo <> Ruolo)
+                If Ruolo <> "" Then mtxdata.RemoveAll(Function(x) x.Ruolo <> Ruolo)
 
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
             End If
 
         End Function
 
-        Private Shared Function GetPlayersQuotesData(ruolo As String) As List(Of PlayerQuotesItem)
-            If ruolo <> "" Then
-                Return GetPlayersQuotesData(New List(Of String) From {ruolo})
+        Private Shared Function GetPlayersQuotesData(Ruolo As String) As List(Of PlayerQuotesItem)
+            If Ruolo <> "" Then
+                Return GetPlayersQuotesData(New List(Of String) From {Ruolo})
             Else
                 Return GetPlayersQuotesData(New List(Of String))
             End If
@@ -35,17 +35,17 @@ Namespace Torneo
             Dim mtxtdata As New List(Of PlayerQuotesItem)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbplayer " & If(ruoli.Count > 0, " WHERE ruolo IN ('" & WebData.Functions.ConvertListStringToString(ruoli, "','") & "')", ""))
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbplayer " & If(ruoli.Count > 0, " WHERE Ruolo IN ('" & WebData.Functions.ConvertListStringToString(ruoli, "','") & "')", ""))
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim p As New PlayerQuotesItem
-                        p.ruolo = row.Item("ruolo").ToString()
-                        p.nome = row.Item("nome").ToString()
-                        p.squadra = row.Item("squadra").ToString()
-                        p.qini = If(row.Item("qini") IsNot DBNull.Value, Convert.ToInt32(row.Item("qini")), 0)
-                        p.qcur = If(row.Item("qcur") IsNot DBNull.Value, Convert.ToInt32(row.Item("qcur")), 0)
+                        p.Ruolo = row.Item("Ruolo").ToString()
+                        p.Nome = row.Item("Nome").ToString()
+                        p.Squadra = row.Item("Squadra").ToString()
+                        p.Qini = If(row.Item("Qini") IsNot DBNull.Value, Convert.ToInt32(row.Item("Qini")), 0)
+                        p.Qcur = If(row.Item("Qcur") IsNot DBNull.Value, Convert.ToInt32(row.Item("Qcur")), 0)
                         mtxtdata.Add(p)
                     Next
                 End If
@@ -65,11 +65,11 @@ Namespace Torneo
                 Dim newdata As New Dictionary(Of String, PlayerQuotesItem)
 
                 For Each p As PlayerQuotesItem In mtxdata
-                    If olddata.ContainsKey(p.nome) = False Then olddata.Add(p.nome, p)
+                    If olddata.ContainsKey(p.Nome) = False Then olddata.Add(p.Nome, p)
                 Next
 
                 For Each p As PlayerQuotesItem In newmtxdata
-                    If newdata.ContainsKey(p.nome) = False Then newdata.Add(p.nome, p)
+                    If newdata.ContainsKey(p.Nome) = False Then newdata.Add(p.Nome, p)
                 Next
 
                 Dim sqlinsert As New List(Of String)
@@ -78,9 +78,9 @@ Namespace Torneo
                 For Each key In newdata.Keys
                     Dim p As PlayerQuotesItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,nome,squadra,qini,qcur) values (" & p.ruolo & "," & p.nome & ",'" & p.squadra & "'," & p.qini & "," & p.qcur & ")")
+                        sqlinsert.Add("INSERT INTO tbplayer (Ruolo,Nome,Squadra,Qini,Qcur) values (" & p.Ruolo & "," & p.Nome & ",'" & p.Squadra & "'," & p.Qini & "," & p.Qcur & ")")
                     ElseIf WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                        sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.ruolo & "',squadra='" & p.squadra & "',qini=" & p.qini & ",qcur=" & p.qcur & " WHERE nome='" & p.nome & "'")
+                        sqlupdate.Add("UPDATE tbplayer SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',Qini=" & p.Qini & ",Qcur=" & p.Qcur & " WHERE Nome='" & p.Nome & "'")
                     End If
                 Next
 
@@ -92,9 +92,9 @@ Namespace Torneo
             End Try
         End Sub
 
-        Public Shared Function apiGetPlayersData() As String
+        Public Shared Function ApiGetPlayersData() As String
 
-            If PublicVariables.dataFromDatabase Then
+            If PublicVariables.DataFromDatabase Then
                 Dim mtxdata As List(Of PlayerDataItem) = GetPlayersData()
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
             Else
@@ -116,11 +116,11 @@ Namespace Torneo
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim p As New PlayerDataItem
-                        p.ruolo = row.Item("ruolo").ToString()
-                        p.nome = row.Item("nome").ToString()
-                        p.squadra = row.Item("squadra").ToString()
-                        p.nation = row.Item("nat").ToString()
-                        p.natcode = row.Item("natcode").ToString()
+                        p.Ruolo = row.Item("Ruolo").ToString()
+                        p.Nome = row.Item("Nome").ToString()
+                        p.Squadra = row.Item("Squadra").ToString()
+                        p.Nazione = row.Item("nat").ToString()
+                        p.NatCode = row.Item("NatCode").ToString()
                         mtxtdata.Add(p)
                     Next
                 End If
@@ -140,11 +140,11 @@ Namespace Torneo
                 Dim newdata As New Dictionary(Of String, PlayerDataItem)
 
                 For Each p As PlayerDataItem In mtxdata
-                    If olddata.ContainsKey(p.nome) = False Then olddata.Add(p.nome, p)
+                    If olddata.ContainsKey(p.Nome) = False Then olddata.Add(p.Nome, p)
                 Next
 
                 For Each p As PlayerDataItem In newmtxdata
-                    If newdata.ContainsKey(p.nome) = False Then newdata.Add(p.nome, p)
+                    If newdata.ContainsKey(p.Nome) = False Then newdata.Add(p.Nome, p)
                 Next
 
                 Dim sqlinsert As New List(Of String)
@@ -153,9 +153,9 @@ Namespace Torneo
                 For Each key In newdata.Keys
                     Dim p As PlayerDataItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer_data (ruolo,nome,squadra,nat,natcode) values (" & p.ruolo & "," & p.nome & ",'" & p.squadra & "','" & p.nation & "','" & p.natcode & "')")
+                        sqlinsert.Add("INSERT INTO tbplayer_data (Ruolo,Nome,Squadra,nat,NatCode) values (" & p.Ruolo & "," & p.Nome & ",'" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "')")
                     ElseIf WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                        sqlupdate.Add("UPDATE tbplayer_data SET ruolo='" & p.ruolo & "',squadra='" & p.squadra & "',nat='" & p.nation & "',natcode='" & p.natcode & "' WHERE nome='" & p.nome & "'")
+                        sqlupdate.Add("UPDATE tbplayer_data SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',nat='" & p.Nazione & "',NatCode='" & p.NatCode & "' WHERE Nome='" & p.Nome & "'")
                     End If
                 Next
 
@@ -168,43 +168,43 @@ Namespace Torneo
         End Sub
 
         Public Class PlayerQuotesItem
-            Public Property ruolo As String = ""
-            Public Property nome As String = ""
-            Public Property squadra As String = ""
-            Public Property qini As Integer = 0
-            Public Property qcur As Integer = 0
+            Public Property Ruolo As String = ""
+            Public Property Nome As String = ""
+            Public Property Squadra As String = ""
+            Public Property Qini As Integer = 0
+            Public Property Qcur As Integer = 0
 
             Sub New()
 
             End Sub
 
-            Sub New(ruolo As String, nome As String, squadra As String, qini As Integer, qcur As Integer)
-                Me.ruolo = ruolo
-                Me.nome = nome
-                Me.squadra = squadra
-                Me.qini = qini
-                Me.qcur = qcur
+            Sub New(Ruolo As String, Nome As String, Squadra As String, Qini As Integer, Qcur As Integer)
+                Me.Ruolo = Ruolo
+                Me.Nome = Nome
+                Me.Squadra = Squadra
+                Me.Qini = Qini
+                Me.Qcur = Qcur
             End Sub
 
         End Class
 
         Public Class PlayerDataItem
-            Public Property ruolo As String = ""
-            Public Property nome As String = ""
-            Public Property squadra As String = ""
-            Public Property nation As String = "UNK"
-            Public Property natcode As String = "UNK"
+            Public Property Ruolo As String = ""
+            Public Property Nome As String = ""
+            Public Property Squadra As String = ""
+            Public Property Nazione As String = "UNK"
+            Public Property NatCode As String = "UNK"
 
             Sub New()
 
             End Sub
 
-            Sub New(ruolo As String, nome As String, squadra As String, nation As String, natcode As String)
-                Me.ruolo = ruolo
-                Me.nome = nome
-                Me.squadra = squadra
-                Me.nation = nation
-                Me.natcode = natcode
+            Sub New(Ruolo As String, Nome As String, Squadra As String, Nazione As String, NatCode As String)
+                Me.Ruolo = Ruolo
+                Me.Nome = Nome
+                Me.Squadra = Squadra
+                Me.Nazione = Nazione
+                Me.NatCode = NatCode
             End Sub
         End Class
     End Class

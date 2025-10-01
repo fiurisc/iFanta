@@ -1,8 +1,6 @@
 ﻿Namespace Torneo
-    Partial Class LegaSettings
-
+    Partial Class TorneoSettings
         Public Class CoppaSettings
-
             Public Property TipoSecondoTurno As String = "playoff"
             Public Property PlayOffGiorone1Team() As Integer() = New Integer() {-1, -1, -1}
             Public Property PlayOffGiorone2Team() As Integer() = New Integer() {-1, -1, -1}

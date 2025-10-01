@@ -61,8 +61,8 @@ Namespace WebData
 
                                 line(i) = line(i).Replace(vbTab, "").Trim()
 
-                                Dim name As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=nomegio=)(.*?)(?="")").Value.Replace("'", "’")
-                                Dim ruolo As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=ruolo=)\w{1}").Value
+                                Dim name As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Nomegio=)(.*?)(?="")").Value.Replace("'", "’")
+                                Dim Ruolo As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Ruolo=)\w{1}").Value
                                 Dim info As String = ""
 
                                 If line(i).Contains("FERGUSON") Then
@@ -73,15 +73,15 @@ Namespace WebData
 
                                     Dim s() As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Ballottaggio\s+)(.*?)(?=\"")").Value.Replace("(", "|").Replace(")", "").Replace("/", "|").Split(CChar("|"))
                                     If s.Length = 4 Then
-                                        name = Players.Data.ResolveName(ruolo, s(0), team, wpl, False).GetName()
+                                        name = Players.Data.ResolveName(Ruolo, s(0), team, wpl, False).GetName()
                                         info = "In ballottagio con " & s(2).Trim() & " [" & s(1).Trim() & "]"
                                         Call AddInfo(name, team, site, pstate, info, -1, wpd)
-                                        name = Players.Data.ResolveName(ruolo, s(2), team, wpl, False).GetName()
+                                        name = Players.Data.ResolveName(Ruolo, s(2), team, wpl, False).GetName()
                                         info = "In ballottagio con " & s(0).Trim() & " [" & s(3).Trim() & "]"
                                         Call AddInfo(name, team, site, "Panchina", info, -1, wpd)
                                     End If
                                 Else
-                                    name = Players.Data.ResolveName(ruolo, name, team, wpl, False).GetName()
+                                    name = Players.Data.ResolveName(Ruolo, name, team, wpl, False).GetName()
                                     Call AddInfo(name, team, site, pstate, info, -1, wpd)
                                 End If
 

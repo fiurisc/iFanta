@@ -32,34 +32,34 @@ Namespace WebData
                     IO.File.WriteAllText(fileTemp, html)
 
                     Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("ISO-8859-1"))
-                    Dim nome As String = ""
-                    Dim ruolo As String = ""
-                    Dim squadra As String = ""
-                    Dim qini As String = ""
-                    Dim qcur As String = ""
+                    Dim Nome As String = ""
+                    Dim Ruolo As String = ""
+                    Dim Squadra As String = ""
+                    Dim Qini As String = ""
+                    Dim Qcur As String = ""
 
                     For i As Integer = 0 To line.Length - 1
 
-                        'Leggo il nome'
+                        'Leggo il Nome'
                         If line(i).Contains("data-filter-keywords") Then
-                            nome = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim().Replace("&#X27;", "'"))
+                            Nome = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim().Replace("&#X27;", "'"))
                         End If
-                        'Leggo il ruolo'
+                        'Leggo il Ruolo'
                         If line(i).Contains("data-filter-role-classic") Then
-                            ruolo = System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim()
+                            Ruolo = System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim()
                         End If
-                        'Leggo la squadra'
+                        'Leggo la Squadra'
                         If line(i).Contains("<td class=""player-team"" data-col-key=""sq"">") Then
-                            squadra = Functions.GetTeamNameFromCode(line(i + 1).Trim())
+                            Squadra = Functions.GetTeamNameFromCode(line(i + 1).Trim())
                         End If
                         'Leggo la quotazione iniziale'
                         If line(i).Contains("player-classic-initial-price") Then
-                            qini = line(i + 1).Trim()
+                            Qini = line(i + 1).Trim()
                         End If
                         'Leggo la quotazione iniziale'
                         If line(i).Contains("player-classic-current-price") Then
-                            qcur = line(i + 1).Trim()
-                            playersq.Add(New Torneo.Players.PlayerQuotesItem(ruolo, nome, squadra, CInt(qini), CInt(qcur)))
+                            Qcur = line(i + 1).Trim()
+                            playersq.Add(New Torneo.Players.PlayerQuotesItem(Ruolo, Nome, Squadra, CInt(Qini), CInt(Qcur)))
                         End If
                     Next
 
@@ -97,7 +97,7 @@ Namespace WebData
             Dim filed As String = dird & "\players-quote.txt"
             Dim strdata As New System.Text.StringBuilder
 
-            strdata.AppendLine("RUOLO|NOME|SQUADRA|QINI|QCUR")
+            strdata.AppendLine("Ruolo|Nome|Squadra|Qini|Qcur")
 
             Try
 

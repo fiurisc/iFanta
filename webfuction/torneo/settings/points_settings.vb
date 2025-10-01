@@ -1,5 +1,5 @@
 ﻿Namespace Torneo
-    Partial Class LegaSettings
+    Partial Class TorneoSettings
         Public Class PointsSettings
 
             Private _sitereferenceforpoints As New List(Of String)

@@ -1,11 +1,13 @@
-﻿Imports System.Data.OleDb
+﻿Imports System.Data
+Imports System.Data.OleDb
 
 Namespace Torneo
     Public Class Functions
 
         Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String, year As String)
+            PublicVariables.Year = year
+            PublicVariables.RootDataPath = rootdatabasePath
             PublicVariables.DataPath = rootDataPath & year & "\"
-            PublicVariables.SettingsPath = rootDataPath & "update\tornei\" & year & "-" & CInt(year) + 1 & "\"
             PublicVariables.DatabaseFileName = rootdatabasePath & year & ".accdb"
         End Sub
 
@@ -33,7 +35,7 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function apiGetRecordIdFromUpdate(table As String, lastRecordId As Integer) As Integer
+        Public Shared Function ApiGetRecordIdFromUpdate(table As String, lastRecordId As Integer) As Integer
 
             Dim query As String = "SELECT max(id) as lastid FROM " & table & " WHERE id<=" & lastRecordId & ";"
             Dim lastId As Integer = -1
@@ -57,7 +59,76 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Sub ExecuteSql(serverPath As String, year As String, ByVal SqlString As String)
+        Public Shared Function ConvertListStringToString(List As List(Of String), Separator As String) As String
+            Dim str As String = ""
+            For i As Integer = 0 To List.Count - 1
+                str = str & Separator & List(i)
+            Next
+            If str.Length > 0 Then
+                Return str.Substring(1)
+            Else
+                Return ""
+            End If
+        End Function
+
+        Public Shared Function ReadFieldStringData(FieldsName As String, DataRow As DataRow, Optional defvalue As String = "") As String
+            If DataRow.Table.Columns.Contains(FieldsName) Then
+                If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then
+                    defvalue = DataRow.Item(FieldsName).ToString
+                End If
+            End If
+            Return defvalue
+        End Function
+
+        Public Shared Function ReadFieldBooleanData(FieldsName As String, DataRow As DataRow, Optional defvalue As Boolean = False) As Boolean
+            If DataRow.Table.Columns.Contains(FieldsName) Then
+                If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then
+                    defvalue = CBool(DataRow.Item(FieldsName))
+                End If
+            End If
+            Return defvalue
+        End Function
+
+        Public Shared Function ReadFieldIntegerData(FieldsName As String, DataRow As DataRow, Optional defvalue As Integer = 0) As Integer
+            If DataRow.Table.Columns.Contains(FieldsName) Then
+                If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then
+                    defvalue = CInt(DataRow.Item(FieldsName))
+                End If
+            End If
+            Return defvalue
+        End Function
+
+        Public Shared Function ReadFieldTimeData(FieldsName As String, DataRow As DataRow, Optional defvalue As Date = Nothing) As Date
+            If DataRow.Table.Columns.Contains(FieldsName) Then
+                If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then
+                    defvalue = CDate(DataRow.Item(FieldsName))
+                End If
+            End If
+            Return defvalue
+        End Function
+
+        Public Shared Function ReadFieldStringData(obj As Object, Optional defvalue As String = "") As String
+            If obj IsNot System.DBNull.Value Then
+                defvalue = obj.ToString
+            End If
+            Return defvalue
+        End Function
+
+        Public Shared Function ReadFieldIntegerData(obj As Object, Optional defvalue As Integer = 0) As Integer
+            If obj IsNot System.DBNull.Value Then
+                defvalue = CInt(obj)
+            End If
+            Return defvalue
+        End Function
+
+        Public Shared Function ReadFieldTimeData(obj As Object, Optional defvalue As Date = Nothing) As Date
+            If obj IsNot System.DBNull.Value Then
+                defvalue = CDate(obj)
+            End If
+            Return defvalue
+        End Function
+
+        Public Shared Sub ExecuteSql(ByVal SqlString As String)
             ExecuteSql(New List(Of String) From {SqlString})
         End Sub
 
@@ -90,18 +161,6 @@ Namespace Torneo
 
         Public Shared Function GetDbConnectionString() As String
             Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & PublicVariables.DatabaseFileName & ";"
-        End Function
-
-        Public Shared Function ConvertListStringToString(List As List(Of String), Separator As String) As String
-            Dim str As String = ""
-            For i As Integer = 0 To List.Count - 1
-                str = str & "," & List(i)
-            Next
-            If str.Length > 0 Then
-                Return str.Substring(1)
-            Else
-                Return ""
-            End If
         End Function
 
     End Class

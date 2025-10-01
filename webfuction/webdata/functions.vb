@@ -15,7 +15,7 @@ Namespace WebData
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
 
         Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String)
-            DataPath = rootDataPath & Year & "\"
+            DataPath = rootDataPath & Year & "\webdata\"
             Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
         End Sub
 
@@ -37,10 +37,10 @@ Namespace WebData
 
         Public Shared Sub MakeDirectory()
 
-            Dim dirt As String = DataPath & "\temp"
-            Dim dird As String = DataPath & "\data"
-            Dim dirdpf As String = DataPath & "\data\pforma"
-            Dim dirdmt As String = DataPath & "\data\matchs"
+            Dim dirt As String = DataPath & "\webdata\temp"
+            Dim dird As String = DataPath & "\webdata\data"
+            Dim dirdpf As String = DataPath & "\webdata\data\pforma"
+            Dim dirdmt As String = DataPath & "\webdata\data\matchs"
 
             If IO.Directory.Exists(dirt) = False Then IO.Directory.CreateDirectory(dirt)
             If IO.Directory.Exists(dird) = False Then IO.Directory.CreateDirectory(dird)
@@ -106,7 +106,6 @@ Namespace WebData
 
         End Function
 
-
         Public Shared Function DeserializeJson(Of T)(json As String) As T
             Dim serializer As New JavaScriptSerializer()
             Try
@@ -120,6 +119,9 @@ Namespace WebData
 
         Public Shared Function SerializzaOggetto(obj As Object, compatta As Boolean) As String
             If obj Is Nothing Then Return "{}"
+#If DEBUG Then
+            compatta = False
+#End If
             Dim serializer As New JavaScriptSerializer()
             Dim json As String = serializer.Serialize(obj)
             If compatta Then
@@ -269,109 +271,109 @@ Namespace WebData
             Return Squadra
         End Function
 
-        Public Shared Function GetTeamNameFromCode(squadra As String) As String
-            Select Case squadra
-                Case "ATA" : squadra = "ATALANTA"
-                Case "BAR" : squadra = "BARI"
-                Case "BOL" : squadra = "BOLOGNA"
-                Case "CAG" : squadra = "CAGLIARI"
-                Case "CAT" : squadra = "CATANIA"
-                Case "COM" : squadra = "COMO"
-                Case "CRE" : squadra = "CREMONESE"
-                Case "EMP" : squadra = "EMPOLI"
-                Case "FIO" : squadra = "FIORENTINA"
-                Case "FRO" : squadra = "FROSINONE"
-                Case "GEN" : squadra = "GENOA"
-                Case "INT" : squadra = "INTER"
-                Case "JUV" : squadra = "JUVENTUS"
-                Case "LAZ" : squadra = "LAZIO"
-                Case "LEC" : squadra = "LECCE"
-                Case "MIL" : squadra = "MILAN"
-                Case "MON" : squadra = "MONZA"
-                Case "NAP" : squadra = "NAPOLI"
-                Case "PAL" : squadra = "PALERMO"
-                Case "PAR" : squadra = "PARMA"
-                Case "PIS" : squadra = "PISA"
-                Case "ROM" : squadra = "ROMA"
-                Case "SAL" : squadra = "SALERNITANA"
-                Case "SAM" : squadra = "SAMPDORIA"
-                Case "SAS" : squadra = "SASSUOLO"
-                Case "SPE" : squadra = "SPEZIA"
-                Case "TOR" : squadra = "TORINO"
-                Case "UDI" : squadra = "UDINESE"
-                Case "VEN" : squadra = "VENEZIA"
-                Case "VER" : squadra = "VERONA"
+        Public Shared Function GetTeamNameFromCode(Squadra As String) As String
+            Select Case Squadra
+                Case "ATA" : Squadra = "ATALANTA"
+                Case "BAR" : Squadra = "BARI"
+                Case "BOL" : Squadra = "BOLOGNA"
+                Case "CAG" : Squadra = "CAGLIARI"
+                Case "CAT" : Squadra = "CATANIA"
+                Case "COM" : Squadra = "COMO"
+                Case "CRE" : Squadra = "CREMONESE"
+                Case "EMP" : Squadra = "EMPOLI"
+                Case "FIO" : Squadra = "FIORENTINA"
+                Case "FRO" : Squadra = "FROSINONE"
+                Case "GEN" : Squadra = "GENOA"
+                Case "INT" : Squadra = "INTER"
+                Case "JUV" : Squadra = "JUVENTUS"
+                Case "LAZ" : Squadra = "LAZIO"
+                Case "LEC" : Squadra = "LECCE"
+                Case "MIL" : Squadra = "MILAN"
+                Case "MON" : Squadra = "MONZA"
+                Case "NAP" : Squadra = "NAPOLI"
+                Case "PAL" : Squadra = "PALERMO"
+                Case "PAR" : Squadra = "PARMA"
+                Case "PIS" : Squadra = "PISA"
+                Case "ROM" : Squadra = "ROMA"
+                Case "SAL" : Squadra = "SALERNITANA"
+                Case "SAM" : Squadra = "SAMPDORIA"
+                Case "SAS" : Squadra = "SASSUOLO"
+                Case "SPE" : Squadra = "SPEZIA"
+                Case "TOR" : Squadra = "TORINO"
+                Case "UDI" : Squadra = "UDINESE"
+                Case "VEN" : Squadra = "VENEZIA"
+                Case "VER" : Squadra = "VERONA"
             End Select
-            Return squadra
+            Return Squadra
         End Function
 
-        Public Shared Function GetNatCode(natcode As String) As String
-            Select Case natcode
-                Case "REP" : natcode = "CZE"
-                Case "ING" : natcode = "GBR"
-                Case "ENG" : natcode = "GBR"
-                Case "CHI" : natcode = "CHL"
-                Case "GRE" : natcode = "GRC"
-                Case "GUI" : natcode = "GIN"
-                Case "CRO" : natcode = "HRV"
-                Case "SUI" : natcode = "CHE"
-                Case "DAN" : natcode = "DNK"
-                Case "GAM" : natcode = "GMB"
-                Case "POR" : natcode = "PRT"
-                Case "PAR" : natcode = "PRY"
-                Case "NED" : natcode = "NLD"
-                Case "GER" : natcode = "DEU"
-                Case "CRC" : natcode = "CRI"
-                Case "BUL" : natcode = "BGR"
-                Case "URU" : natcode = "URY"
-                Case "ALG" : natcode = "DZA"
-                Case "SLO" : natcode = "SVK"
-                Case "CIL" : natcode = "CHL"
-                Case "MOL" : natcode = "MDA"
-                Case "SVE" : natcode = "SWE"
-                Case "SER" : natcode = "SVK"
-                Case "SPA" : natcode = "ESP"
-                Case "ROM" : natcode = "ROU"
-                Case "OLA" : natcode = "NLD"
-                Case "COS" : natcode = "CIV"
-                Case "SVI" : natcode = "SWZ"
-                Case "BOS" : natcode = "BIH"
-                Case "GIA" : natcode = "JAM"
-                Case "SNV" : natcode = "SVN"
-                Case "UNG" : natcode = "HUN"
-                Case "LIB" : natcode = "LBY"
-                Case "LIT" : natcode = "LTU"
-                Case "NIG" : natcode = "NER"
-                Case "IRA" : natcode = "IRN"
-                Case "MON" : natcode = "MNE"
-                Case "EGI" : natcode = "EGY"
-                Case "ANG" : natcode = "AGO"
-                Case "MES" : natcode = "MEX"
-                Case "CAM" : natcode = "CMR"
-                Case "MAL" : natcode = "MLI"
-                Case "COR" : natcode = "KOR"
-                Case "GUA" : natcode = "GLP"
-                Case "DEN" : natcode = "DNK"
-                Case "KVX" : natcode = "RKS"
+        Public Shared Function GetNatCode(NatCode As String) As String
+            Select Case NatCode
+                Case "REP" : NatCode = "CZE"
+                Case "ING" : NatCode = "GBR"
+                Case "ENG" : NatCode = "GBR"
+                Case "CHI" : NatCode = "CHL"
+                Case "GRE" : NatCode = "GRC"
+                Case "GUI" : NatCode = "GIN"
+                Case "CRO" : NatCode = "HRV"
+                Case "SUI" : NatCode = "CHE"
+                Case "DAN" : NatCode = "DNK"
+                Case "GAM" : NatCode = "GMB"
+                Case "POR" : NatCode = "PRT"
+                Case "PAR" : NatCode = "PRY"
+                Case "NED" : NatCode = "NLD"
+                Case "GER" : NatCode = "DEU"
+                Case "CRC" : NatCode = "CRI"
+                Case "BUL" : NatCode = "BGR"
+                Case "URU" : NatCode = "URY"
+                Case "ALG" : NatCode = "DZA"
+                Case "SLO" : NatCode = "SVK"
+                Case "CIL" : NatCode = "CHL"
+                Case "MOL" : NatCode = "MDA"
+                Case "SVE" : NatCode = "SWE"
+                Case "SER" : NatCode = "SVK"
+                Case "SPA" : NatCode = "ESP"
+                Case "ROM" : NatCode = "ROU"
+                Case "OLA" : NatCode = "NLD"
+                Case "COS" : NatCode = "CIV"
+                Case "SVI" : NatCode = "SWZ"
+                Case "BOS" : NatCode = "BIH"
+                Case "GIA" : NatCode = "JAM"
+                Case "SNV" : NatCode = "SVN"
+                Case "UNG" : NatCode = "HUN"
+                Case "LIB" : NatCode = "LBY"
+                Case "LIT" : NatCode = "LTU"
+                Case "NIG" : NatCode = "NER"
+                Case "IRA" : NatCode = "IRN"
+                Case "MON" : NatCode = "MNE"
+                Case "EGI" : NatCode = "EGY"
+                Case "ANG" : NatCode = "AGO"
+                Case "MES" : NatCode = "MEX"
+                Case "CAM" : NatCode = "CMR"
+                Case "MAL" : NatCode = "MLI"
+                Case "COR" : NatCode = "KOR"
+                Case "GUA" : NatCode = "GLP"
+                Case "DEN" : NatCode = "DNK"
+                Case "KVX" : NatCode = "RKS"
             End Select
-            Return natcode
+            Return NatCode
         End Function
 
         Public Shared Function GetDicNatCodeList(fname As String) As Dictionary(Of String, String)
 
-            Dim dicnatcode As New Dictionary(Of String, String)
+            Dim dicNatCode As New Dictionary(Of String, String)
 
             If IO.File.Exists(fname) Then
                 Dim line() As String = IO.File.ReadAllLines(fname)
                 For i As Integer = 0 To line.Length - 1
                     Dim s() As String = line(i).Split(CChar(","))
                     If s.Length = 2 Then
-                        If dicnatcode.ContainsKey(s(0)) = False Then dicnatcode.Add(s(0), s(1))
+                        If dicNatCode.ContainsKey(s(0)) = False Then dicNatCode.Add(s(0), s(1))
                     End If
                 Next
             End If
 
-            Return dicnatcode
+            Return dicNatCode
 
         End Function
 

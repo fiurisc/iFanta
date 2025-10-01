@@ -45,7 +45,7 @@
                     Dim sq As New List(Of String)
                     Dim team As String = ""
                     Dim name As String = ""
-                    Dim ruolo As String = ""
+                    Dim Ruolo As String = ""
                     Dim perc As Integer = 0
                     Dim info As String = ""
 

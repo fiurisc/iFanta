@@ -28,7 +28,7 @@ Namespace WebData
 
                 Players.Data.LoadPlayers(False)
 
-                Dim dicnatcode As Dictionary(Of String, String) = Functions.GetDicNatCodeList(Functions.DataPath & "\code.txt")
+                Dim dicNatCode As Dictionary(Of String, String) = Functions.GetDicNatCodeList(Functions.DataPath & "\code.txt")
                 Dim sqlink As New Dictionary(Of String, String)
                 Dim team As List(Of String) = GetTeamList()
                 Dim plist As New List(Of String)
@@ -69,13 +69,13 @@ Namespace WebData
 
                                         Dim role As String = pdata(2).Replace("role:", "")
                                         Dim nat As String = ""
-                                        Dim natcode As String = Functions.GetNatCode(pdata(3).Replace("flag:", ""))
+                                        Dim NatCode As String = Functions.GetNatCode(pdata(3).Replace("flag:", ""))
                                         Dim name1 As String = Functions.NormalizeText(pdata(6).Replace("name:", "").ToUpper() & " " & pdata(5).Replace("surname:", "").ToUpper()).Trim()
                                         Dim name2 As String = Functions.NormalizeText(pdata(9).Replace("fullname:", "").ToUpper()).Replace(".", ". ").Replace("  ", " ").Trim()
 
-                                        If natcode = "SCT" Then natcode = "GBR"
+                                        If NatCode = "SCT" Then NatCode = "GBR"
 
-                                        If dicnatcode.ContainsKey(natcode) Then nat = dicnatcode(natcode) Else nat = ""
+                                        If dicNatCode.ContainsKey(NatCode) Then nat = dicNatCode(NatCode) Else nat = ""
 
                                         If role = "Goalkeeper" Then
                                             role = "P"
@@ -102,8 +102,8 @@ Namespace WebData
                                             If playerm.Matched Then
                                                 Dim newname As String = playerm.GetName()
                                                 If dicname.Contains(newname) = False Then
-                                                    playersd.Add(New Torneo.Players.PlayerDataItem(role, newname, sq, nat, natcode))
-                                                    strplayer.AppendLine(npla.ToString().PadRight(3, CChar("x")).Replace("x", "&nbsp;") & " - " & role & " - " & name1 & " -> " & playerm.MatchedPlayer.Role & " - " & newname & " - " & playerm.MatchedPlayer.Team & " - " & nat & " - " & natcode)
+                                                    playersd.Add(New Torneo.Players.PlayerDataItem(role, newname, sq, nat, NatCode))
+                                                    strplayer.AppendLine(npla.ToString().PadRight(3, CChar("x")).Replace("x", "&nbsp;") & " - " & role & " - " & name1 & " -> " & playerm.MatchedPlayer.Role & " - " & newname & " - " & playerm.MatchedPlayer.Team & " - " & nat & " - " & NatCode)
                                                     dicname.Add(newname)
                                                 Else
                                                     strplayer.AppendLine(npla.ToString().PadRight(3, CChar("x")).Replace("x", "&nbsp;") & " - " & role & " - " & name1 & " -> " & playerm.MatchedPlayer.Role & " - " & newname & " - " & playerm.MatchedPlayer.Team & "&nbsp;&nbsp;<span style=color:red;font-size:bold;'>[Already exist]</span>")

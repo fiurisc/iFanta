@@ -14,8 +14,8 @@ Public Class Form1
         Dim str As New System.Text.StringBuilder
 
         WebData.Functions.Year = year
-        WebData.Functions.InitPath(My.Application.Info.DirectoryPath & "\web\", My.Application.Info.DirectoryPath & "\web\")
-        Torneo.PublicVariables.dataFromDatabase = False
+        WebData.Functions.InitPath(My.Application.Info.DirectoryPath & "\tornei\", My.Application.Info.DirectoryPath & "\tornei\")
+        Torneo.PublicVariables.DataFromDatabase = True
 
     End Sub
 
@@ -69,7 +69,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-        Dim json As String = Torneo.Classifica.apiGetClassifica("1", False)
+        Dim json As String = Torneo.General.ApiGetSettings("2025")
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", json)
         json = ""
         'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
@@ -91,7 +91,7 @@ Public Class Form1
         '    Dim jss As New System.Web.Script.Serialization.JavaScriptSerializer()
         '    Dim dict As Dictionary(Of String, Object) = jss.Deserialize(Of Dictionary(Of String, Object))(html)
         '    For Each ab As Object In dict("data")
-        '        strout.Append(ab("CODSQUADRA") & ",")
+        '        strout.Append(ab("CODSquadra") & ",")
         '        strout.Append(ab("Giocate") & ",")
         '        strout.Append(ab("VinteCasa") & ",")
         '        strout.Append(ab("VinteFuori") & ",")

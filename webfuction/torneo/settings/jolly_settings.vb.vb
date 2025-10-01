@@ -1,5 +1,5 @@
 ﻿Namespace Torneo
-    Partial Class LegaSettings
+    Partial Class TorneoSettings
         Public Class JollySettings
 
             Private _enajollyplayer As Boolean = True
@@ -9,7 +9,6 @@
             Private _enajollyattaccante As Boolean = False
             Private _maximumnbrjollyplayable As Integer = 4
             Private _maximumnbrjollyplayableforday As Integer = 1
-            Private _njolly As Dictionary(Of Integer, Integer)
 
             Public Property EnableJollyPlayer() As Boolean
                 Get

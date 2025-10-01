@@ -3,12 +3,12 @@
 Namespace Torneo
     Public Class MatchsData
 
-        Public Shared Function apiGetMatchsCurrentDay() As String
+        Public Shared Function ApiGetMatchsCurrentDay() As String
 
             Dim cday As String = "38"
 
             Try
-                If PublicVariables.dataFromDatabase Then
+                If PublicVariables.DataFromDatabase Then
                     Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM current_championship_day")
                     If ds.Tables.Count > 0 Then
                         cday = ds.Tables(0).Rows(0).Item("gio").ToString()
@@ -16,7 +16,7 @@ Namespace Torneo
                 Else
 
                     Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
-                    Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(apiGetMatchsData("-1"))
+                    Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(ApiGetMatchsData("-1"))
                     Dim found As Boolean = False
 
                     For d As Integer = 38 To 1 Step -1
@@ -42,9 +42,9 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function apiGetMatchsData(Day As String) As String
+        Public Shared Function ApiGetMatchsData(Day As String) As String
 
-            If PublicVariables.dataFromDatabase Then
+            If PublicVariables.DataFromDatabase Then
 
                 Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Match))
                 Dim mtxdata As List(Of Match) = GetMatchsData(Day)
@@ -80,9 +80,9 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function apiGetMatchsDataPlayers(startDay As String, endDay As String) As String
+        Public Shared Function ApiGetMatchsDataPlayers(startDay As String, endDay As String) As String
 
-            If PublicVariables.dataFromDatabase Then
+            If PublicVariables.DataFromDatabase Then
 
                 Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer)))
                 Dim mtxdata As List(Of MatchPlayer) = GetMatchDataPlayers(startDay, endDay)
@@ -214,9 +214,9 @@ Namespace Torneo
                             Dim mp As MatchPlayer = newdata(g)(t)(n)
                             Dim key As String = n & "/" & t
                             If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
-                                sqlinsert.Add("INSERT INTO tbtabellini (gio,nome,squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & ",'" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
+                                sqlinsert.Add("INSERT INTO tbtabellini (gio,Nome,Squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & ",'" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
                             ElseIf WebData.Functions.GetCustomHashCode(olddata(g)(key)) <> WebData.Functions.GetCustomHashCode(mp) Then
-                                sqlupdate.Add("UPDATE tbtabellini SET nome='" & mp.Nome & "',squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND nome='" & mp.Nome & "' AND squadra='" & mp.Squadra & "'")
+                                sqlupdate.Add("UPDATE tbtabellini SET Nome='" & mp.Nome & "',Squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND Nome='" & mp.Nome & "' AND Squadra='" & mp.Squadra & "'")
                             End If
                         Next
                     Next
@@ -244,8 +244,8 @@ Namespace Torneo
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim m As New MatchPlayer
                         m.Giornata = If(row.Item("gio") IsNot DBNull.Value, Convert.ToInt32(row.Item("gio")), 1)
-                        m.Nome = row.Item("nome").ToString()
-                        m.Squadra = row.Item("squadra").ToString()
+                        m.Nome = row.Item("Nome").ToString()
+                        m.Squadra = row.Item("Squadra").ToString()
                         m.Minuti = If(row.Item("mm") IsNot DBNull.Value, Convert.ToInt32(row.Item("mm")), 0)
                         m.Titolare = If(row.Item("tit") IsNot DBNull.Value, Convert.ToInt32(row.Item("tit")), 0)
                         m.Sostituito = If(row.Item("sos") IsNot DBNull.Value, Convert.ToInt32(row.Item("sos")), 0)

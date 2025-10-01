@@ -1,5 +1,5 @@
 ﻿Namespace Torneo
-    Public Class LegaSettings
+    Public Class TorneoSettings
 
         Enum eSubstitutionType As Integer
             Normal = 0
@@ -10,7 +10,6 @@
         Public Property Active As Boolean = False
         Public Property Nome() As String = "TORNEO"
         Public Property Year As String = "2001"
-        Public Property MailAdmin As String = ""
         Public Property NumberOfTeams() As Integer = 10
         Public Property NumberOfDays() As Integer = 38
         Public Property Points As PointsSettings = New PointsSettings

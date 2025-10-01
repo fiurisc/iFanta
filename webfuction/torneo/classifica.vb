@@ -6,19 +6,19 @@ Namespace Torneo
         Public Shared fname1 As String = PublicVariables.DataPath & "torneo/classifica.json"
         Public Shared fname2 As String = PublicVariables.DataPath & "torneo/classifica-top.json"
 
-        Public Shared Function apiGetLastDay() As String
+        Public Shared Function ApiGetLastDay() As String
 
             Dim cday As String = "1"
 
             Try
-                If PublicVariables.dataFromDatabase Then
+                If PublicVariables.DataFromDatabase Then
                     Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT MAX(gio) AS currgio FROM tbformazioni")
                     If ds.Tables.Count > 0 Then
                         cday = ds.Tables(0).Rows(0).Item("currgio").ToString()
                     End If
                 Else
                     Dim j As String = IO.File.ReadAllText(fname1)
-                    Dim dicdata As Dictionary(Of String, List(Of sClassificaItem)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of sClassificaItem)))(j)
+                    Dim dicdata As Dictionary(Of String, List(Of ClassificaItem)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of ClassificaItem)))(j)
                     cday = dicdata.Keys.Last()
                 End If
             Catch ex As Exception
@@ -29,14 +29,14 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function apiGetClassifica(day As String, top As Boolean) As String
+        Public Shared Function ApiGetClassifica(day As String, top As Boolean) As String
 
             Try
-                If PublicVariables.dataFromDatabase Then
+                If PublicVariables.DataFromDatabase Then
                     Return WebData.Functions.SerializzaOggetto(GetClassificaGiornata(CInt(day), top), True)
                 Else
                     Dim j As String = IO.File.ReadAllText(If(top, fname2, fname1))
-                    Dim dicdata As Dictionary(Of String, List(Of sClassificaItem)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of sClassificaItem)))(j)
+                    Dim dicdata As Dictionary(Of String, List(Of ClassificaItem)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of ClassificaItem)))(j)
                     If dicdata.ContainsKey(day) Then
                         Return WebData.Functions.SerializzaOggetto(dicdata(day), True)
                     End If
@@ -49,14 +49,14 @@ Namespace Torneo
 
         End Function
 
-        Shared Function GetClassificaGiornata(ByVal Giornata As Integer, ByVal Top As Boolean) As List(Of sClassificaItem)
+        Shared Function GetClassificaGiornata(ByVal Giornata As Integer, ByVal Top As Boolean) As List(Of ClassificaItem)
 
-            Dim curr As New List(Of sClassificaItem)
+            Dim curr As New List(Of ClassificaItem)
 
             Try
 
-                Dim prev As New List(Of sClassificaItem)
-                Dim topf As New List(Of sClassificaItem)
+                Dim prev As New List(Of ClassificaItem)
+                Dim topf As New List(Of ClassificaItem)
 
                 'Determino i punti totali della giornata scora
                 prev = GetClassificaData(Giornata - 1, Top, False)
@@ -81,7 +81,7 @@ Namespace Torneo
 
         End Function
 
-        Private Shared Sub CalcoloPreviewPostion(curr As List(Of sClassificaItem), prev As List(Of sClassificaItem))
+        Private Shared Sub CalcoloPreviewPostion(curr As List(Of ClassificaItem), prev As List(Of ClassificaItem))
             For i As Integer = 0 To curr.Count - 1
                 For k As Integer = 0 To prev.Count - 1
                     If prev(k).IdTeam = curr(i).IdTeam Then
@@ -92,7 +92,7 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Sub CalcoloPuntiPersi(curr As List(Of sClassificaItem), topf As List(Of sClassificaItem))
+        Private Shared Sub CalcoloPuntiPersi(curr As List(Of ClassificaItem), topf As List(Of ClassificaItem))
             For i As Integer = 0 To curr.Count - 1
                 For k As Integer = 0 To topf.Count - 1
                     If topf(k).IdTeam = curr(i).IdTeam Then
@@ -104,7 +104,7 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Sub CalcoloFantaMister(curr As List(Of sClassificaItem))
+        Private Shared Sub CalcoloFantaMister(curr As List(Of ClassificaItem))
 
             'Calcolo punti fanta mister'
             Dim p As Integer = 0
@@ -166,9 +166,9 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Function GetClassificaData(ByVal Giornata As Integer, ByVal Top As Boolean, ByVal CalculateMinMax As Boolean) As List(Of sClassificaItem)
+        Private Shared Function GetClassificaData(ByVal Giornata As Integer, ByVal Top As Boolean, ByVal CalculateMinMax As Boolean) As List(Of ClassificaItem)
 
-            Dim clasa As New List(Of sClassificaItem)
+            Dim clasa As New List(Of ClassificaItem)
             Dim str As New System.Text.StringBuilder
             Dim pos As Integer = 1
             Dim pt1 As Integer = 0
@@ -191,7 +191,7 @@ Namespace Torneo
                 stot = "sum(f.pt+f.gf) as stot"
             End If
 
-            str.Append("SELECT tb1.idteam,teamq.nome,teamq.allenatore,teamq.diff,SUM(tb1.pt) AS tot,SUM(tb1.ptgio) AS ptgio,")
+            str.Append("SELECT tb1.idteam,teamq.Nome,teamq.allenatore,teamq.diff,SUM(tb1.pt) AS tot,SUM(tb1.ptgio) AS ptgio,")
             str.Append("AVG(tb1.pt) AS avgpt, min(pt) AS minpt, max(pt) AS maxpt,sum(tb1.amm) AS amm,")
             str.Append("sum(tb1.esp) AS esp, sum(tb1.ass) AS ass,sum(tb1.gs) AS gs,")
             str.AppendLine("sum(tb1.gf) AS gf,sum(tb1.vitt) as vitt,sum(tb1.vittgio) as vittgio,sum(11-tb1.numg) as n10,sum(tb1.bonus) as bonus")
@@ -207,12 +207,12 @@ Namespace Torneo
             str.AppendLine("GROUP BY f.idteam,f.gio,p." & colptmax)
             str.AppendLine(") AS tb1 ")
             str.AppendLine("INNER JOIN teamq ON teamq.idteam=tb1.idteam ")
-            str.Append("GROUP BY tb1.idteam,teamq.nome,teamq.allenatore,teamq.diff ORDER BY sum(tb1.pt) DESC;")
+            str.Append("GROUP BY tb1.idteam,teamq.Nome,teamq.allenatore,teamq.diff ORDER BY sum(tb1.pt) DESC;")
 
             Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet(str.ToString)
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
                 For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
-                    Dim citem As New sClassificaItem
+                    Dim citem As New ClassificaItem
                     Dim pt As Integer = CInt(ds.Tables(0).Rows(i).Item("tot"))
                     If i = 0 Then
                         pt1 = pt
@@ -221,7 +221,7 @@ Namespace Torneo
                     If pt <> ptp Then pos = i + 1
                     citem.Postion = pos
                     citem.IdTeam = CInt(ds.Tables(0).Rows(i).Item("idteam"))
-                    citem.Nome = ds.Tables(0).Rows(i).Item("nome").ToString()
+                    citem.Nome = ds.Tables(0).Rows(i).Item("Nome").ToString()
                     citem.Allenatore = ds.Tables(0).Rows(i).Item("allenatore").ToString()
                     citem.Pt = pt / 10
                     citem.PtGio = CInt(ds.Tables(0).Rows(i).Item("ptgio")) / 10
@@ -256,272 +256,38 @@ Namespace Torneo
 
         End Function
 
-        Public Class sClassificaItem
-
-            Private _pos As Integer = 0
-            Private _prevpos As Integer = 0
-            Private _idteam As Integer = 0
-            Private _nome As String = ""
-            Private _allenatore As String = ""
-            Private _pt As Double = 0
-            Private _ptgio As Double = 0
-            Private _vittgio As Integer = 0
-            Private _ptfirst As Double = 0
-            Private _ptpreviews As Double = 0
-            Private _avg As Double = 0
-            Private _min As Double = 0
-            Private _max As Double = 0
-            Private _amm As Integer = 0
-            Private _esp As Integer = 0
-            Private _sae As Integer = 0
-            Private _ass As Integer = 0
-            Private _gs As Integer = 0
-            Private _gf As Integer = 0
-            Private _pp As Double = 0
-            Private _percpp As Double = 0
-            Private _n10 As Integer = 0
-            Private _nbrwinner As Integer = 0
-            Private _ptbonus As Double = 0
-            Private _diffq As Integer = 0
-            Private _fm As Integer = 0
+        Public Class ClassificaItem
 
             Sub New()
 
             End Sub
 
-            Public Property Postion() As Integer
-                Get
-                    Return _pos
-                End Get
-                Set(ByVal value As Integer)
-                    _pos = value
-                End Set
-            End Property
-
-            Public Property PreviewPostion() As Integer
-                Get
-                    Return _prevpos
-                End Get
-                Set(ByVal value As Integer)
-                    _prevpos = value
-                End Set
-            End Property
-
-            Public Property IdTeam() As Integer
-                Get
-                    Return _idteam
-                End Get
-                Set(ByVal value As Integer)
-                    _idteam = value
-                End Set
-            End Property
-
-            Public Property Nome() As String
-                Get
-                    Return _nome
-                End Get
-                Set(ByVal value As String)
-                    _nome = value
-                End Set
-            End Property
-
-            Public Property Allenatore() As String
-                Get
-                    Return _allenatore
-                End Get
-                Set(ByVal value As String)
-                    _allenatore = value
-                End Set
-            End Property
-
-            Public Property Pt() As Double
-                Get
-                    Return _pt
-                End Get
-                Set(ByVal value As Double)
-                    _pt = value
-                End Set
-            End Property
-
-            Public Property PtGio() As Double
-                Get
-                    Return _ptgio
-                End Get
-                Set(ByVal value As Double)
-                    _ptgio = value
-                End Set
-            End Property
-
-            Public Property PtFirst() As Double
-                Get
-                    Return _ptfirst
-                End Get
-                Set(ByVal value As Double)
-                    _ptfirst = value
-                End Set
-            End Property
-
-            Public Property PtPreviews() As Double
-                Get
-                    Return _ptpreviews
-                End Get
-                Set(ByVal value As Double)
-                    _ptpreviews = value
-                End Set
-            End Property
-
-            Public Property Avg() As Double
-                Get
-                    Return _avg
-                End Get
-                Set(ByVal value As Double)
-                    _avg = value
-                End Set
-            End Property
-
-            Public Property Min() As Double
-                Get
-                    Return _min
-                End Get
-                Set(ByVal value As Double)
-                    _min = value
-                End Set
-            End Property
-
-            Public Property Max() As Double
-                Get
-                    Return _max
-                End Get
-                Set(ByVal value As Double)
-                    _max = value
-                End Set
-            End Property
-
-            Public Property Ammonizioni() As Integer
-                Get
-                    Return _amm
-                End Get
-                Set(ByVal value As Integer)
-                    _amm = value
-                End Set
-            End Property
-
-            Public Property Espulsioni() As Integer
-                Get
-                    Return _esp
-                End Get
-                Set(ByVal value As Integer)
-                    _esp = value
-                End Set
-            End Property
-
-            Public Property SumAmmEsp() As Integer
-                Get
-                    Return _sae
-                End Get
-                Set(ByVal value As Integer)
-                    _sae = value
-                End Set
-            End Property
-
-            Public Property Assist() As Integer
-                Get
-                    Return _ass
-                End Get
-                Set(ByVal value As Integer)
-                    _ass = value
-                End Set
-            End Property
-
-            Public Property GoalSubiti() As Integer
-                Get
-                    Return _gs
-                End Get
-                Set(ByVal value As Integer)
-                    _gs = value
-                End Set
-            End Property
-
-            Public Property GoalFatti() As Integer
-                Get
-                    Return _gf
-                End Get
-                Set(ByVal value As Integer)
-                    _gf = value
-                End Set
-            End Property
-
-            Public Property PuntiPersi() As Double
-                Get
-                    Return _pp
-                End Get
-                Set(ByVal value As Double)
-                    _pp = value
-                End Set
-            End Property
-
-            Public Property PercentualePuntiPersi() As Double
-                Get
-                    Return _percpp
-                End Get
-                Set(ByVal value As Double)
-                    _percpp = value
-                End Set
-            End Property
-
-            Public Property NumeroGiocateIn10() As Integer
-                Get
-                    Return _n10
-                End Get
-                Set(ByVal value As Integer)
-                    _n10 = value
-                End Set
-            End Property
-
-            Public Property NbrWinner() As Integer
-                Get
-                    Return _nbrwinner
-                End Get
-                Set(ByVal value As Integer)
-                    _nbrwinner = value
-                End Set
-            End Property
-
-            Public Property WinnerDay() As Integer
-                Get
-                    Return _vittgio
-                End Get
-                Set(ByVal value As Integer)
-                    _vittgio = value
-                End Set
-            End Property
-
-            Public Property PtBonus() As Double
-                Get
-                    Return _ptbonus
-                End Get
-                Set(ByVal value As Double)
-                    _ptbonus = value
-                End Set
-            End Property
-
-            Public Property DiffQ() As Integer
-                Get
-                    Return _diffq
-                End Get
-                Set(ByVal value As Integer)
-                    _diffq = value
-                End Set
-            End Property
-
-            Public Property FantaMister() As Integer
-                Get
-                    Return _fm
-                End Get
-                Set(ByVal value As Integer)
-                    _fm = value
-                End Set
-            End Property
+            Public Property Postion() As Integer = 0
+            Public Property PreviewPostion() As Integer = 0
+            Public Property IdTeam() As Integer = 0
+            Public Property Nome() As String = ""
+            Public Property Allenatore() As String = ""
+            Public Property Pt() As Double = 0
+            Public Property PtGio() As Double = 0
+            Public Property PtFirst() As Double = 0
+            Public Property PtPreviews() As Double = 0
+            Public Property Avg() As Double = 0
+            Public Property Min() As Double = 0
+            Public Property Max() As Double = 0
+            Public Property Ammonizioni() As Integer = 0
+            Public Property Espulsioni() As Integer = 0
+            Public Property SumAmmEsp() As Integer = 0
+            Public Property Assist() As Integer = 0
+            Public Property GoalSubiti() As Integer = 0
+            Public Property GoalFatti() As Integer = 0
+            Public Property PuntiPersi() As Double = 0
+            Public Property PercentualePuntiPersi() As Double = 0
+            Public Property NumeroGiocateIn10() As Integer = 0
+            Public Property NbrWinner() As Integer = 0
+            Public Property WinnerDay() As Integer = 0
+            Public Property PtBonus() As Double = 0
+            Public Property DiffQ() As Integer = 0
+            Public Property FantaMister() As Integer = 0
 
         End Class
 

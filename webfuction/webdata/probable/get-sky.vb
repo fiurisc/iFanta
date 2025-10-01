@@ -70,7 +70,7 @@
 
                                 Select Case sez
                                     Case "header"
-                                        'Aggiungo la squadra alla lista di quelle che disputano il match'
+                                        'Aggiungo la Squadra alla lista di quelle che disputano il match'
                                         sq.Add(Functions.CheckTeamName(val.ToUpper))
                                         'Cerco di determinare la giornata di riferiemnto'
                                         If sq.Count = 2 AndAlso currgg = -1 Then
