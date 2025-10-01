@@ -6,7 +6,7 @@ Namespace Torneo
 
         Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String, year As String)
             PublicVariables.Year = year
-            PublicVariables.RootDataPath = rootdatabasePath
+            PublicVariables.RootDataPath = rootDataPath
             PublicVariables.DataPath = rootDataPath & year & "\"
             PublicVariables.DatabaseFileName = rootdatabasePath & year & ".accdb"
         End Sub

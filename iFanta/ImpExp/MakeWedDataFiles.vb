@@ -1,6 +1,7 @@
 ﻿Imports iFanta.LegaObject
-Imports Newtonsoft.Json
+Imports iFanta.LegaObject.Formazione
 Imports iFanta.SystemFunction.FileAndDirectory
+Imports Newtonsoft.Json
 
 Public Class MakeWedDataFiles
     Public Shared Function MakeFiles() As List(Of String)
@@ -128,6 +129,7 @@ Public Class MakeWedDataFiles
                     sb.Append("|" & Formazione.Players(i).Dati.AutG)
                     sb.Append("|" & Formazione.Players(i).Dati.Gs)
                     sb.Append("|" & Formazione.Players(i).Dati.Gf)
+                    sb.Append("|" & Formazione.Players(i).Dati.RigT)
                     sb.Append("|" & Formazione.Players(i).Dati.RigS)
                     sb.Append("|" & Formazione.Players(i).Dati.RigP)
                     sb.AppendLine("|" & Formazione.Players(i).Dati.Pt * 10)

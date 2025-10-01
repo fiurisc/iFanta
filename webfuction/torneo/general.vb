@@ -8,9 +8,9 @@ Namespace Torneo
             Return PublicVariables.RootDataPath & Year & "/settings.txt"
         End Function
 
-        Shared Function ApiGetYearAct(folderPath As String) As String
+        Shared Function ApiGetYearAct() As String
 
-            Dim years As List(Of YearTorneo) = ApiGetYearsList(folderPath)
+            Dim years As List(Of YearTorneo) = ApiGetYearsList()
 
             For Each y As YearTorneo In years
                 If y.Active Then
@@ -22,11 +22,11 @@ Namespace Torneo
 
         End Function
 
-        Shared Function ApiGetYearsList(folderPath As String) As List(Of YearTorneo)
+        Shared Function apiGetYearsList() As List(Of YearTorneo)
 
             Dim years As New List(Of YearTorneo)
 
-            Dim d() As String = IO.Directory.GetDirectories(folderPath)
+            Dim d() As String = IO.Directory.GetDirectories(PublicVariables.RootDataPath)
 
             For i As Integer = 0 To d.Length - 1
 

@@ -1,10 +1,10 @@
 ﻿Imports System.Data
 
 Namespace Torneo
-    Public Class Classifica
+    Public Class ClassificaData
 
-        Public Shared fname1 As String = PublicVariables.DataPath & "torneo/classifica.json"
-        Public Shared fname2 As String = PublicVariables.DataPath & "torneo/classifica-top.json"
+        Public Shared fname1 As String = PublicVariables.DataPath & "export\classifica.json"
+        Public Shared fname2 As String = PublicVariables.DataPath & "export\classifica-top.json"
 
         Public Shared Function ApiGetLastDay() As String
 
@@ -18,7 +18,7 @@ Namespace Torneo
                     End If
                 Else
                     Dim j As String = IO.File.ReadAllText(fname1)
-                    Dim dicdata As Dictionary(Of String, List(Of ClassificaItem)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of ClassificaItem)))(j)
+                    Dim dicdata As Dictionary(Of String, List(Of Classifica)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of Classifica)))(j)
                     cday = dicdata.Keys.Last()
                 End If
             Catch ex As Exception
@@ -36,7 +36,7 @@ Namespace Torneo
                     Return WebData.Functions.SerializzaOggetto(GetClassificaGiornata(CInt(day), top), True)
                 Else
                     Dim j As String = IO.File.ReadAllText(If(top, fname2, fname1))
-                    Dim dicdata As Dictionary(Of String, List(Of ClassificaItem)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of ClassificaItem)))(j)
+                    Dim dicdata As Dictionary(Of String, List(Of Classifica)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of Classifica)))(j)
                     If dicdata.ContainsKey(day) Then
                         Return WebData.Functions.SerializzaOggetto(dicdata(day), True)
                     End If
@@ -49,14 +49,14 @@ Namespace Torneo
 
         End Function
 
-        Shared Function GetClassificaGiornata(ByVal Giornata As Integer, ByVal Top As Boolean) As List(Of ClassificaItem)
+        Shared Function GetClassificaGiornata(ByVal Giornata As Integer, ByVal Top As Boolean) As List(Of Classifica)
 
-            Dim curr As New List(Of ClassificaItem)
+            Dim curr As New List(Of Classifica)
 
             Try
 
-                Dim prev As New List(Of ClassificaItem)
-                Dim topf As New List(Of ClassificaItem)
+                Dim prev As New List(Of Classifica)
+                Dim topf As New List(Of Classifica)
 
                 'Determino i punti totali della giornata scora
                 prev = GetClassificaData(Giornata - 1, Top, False)
@@ -81,7 +81,7 @@ Namespace Torneo
 
         End Function
 
-        Private Shared Sub CalcoloPreviewPostion(curr As List(Of ClassificaItem), prev As List(Of ClassificaItem))
+        Private Shared Sub CalcoloPreviewPostion(curr As List(Of Classifica), prev As List(Of Classifica))
             For i As Integer = 0 To curr.Count - 1
                 For k As Integer = 0 To prev.Count - 1
                     If prev(k).IdTeam = curr(i).IdTeam Then
@@ -92,7 +92,7 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Sub CalcoloPuntiPersi(curr As List(Of ClassificaItem), topf As List(Of ClassificaItem))
+        Private Shared Sub CalcoloPuntiPersi(curr As List(Of Classifica), topf As List(Of Classifica))
             For i As Integer = 0 To curr.Count - 1
                 For k As Integer = 0 To topf.Count - 1
                     If topf(k).IdTeam = curr(i).IdTeam Then
@@ -104,7 +104,7 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Sub CalcoloFantaMister(curr As List(Of ClassificaItem))
+        Private Shared Sub CalcoloFantaMister(curr As List(Of Classifica))
 
             'Calcolo punti fanta mister'
             Dim p As Integer = 0
@@ -166,9 +166,9 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Function GetClassificaData(ByVal Giornata As Integer, ByVal Top As Boolean, ByVal CalculateMinMax As Boolean) As List(Of ClassificaItem)
+        Private Shared Function GetClassificaData(ByVal Giornata As Integer, ByVal Top As Boolean, ByVal CalculateMinMax As Boolean) As List(Of Classifica)
 
-            Dim clasa As New List(Of ClassificaItem)
+            Dim clasa As New List(Of Classifica)
             Dim str As New System.Text.StringBuilder
             Dim pos As Integer = 1
             Dim pt1 As Integer = 0
@@ -212,7 +212,7 @@ Namespace Torneo
             Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet(str.ToString)
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
                 For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
-                    Dim citem As New ClassificaItem
+                    Dim citem As New Classifica
                     Dim pt As Integer = CInt(ds.Tables(0).Rows(i).Item("tot"))
                     If i = 0 Then
                         pt1 = pt
@@ -256,7 +256,7 @@ Namespace Torneo
 
         End Function
 
-        Public Class ClassificaItem
+        Public Class Classifica
 
             Sub New()
 

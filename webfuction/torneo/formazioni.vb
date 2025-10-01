@@ -1,9 +1,8 @@
-﻿Imports System.Runtime.InteropServices.ComTypes
-Imports System.Security.Cryptography
+﻿Imports System.Data
 
 Namespace Torneo
 
-    Public Class DataFormazioni
+    Public Class FormazioniData
 
         Public Shared Sub ApiAddFormazione(Day As String, TeamId As String, Top As Boolean)
 
@@ -81,7 +80,7 @@ Namespace Torneo
 
                 'Aggiungo punti provenieni dai bonus
                 forma.Punti += forma.BonusDifesa
-                forma.Punti += forma.BonusCentroCampo
+                forma.Punti += forma.BonusCentrocampo
                 forma.Punti += forma.BonusAttacco
 
             Next
@@ -155,7 +154,7 @@ Namespace Torneo
 
             Try
                 If Top = False Then
-                    Dim fname As String = PublicVariables.DataPath & "\torneo\formazioni.txt"
+                    Dim fname As String = PublicVariables.DataPath & "\export\formazioni.txt"
                     Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
                     For Each line As String In lines
                         Dim values() As String = line.Split(Convert.ToChar("|"))
@@ -184,11 +183,11 @@ Namespace Torneo
                                 p.RigoriTirati = CInt(values(17))
                                 p.RigoriSbagliati = CInt(values(18))
                                 p.RigoriParati = CInt(values(19))
-                                p.Punti = CInt(values(19))
+                                p.Punti = CInt(values(20))
                                 list(tid).Players.Add(p)
                             ElseIf values.Length > 5 Then
                                 list(tid).BonusDifesa = CInt(values(2))
-                                list(tid).BonusCentroCampo = CInt(values(3))
+                                list(tid).BonusCentrocampo = CInt(values(3))
                                 list(tid).BonusAttacco = CInt(values(4))
                                 list(tid).CambioModulo = CBool(values(2))
                             End If

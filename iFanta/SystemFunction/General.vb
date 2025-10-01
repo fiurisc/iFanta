@@ -540,13 +540,21 @@ Namespace SystemFunction
             Return False
         End Function
 
+        Public Shared Function UploadWebFile(ByVal FileName As String, ByVal FileDest As String) As Boolean
+            Return UploadFileGeneral(FileName, "ftp://www.ifantacalcio.it/ifantacalcio.it/public/" & FileDest)
+        End Function
+
         Public Shared Function UploadFile(ByVal FileName As String, ByVal FileDest As String, LegaPath As Boolean) As Boolean
+            Return UploadFileGeneral(FileName, If(LegaPath = True, "ftp://www.ifantacalcio.it/ifantacalcio.it/public/ifanta/update/tornei/" & FileDest, "ftp://www.ifantacalcio.it/ifantacalcio.it/public/ifanta/" & FileDest))
+        End Function
+
+        Private Shared Function UploadFileGeneral(ByVal FileName As String, ByVal FileDest As String) As Boolean
             Dim err As Boolean = False
 
             Try
 
                 Dim writer As System.IO.Stream
-                Dim Uri As String = If(LegaPath = True, "ftp://www.ifantacalcio.it/ifantacalcio.it/public/ifanta/update/tornei/" & FileDest, "ftp://www.ifantacalcio.it/ifantacalcio.it/public/ifanta/" & FileDest)
+                Dim Uri As String = FileDest
                 Dim FTP1 As Net.FtpWebRequest = CType(Net.FtpWebRequest.Create(Uri), FtpWebRequest)
 
                 FTP1.Credentials = New System.Net.NetworkCredential("7974741@aruba.it", "Anxanum1969")

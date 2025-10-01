@@ -10,7 +10,7 @@ Namespace Torneo
 
             Try
 
-                Dim fname As String = PublicVariables.DataPath & "\exp\svincolati.txt"
+                Dim fname As String = PublicVariables.DataPath & "\export\svincolati.txt"
                 Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
                 For Each line As String In lines
                     If role = "Tutti" OrElse line.Split(Convert.ToChar("|"))(2) = role Then
@@ -56,7 +56,7 @@ Namespace Torneo
                     Return WebData.Functions.SerializzaOggetto(teams, True)
 
                 Else
-                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(PublicVariables.DataPath & "torneo\teams.json"))
+                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(PublicVariables.DataPath & "export\teams.json"))
                 End If
 
             Catch ex As Exception
@@ -73,19 +73,16 @@ Namespace Torneo
 
             Try
 
-                Dim fquota As String = PublicVariables.DataPath & "data\players-quote.txt"
-                Dim fname As String = PublicVariables.DataPath & "torneo\rose.txt"
+                Dim fname As String = PublicVariables.DataPath & "export\rose.txt"
                 Dim quotes As New Dictionary(Of String, String)
                 Dim lines As List(Of String)
 
-                lines = IO.File.ReadAllLines(fquota).ToList()
+                Dim j As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+                Dim mtxquotes As List(Of Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Players.PlayerQuotesItem))(j)
 
-                For Each line As String In lines
-                    Dim s() As String = line.Split(CChar("|"))
-                    If s.Length = 5 Then
-                        Dim key As String = s(0) & "|" & s(1) & "|" & s(2)
-                        If quotes.ContainsKey(key) = False Then quotes.Add(key, s(4))
-                    End If
+                For Each p As Players.PlayerQuotesItem In mtxquotes
+                    Dim key As String = p.Ruolo & "|" & p.Nome & "|" & p.Squadra
+                    If quotes.ContainsKey(key) = False Then quotes.Add(key, p.Qcur.ToString())
                 Next
 
                 lines = IO.File.ReadAllLines(fname).ToList()
@@ -101,6 +98,7 @@ Namespace Torneo
                     End If
                 Next
             Catch ex As Exception
+                strdata.Append(ex.Message)
                 WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
 

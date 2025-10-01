@@ -14,7 +14,13 @@ Namespace WebData
 
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
 
-        Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String)
+        Public Shared Function InitPath(rootDataPath As String, rootdatabasePath As String) As String
+            DataPath = rootDataPath & Year & "\webdata\"
+            Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
+            Return DataPath
+        End Function
+
+        Public Shared Sub InitPath1(rootDataPath As String, rootdatabasePath As String)
             DataPath = rootDataPath & Year & "\webdata\"
             Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
         End Sub

@@ -116,7 +116,7 @@ Public Class frmupdateserver
                         Dim flist As List(Of String) = MakeWedDataFiles.MakeFiles()
                         For Each fname In flist
                             If IO.File.Exists(fname) Then
-                                err = SystemFunction.General.UploadFile(fname, "web/" & currlega.Settings.Year & "/torneo/" & IO.Path.GetFileName(fname), False)
+                                err = SystemFunction.General.UploadWebFile(fname, "tornei/" & currlega.Settings.Year & "/export/" & IO.Path.GetFileName(fname))
                                 If err Then Exit For
                             End If
                         Next

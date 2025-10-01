@@ -207,6 +207,7 @@ Partial Class ImpExp
                                             Select Case s(0)
                                                 Case "RUOLO" : p.Ruolo = s(1)
                                                 Case "NOME" : p.Nome = s(1).Replace("'", "’").ToUpper()
+                                                Case "SQUADRA" : p.Squadra = s(1).Replace("'", "’").ToUpper()
                                                 Case "JOLLY" : p.Jolly = CInt(s(1))
                                                 Case "IDFORMAZIONE" : p.IdFormazione = If(s(1) <> "undefined", CInt(s(1)), 0)
                                                 Case "TYPE" : p.Type = CInt(s(1))
