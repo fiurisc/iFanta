@@ -22,8 +22,7 @@ Namespace WebData
 
             Try
 
-                If IO.Directory.Exists(dirTemp) = False Then IO.Directory.CreateDirectory(dirTemp)
-                If IO.Directory.Exists(dirData) = False Then IO.Directory.CreateDirectory(dirData)
+                Functions.MakeDirectory()
 
                 Dim html As String = Functions.GetPage("https://www.fantacalcio.it/quotazioni-fantacalcio")
 

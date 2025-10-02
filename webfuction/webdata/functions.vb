@@ -43,10 +43,10 @@ Namespace WebData
 
         Public Shared Sub MakeDirectory()
 
-            Dim dirt As String = DataPath & "\webdata\temp"
-            Dim dird As String = DataPath & "\webdata\data"
-            Dim dirdpf As String = DataPath & "\webdata\data\pforma"
-            Dim dirdmt As String = DataPath & "\webdata\data\matchs"
+            Dim dirt As String = DataPath & "temp"
+            Dim dird As String = DataPath & "data"
+            Dim dirdpf As String = DataPath & "data\pforma"
+            Dim dirdmt As String = DataPath & "data\matchs"
 
             If IO.Directory.Exists(dirt) = False Then IO.Directory.CreateDirectory(dirt)
             If IO.Directory.Exists(dird) = False Then IO.Directory.CreateDirectory(dird)
