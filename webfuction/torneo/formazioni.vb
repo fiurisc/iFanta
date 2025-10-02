@@ -4,17 +4,41 @@ Namespace Torneo
 
     Public Class FormazioniData
 
-        Public Shared Sub ApiAddFormazione(Day As String, TeamId As String, Top As Boolean)
-
-        End Sub
-
-        Public Shared Sub ApiImportFormazione(Day As String, TeamId As String, json As String)
-
+        Public Shared Sub ApiAddFormazione(Day As String, TeamId As String, Top As Boolean, json As String)
+            Try
+                Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
+                Dim formazioni As List(Of Formazione) = WebData.Functions.DeserializeJson(Of List(Of Formazione))(json)
+                If formazioni IsNot Nothing AndAlso formazioni.Count > 0 Then
+                    Dim dicform As Dictionary(Of Integer, Formazione) = formazioni.ToDictionary(Function(x) x.TeamId, Function(x) x)
+                    For Each tid As Integer In dicform.Keys
+                        Dim sqlinsert As New List(Of String)
+                        For Each p As PlayerFormazione In dicform(tid).Players
+                            If p.Type >= 10 Then
+                                Dim sqlp As New System.Text.StringBuilder
+                                sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
+                                sqlp.AppendLine(Day & "," & TeamId & "," & p.Type & "," & p.Punti & ")")
+                                sqlinsert.Add(sqlp.ToString())
+                            Else
+                                Dim sqlp As New System.Text.StringBuilder
+                                sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
+                                sqlp.AppendLine(Day & "," & TeamId & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
+                                sqlp.AppendLine("'" & p.Nome & "','" & p.Squadra & "'," & p.Voto & "," & p.Ammonito & "," & p.Espulso & "," & p.Assists & "," & p.AutoGoal & ",")
+                                sqlp.AppendLine(p.GoalSubiti & "," & p.GoalFatti & "," & p.RigoriSbagliati & "," & p.RigoriParati & "," & p.Punti & ")")
+                                sqlinsert.Add(sqlp.ToString())
+                            End If
+                        Next
+                        ApiDeleteFormazioni(Day, tid.ToString(), Top)
+                        Functions.ExecuteSql(sqlinsert)
+                    Next
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
         End Sub
 
         Public Shared Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
             Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
-            Functions.ExecuteSql("DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam = " & TeamId, "") & " ORDER BY idteam,idformazione")
+            Functions.ExecuteSql("DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
         End Sub
 
         Public Shared Function ApiGetFormazione(Day As String, TeamId As String, Top As Boolean) As String
@@ -76,6 +100,7 @@ Namespace Torneo
                         End Select
                     End If
                 Next
+
                 forma.Modulo.Display = forma.Modulo.Difensori & "-" & forma.Modulo.Centrocampisti & "-" & forma.Modulo.Attaccanti
 
                 'Aggiungo punti provenieni dai bonus
@@ -123,10 +148,9 @@ Namespace Torneo
                             p.Ammonito = Functions.ReadFieldIntegerData("amm", row, 0)
                             p.Espulso = Functions.ReadFieldIntegerData("esp", row, 0)
                             p.Assists = Functions.ReadFieldIntegerData("ass", row, 0)
-                            p.AutoGoal = Functions.ReadFieldIntegerData("autogoal", row, 0)
+                            p.AutoGoal = Functions.ReadFieldIntegerData("autogol", row, 0)
                             p.GoalSubiti = Functions.ReadFieldIntegerData("gs", row, 0)
                             p.GoalFatti = Functions.ReadFieldIntegerData("gf", row, 0)
-                            p.RigoriTirati = Functions.ReadFieldIntegerData("rigt", row, 0)
                             p.RigoriSbagliati = Functions.ReadFieldIntegerData("rigs", row, 0)
                             p.RigoriParati = Functions.ReadFieldIntegerData("rigp", row, 0)
                             p.Punti = Functions.ReadFieldIntegerData("pt", row, 0)

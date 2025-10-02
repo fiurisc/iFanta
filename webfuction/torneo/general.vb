@@ -10,7 +10,7 @@ Namespace Torneo
 
         Shared Function ApiGetYearAct() As String
 
-            Dim years As List(Of YearTorneo) = ApiGetYearsList()
+            Dim years As List(Of YearTorneo) = apiGetYearsList()
 
             For Each y As YearTorneo In years
                 If y.Active Then
