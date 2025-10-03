@@ -15,7 +15,7 @@ Public Class Form1
 
         WebData.Functions.Year = year
         WebData.Functions.InitPath(My.Application.Info.DirectoryPath & "\tornei\", My.Application.Info.DirectoryPath & "\tornei\")
-        Torneo.PublicVariables.DataFromDatabase = True
+        Torneo.PublicVariables.DataFromDatabase = False
 
     End Sub
 
@@ -79,7 +79,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-        Dim data As String = Torneo.RoseData.apiGetRoseTorneo(1)
+        Dim data As String = Torneo.RoseData.ApiGetRoseTorneo("1", "6")
         data = ""
     End Sub
 

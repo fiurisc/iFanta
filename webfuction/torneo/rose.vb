@@ -33,7 +33,6 @@ Namespace Torneo
 
                 If PublicVariables.DataFromDatabase Then
 
-
                     Dim teams As New Dictionary(Of String, Object)
 
                     Try
@@ -67,42 +66,153 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function ApiGetRoseTorneo(teamId As Integer) As String
+        Public Shared Function ApiGetRoseTorneo(teamId As String, gio As String) As String
 
-            Dim strdata As New System.Text.StringBuilder
+            Dim json As String = ""
 
             Try
-
-                Dim fname As String = PublicVariables.DataPath & "export\rose.txt"
-                Dim quotes As New Dictionary(Of String, String)
-                Dim lines As List(Of String)
-
-                Dim j As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
-                Dim mtxquotes As List(Of Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Players.PlayerQuotesItem))(j)
-
-                For Each p As Players.PlayerQuotesItem In mtxquotes
-                    Dim key As String = p.Ruolo & "|" & p.Nome & "|" & p.Squadra
-                    If quotes.ContainsKey(key) = False Then quotes.Add(key, p.Qcur.ToString())
-                Next
-
-                lines = IO.File.ReadAllLines(fname).ToList()
-
-                For Each line As String In lines
-                    Dim s() As String = line.Split(CChar("|"))
-                    If s.Length > 5 Then
-                        Dim key As String = s(2) & "|" & s(4) & "|" & s(5)
-                        If quotes.ContainsKey(key) Then
-                            s(9) = quotes(key)
-                        End If
-                        strdata.AppendLine(WebData.Functions.ConvertListStringToString(s.ToList(), "|"))
-                    End If
-                Next
+                Dim dicp As New Dictionary(Of String, List(Of Player))
+                If PublicVariables.DataFromDatabase Then
+                    dicp = GetRoseFromDb(teamId, gio)
+                Else
+                    dicp = GetRoseFromTxt(teamId, gio)
+                End If
+                Return WebData.Functions.SerializzaOggetto(dicp, True)
             Catch ex As Exception
-                strdata.Append(ex.Message)
                 WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
 
-            Return strdata.ToString()
+            Return json
+
+        End Function
+
+        'Public Shared Function ApiGetRoseTorneo(teamId As Integer) As String
+
+        '    Dim strdata As New System.Text.StringBuilder
+
+        '    Try
+
+        '        Dim fname As String = PublicVariables.DataPath & "export\rose.txt"
+        '        Dim quotes As New Dictionary(Of String, String)
+        '        Dim lines As List(Of String)
+
+        '        Dim j As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+        '        Dim mtxquotes As List(Of Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Players.PlayerQuotesItem))(j)
+
+        '        For Each p As Players.PlayerQuotesItem In mtxquotes
+        '            Dim key As String = p.Ruolo & "|" & p.Nome & "|" & p.Squadra
+        '            If quotes.ContainsKey(key) = False Then quotes.Add(key, p.Qcur.ToString())
+        '        Next
+
+        '        lines = IO.File.ReadAllLines(fname).ToList()
+
+        '        For Each line As String In lines
+        '            Dim s() As String = line.Split(CChar("|"))
+        '            If s.Length > 5 Then
+        '                Dim key As String = s(2) & "|" & s(4) & "|" & s(5)
+        '                If quotes.ContainsKey(key) Then
+        '                    s(9) = quotes(key)
+        '                End If
+        '                strdata.AppendLine(WebData.Functions.ConvertListStringToString(s.ToList(), "|"))
+        '            End If
+        '        Next
+        '    Catch ex As Exception
+        '        strdata.Append(ex.Message)
+        '        WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+        '    End Try
+
+        '    Return strdata.ToString()
+
+        'End Function
+
+        Private Shared Function GetRoseFromDb(TeamId As String, gio As String) As Dictionary(Of String, List(Of Player))
+
+            Dim list As New Dictionary(Of String, List(Of Player))
+
+            Return list
+
+        End Function
+
+        Private Shared Function GetRoseFromTxt(TeamId As String, gio As String) As Dictionary(Of String, List(Of Player))
+
+            Dim list As New Dictionary(Of String, List(Of Player))
+
+            Try
+
+                Dim quotes As New Dictionary(Of String, Integer)
+                Dim json As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+                Dim mtxquotes As List(Of Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Players.PlayerQuotesItem))(json)
+
+                For Each p As Players.PlayerQuotesItem In mtxquotes
+                    Dim key As String = p.Ruolo & "|" & p.Nome & "|" & p.Squadra
+                    If quotes.ContainsKey(key) = False Then quotes.Add(key, p.Qcur)
+                Next
+
+                json = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
+                Dim matchs As New Dictionary(Of String, MatchsData.Match)
+                Dim mtxmatchs As Dictionary(Of String, Dictionary(Of String, MatchsData.Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, MatchsData.Match)))(json)
+
+                For Each g As String In mtxmatchs.Keys
+                    If g = gio Then
+                        For Each mid As String In mtxmatchs(g).Keys
+                            matchs.Add(mtxmatchs(g)(mid).TeamA, mtxmatchs(g)(mid))
+                            matchs.Add(mtxmatchs(g)(mid).TeamB, mtxmatchs(g)(mid))
+                        Next
+                    End If
+                Next
+
+                Dim fname As String = PublicVariables.DataPath & "\export\rose.txt"
+                Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
+
+                For Each line As String In lines
+
+                    Dim values() As String = line.Split(Convert.ToChar("|"))
+                    Dim tid As String = values(1)
+
+                    If TeamId = "-1" OrElse tid = TeamId Then
+
+                        If list.ContainsKey(tid) = False Then list.Add(tid, New List(Of Player))
+
+                        Dim p As New Player
+                        p.IdTeam = CInt(values(0))
+                        p.IdRosa = CInt(values(1))
+                        p.Ruolo = values(2)
+                        p.NatCode = values(3)
+                        p.Nome = values(4)
+                        p.Squadra = values(5)
+                        p.Riconfermato = CInt(values(6))
+                        p.Costo = CInt(values(7))
+                        p.Qini = CInt(values(8))
+                        p.Qcur = CInt(values(9))
+                        p.StatisticAll.Gs = CInt(values(10))
+                        p.StatisticAll.Gf = CInt(values(11))
+                        p.StatisticAll.Amm = CInt(values(12))
+                        p.StatisticAll.Esp = CInt(values(13))
+                        p.StatisticAll.Ass = CInt(values(14))
+                        p.StatisticAll.Avg_Vt = CInt(values(15))
+                        p.StatisticAll.pGiocate = CInt(values(16))
+                        p.StatisticAll.Titolare = CInt(values(17))
+                        p.StatisticLast.pGiocate = CInt(values(18))
+                        p.StatisticLast.Titolare = CInt(values(19))
+                        p.StatisticLast.mm = CInt(values(20))
+
+                        Dim key As String = p.Ruolo & "|" & p.Nome & "|" & p.Squadra
+                        If quotes.ContainsKey(key) Then p.Qcur = quotes(key)
+                        If matchs.ContainsKey(p.Squadra) Then
+                            Dim m As MatchsData.Match = matchs(p.Squadra)
+                            p.Match.TeamA = m.TeamA
+                            p.Match.TeamB = m.TeamB
+                            p.Match.Time = m.Time
+                        End If
+
+                        list(tid).Add(p)
+                    End If
+                Next
+            Catch ex As Exception
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
+
+            Return list
 
         End Function
 
@@ -233,7 +343,7 @@ Namespace Torneo
             Public Class PlayerMatch
                 Public Property TeamA As String = ""
                 Public Property TeamB As String = ""
-                Public Property Time As Date = Date.Now
+                Public Property Time As String = Now.ToString("yyyy/MM/dd HH:mm:ss")
 
             End Class
 
