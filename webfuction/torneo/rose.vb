@@ -124,7 +124,7 @@ Namespace Torneo
                         p.StatisticLast.Subentrato = Functions.ReadFieldIntegerData("sub_last", row, 0)
                         p.StatisticLast.Minuti = Functions.ReadFieldIntegerData("mm_last", row, 0)
 
-                        list(tid).Add(p)
+                        list(key).Add(p)
 
                     Next
                 End If
