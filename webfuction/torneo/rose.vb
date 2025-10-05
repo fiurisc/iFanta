@@ -4,6 +4,31 @@ Imports System.Data.SqlTypes
 Namespace Torneo
     Public Class RoseData
 
+        Public Shared Sub ApiAddRosa(Day As String, TeamId As String, json As String)
+            Try
+                ApiDeleteRose(Day, TeamId)
+                Dim rose As Dictionary(Of String, List(Of Player)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of Player)))(json)
+                If rose IsNot Nothing AndAlso rose.Count > 0 Then
+                    For Each tid As String In rose.Keys
+                        Dim sqlinsert As New List(Of String)
+                        For Each p As Player In rose(tid)
+                            Dim sqlp As New System.Text.StringBuilder
+                            sqlp.AppendLine("INSERT INTO tbrose (idteam,idrosa,ruolo,nome,costo,qini,riconfermato) values (")
+                            sqlp.AppendLine(tid & "," & p.IdRosa & ",'" & p.Ruolo & "','" & p.Nome & "'," & p.Costo & "," & p.Qini & "," & p.Riconfermato & ")")
+                            sqlinsert.Add(sqlp.ToString())
+                        Next
+                        Functions.ExecuteSql(sqlinsert)
+                    Next
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
+        End Sub
+
+        Public Shared Sub ApiDeleteRose(Day As String, TeamId As String)
+            Functions.ExecuteSql("DELETE FROM tbrose WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
+        End Sub
+
         Public Shared Function ApiGetTeamsTorneo() As String
 
             Dim strdata As New System.Text.StringBuilder
