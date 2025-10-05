@@ -7,7 +7,7 @@
             Dim dird As String = Functions.DataPath & "\data\pforma"
             Dim filet As String = dirt & "\pform-cds.txt"
             Dim filed As String = dird & "\pform-cds.txt"
-            Dim filep As String = dird & "\pform-cds-player.txt"
+            Dim filep As String = dird & "\pform-cds-player.json"
             Dim filel As String = dird & "\pform-cds-log.txt"
 
             Dim site As String = "Corriere"

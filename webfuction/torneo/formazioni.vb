@@ -1,4 +1,5 @@
 ﻿Imports System.Data
+Imports System.Security.Cryptography
 
 Namespace Torneo
 
@@ -6,6 +7,7 @@ Namespace Torneo
 
         Public Shared Sub ApiAddFormazione(Day As String, TeamId As String, Top As Boolean, json As String)
             Try
+                ApiDeleteFormazioni(Day, TeamId, Top)
                 Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
                 Dim formazioni As List(Of Formazione) = WebData.Functions.DeserializeJson(Of List(Of Formazione))(json)
                 If formazioni IsNot Nothing AndAlso formazioni.Count > 0 Then
@@ -16,18 +18,17 @@ Namespace Torneo
                             If p.Type >= 10 Then
                                 Dim sqlp As New System.Text.StringBuilder
                                 sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
-                                sqlp.AppendLine(Day & "," & TeamId & "," & p.Type & "," & p.Punti & ")")
+                                sqlp.AppendLine(Day & "," & tid & "," & p.Type & "," & p.Punti & ")")
                                 sqlinsert.Add(sqlp.ToString())
                             Else
                                 Dim sqlp As New System.Text.StringBuilder
                                 sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
-                                sqlp.AppendLine(Day & "," & TeamId & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
+                                sqlp.AppendLine(Day & "," & tid & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
                                 sqlp.AppendLine("'" & p.Nome & "','" & p.Squadra & "'," & p.Voto & "," & p.Ammonito & "," & p.Espulso & "," & p.Assists & "," & p.AutoGoal & ",")
                                 sqlp.AppendLine(p.GoalSubiti & "," & p.GoalFatti & "," & p.RigoriSbagliati & "," & p.RigoriParati & "," & p.Punti & ")")
                                 sqlinsert.Add(sqlp.ToString())
                             End If
                         Next
-                        ApiDeleteFormazioni(Day, tid.ToString(), Top)
                         Functions.ExecuteSql(sqlinsert)
                     Next
                 End If
@@ -119,7 +120,7 @@ Namespace Torneo
             Dim list As New Dictionary(Of Integer, Formazione)
 
             Try
-                Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
+                Dim tb As String = If(Top, "formazionitop", "formazioni")
                 Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam = " & TeamId, "") & " ORDER BY idteam,idformazione")
 
                 If ds.Tables.Count > 0 Then

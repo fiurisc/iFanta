@@ -10,7 +10,7 @@ Namespace WebData
             Dim site As String = "Gazzetta"
             Dim fileJson As String = GetDataFileName(site)
             Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
-            Dim fileData As String = dirData & site.ToLower() & ".txt"
+            Dim fileData As String = dirData & site.ToLower() & ".json"
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
 

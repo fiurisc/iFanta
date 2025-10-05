@@ -7,7 +7,7 @@ Namespace WebData
             Dim dirt As String = Functions.DataPath & "\temp"
             Dim dird As String = Functions.DataPath & "\data\pforma"
             Dim filet As String = dirt & "\pform-pianeta-fantacalcio.txt"
-            Dim filed As String = dird & "\pform-pianeta-fantacalcio.txt"
+            Dim filed As String = dird & "\pform-pianeta-fantacalcio.json"
             Dim filep As String = dird & "\pform-pianeta-fantacalcio-player.txt"
             Dim site As String = "PianetaFantacalcio"
             Dim currgg As Integer = -1

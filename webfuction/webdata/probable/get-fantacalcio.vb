@@ -6,7 +6,7 @@
             Dim dirt As String = Functions.DataPath & "\temp"
             Dim dird As String = Functions.DataPath & "\data\pforma"
             Dim filet As String = dirt & "\pform-fantacalcio.txt"
-            Dim filed As String = dird & "\pform-fantacalcio.txt"
+            Dim filed As String = dird & "\pform-fantacalcio.json"
             Dim filep As String = dird & "\pform-fantacalcio-player.txt"
             Dim filel As String = dird & "\pform-fantacalcio-log.txt"
             Dim site As String = "Fantacalcio"
