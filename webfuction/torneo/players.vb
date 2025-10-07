@@ -3,22 +3,38 @@
 Namespace Torneo
     Public Class Players
 
-        Public Shared Function ApiGetPlayersQuotes(Ruolo As String) As String
+        Public Shared Function ApiGetPlayersName() As String
+
+            Dim mtxdata As List(Of PlayerQuotesItem)
 
             If PublicVariables.DataFromDatabase Then
-
-                Dim mtxdata As List(Of PlayerQuotesItem) = GetPlayersQuotesData(Ruolo)
-                Return WebData.Functions.SerializzaOggetto(mtxdata, True)
-
+                mtxdata = GetPlayersQuotesData("")
             Else
-
-                Dim j As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
-                Dim mtxdata As List(Of PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(j)
-
-                If Ruolo <> "" Then mtxdata.RemoveAll(Function(x) x.Ruolo <> Ruolo)
-
-                Return WebData.Functions.SerializzaOggetto(mtxdata, True)
+                Dim json As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+                mtxdata = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(json)
             End If
+            Dim dicNames As New Dictionary(Of String, List(Of String))
+            For Each p As PlayerQuotesItem In mtxdata
+                If dicNames.ContainsKey(p.Ruolo) = False Then dicNames.Add(p.Ruolo, New List(Of String))
+                dicNames(p.Ruolo).Add(p.Nome)
+            Next
+            Return WebData.Functions.SerializzaOggetto(dicNames, True)
+
+        End Function
+
+        Public Shared Function ApiGetPlayersQuotes(Ruolo As String) As String
+
+            Dim mtxdata As New List(Of PlayerQuotesItem)
+
+            If PublicVariables.DataFromDatabase Then
+                mtxdata = GetPlayersQuotesData("")
+            Else
+                Dim json As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+                mtxdata = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(json)
+                If Ruolo <> "" Then mtxdata.RemoveAll(Function(x) x.Ruolo <> Ruolo)
+            End If
+
+            Return WebData.Functions.SerializzaOggetto(mtxdata, True)
 
         End Function
 

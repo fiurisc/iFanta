@@ -34,23 +34,6 @@
 
             Return json
 
-            'Dim strdata As New System.Text.StringBuilder
-
-            'Try
-
-
-            '    For Each pkey As String In wp.Keys
-            '        strdata.AppendLine(day & "/" & pkey & "|" & wp(pkey).Name & "|" & wp(pkey).Team & "|" & wp(pkey).Site & "|" & wp(pkey).State & "|" & wp(pkey).Percentage & "|" & wp(pkey).Info)
-            '    Next
-
-            '    IO.File.WriteAllText(filed, strdata.ToString, System.Text.Encoding.UTF8)
-
-            'Catch ex As Exception
-            '    Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
-            'End Try
-
-            'Return strdata.ToString
-
         End Function
 
     End Class
