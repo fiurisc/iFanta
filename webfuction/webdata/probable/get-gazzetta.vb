@@ -31,7 +31,7 @@ Namespace WebData
 
                     Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("UTF-8"))
                     Dim start As Boolean = False
-                    Dim plaryersData As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
+                    Dim plaryersData As New Torneo.ProbablePlayers.Probable
                     Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)
                     Dim sq As New List(Of String)
                     Dim sqid As Integer = 0
@@ -68,6 +68,7 @@ Namespace WebData
                                     For Each key As String In MatchsData.KeyMatchs.Keys
                                         If key = match Then
                                             currgg = MatchsData.KeyMatchs(key)
+                                            plaryersData.Day = currgg
                                             srLog.WriteLine("giornata associata -> " & CStr(currgg))
                                             Exit For
                                         End If
@@ -94,7 +95,7 @@ Namespace WebData
                                 If name = "LAUTARO" Then name = "MARTINEZ L."
                                 If name <> "" Then
                                     name = Players.Data.ResolveName("", name, sq(sqid), playersLog, False).GetName()
-                                    Call AddInfo(name, sq(sqid), site, "Titolare", "", 100, plaryersData)
+                                    Call AddInfo(name, sq(sqid), site, "Titolare", "", 100, plaryersData.Players)
                                 End If
 
                             ElseIf RegularExpressions.Regex.Match(line(i), "\<strong\>(Panchina|Ballottaggio|Squalificati|Indisponibili):\s+\<\/strong\>").Value <> "" Then
@@ -127,7 +128,7 @@ Namespace WebData
                                             End If
                                             Nome = Nome.Trim().ToUpper()
                                             Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
-                                            Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData)
+                                            Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData.Players)
                                         Catch ex As Exception
 
                                         End Try
@@ -138,7 +139,7 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(currgg, plaryersData, fileData)
+                        Dim out As String = WriteData(plaryersData, fileData)
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If

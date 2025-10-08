@@ -4,11 +4,13 @@ Namespace Torneo
 
     Public Class CoppaData
 
+        Public Shared data As New Dictionary(Of Integer, Dictionary(Of Integer, Integer))
+
         Public Shared Function ApiGetCoppa() As String
 
             Try
-                '    currlega.Classifica.LoadHistory()
 
+                LoadTeamScores()
 
                 Dim cup As New Coppa
 
@@ -91,29 +93,33 @@ Namespace Torneo
                 Return WebData.Functions.SerializzaOggetto(cup, True)
 
             Catch ex As Exception
-
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
 
             Return "{}"
 
         End Function
 
-        Shared Function GetGoalString(ByVal Goal As Integer) As String
-            If Goal > -5 Then
-                If Goal > 0 Then
-                    Return CStr(Goal)
-                Else
-                    Return "0"
-                End If
-            Else
-                Return ""
+        Private Shared Sub LoadTeamScores()
+
+            Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet("SELECT gio,idteam,sum(f.pt) AS pt FROM tbformazioni AS f WHERE (f.incampo = 1 OR f.TYPE = 10) AND f.pt > -100 GROUP BY f.gio, f.idteam ORDER BY f.gio, f.idteam")
+            If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
+                For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                    Dim gio As Integer = CInt(ds.Tables(0).Rows(i).Item("gio"))
+                    Dim teamid As Integer = CInt(ds.Tables(0).Rows(i).Item("idteam"))
+                    Dim pt As Integer = CInt(ds.Tables(0).Rows(i).Item("pt"))
+                    If data.ContainsKey(gio) = False Then data.Add(gio, New Dictionary(Of Integer, Integer))
+                    If data(gio).ContainsKey(teamid) = False Then data(gio).Add(teamid, pt)
+                Next
             End If
-        End Function
+            ds.Dispose()
+        End Sub
 
         Private Shared Sub SetClassifica(partite As List(Of Coppa.Girone.PartitaGirone), clasa As List(Of Coppa.Girone.ClasaGirone))
 
 
             For Each partita As Coppa.Girone.PartitaGirone In partite
+
                 Dim pt1 As Integer = 0
                 Dim pt2 As Integer = 0
 
@@ -160,11 +166,12 @@ Namespace Torneo
         End Sub
 
         Private Shared Sub SetRisultatiFinali(partite As List(Of Coppa.Girone.PartitaGirone))
-            'For Each partita As Coppa.Girone.PartitaGirone In partite
-            '    If partita.TeamId2 <> -1 Then partita.GoalAnd2 = GetGoal(currlega.Classifica.History(partita.TeamId2).Giornate(partita.GiornataAndata).Pt, False)
-            '    If partita.TeamId1 <> -1 Then partita.GoalRit1 = GetGoal(currlega.Classifica.History(partita.TeamId1).Giornate(partita.GiornataRitorno).Pt, False)
-            '    If partita.TeamId2 <> -1 Then partita.GoalRit2 = GetGoal(currlega.Classifica.History(partita.TeamId2).Giornate(partita.GiornataRitorno).Pt, True)
-            'Next
+            For Each partita As Coppa.Girone.PartitaGirone In partite
+                If partita.TeamId1 <> -1 Then partita.GoalAnd1 = GetGoal(partita.GiornataAndata, partita.TeamId1, True)
+                If partita.TeamId2 <> -1 Then partita.GoalAnd2 = GetGoal(partita.GiornataAndata, partita.TeamId2, False)
+                If partita.TeamId1 <> -1 Then partita.GoalRit1 = GetGoal(partita.GiornataRitorno, partita.TeamId1, False)
+                If partita.TeamId2 <> -1 Then partita.GoalRit2 = GetGoal(partita.GiornataRitorno, partita.TeamId2, True)
+            Next
         End Sub
 
         Private Shared Sub SetTypeOfResult(ByRef TeamCup As Coppa.Girone.ClasaGirone, ByVal Pt As Integer)
@@ -189,7 +196,14 @@ Namespace Torneo
             End If
         End Function
 
-        Private Shared Function GetGoal(ByVal pt As Double, ByVal Dentro As Boolean) As Integer
+        Private Shared Function GetGoal(gio As Integer, teamId As Integer, ByVal Dentro As Boolean) As Integer
+
+            Dim pt As Integer = 0
+
+            If data.ContainsKey(gio) AndAlso data(gio).ContainsKey(teamId) Then
+                pt = data(gio)(teamId)
+            End If
+
             If pt > 0 Then
                 pt = pt - 650
                 If Dentro Then pt = pt + 20
@@ -198,7 +212,9 @@ Namespace Torneo
             Else
                 pt = -10
             End If
+
             Return CInt(pt)
+
         End Function
 
         Public Class Coppa

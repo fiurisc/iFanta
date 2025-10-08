@@ -5,10 +5,10 @@
 
             Dim dirt As String = Functions.DataPath & "\temp"
             Dim dird As String = Functions.DataPath & "\data\pforma"
-            Dim filet As String = dirt & "\pform-cds.txt"
-            Dim filed As String = dird & "\pform-cds.txt"
-            Dim filep As String = dird & "\pform-cds-player.json"
-            Dim filel As String = dird & "\pform-cds-log.txt"
+            Dim filep As String = dird & "\player.json"
+            Dim filet As String = dirt & "\pform-cds.html"
+            Dim filed As String = dird & "\cds.json"
+            Dim filel As String = dird & "\pform-cds.log"
 
             Dim site As String = "Corriere"
             Dim enc As String = "utf-8"
@@ -28,7 +28,7 @@
                 Next
                 sr.WriteLine("")
 
-                Dim wpd As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
+                Dim wpd As New Torneo.ProbablePlayers.Probable
                 Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                 Dim linkp As New List(Of String)
 
@@ -84,7 +84,8 @@
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(currgg, wpd, filed)
+                        wpd.Day = currgg
+                        Dim out As String = WriteData(wpd, filed)
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filep)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
@@ -102,7 +103,7 @@
 
         End Function
 
-        Private Shared Sub GetCdsSingleMatch(link As String, indmatch As Integer, site As String, wpd As Dictionary(Of String, Torneo.ProbablePlayer.Player), wpl As Dictionary(Of String, Players.PlayerMatch))
+        Private Shared Sub GetCdsSingleMatch(link As String, indmatch As Integer, site As String, wpd As Torneo.ProbablePlayers.Probable, wpl As Dictionary(Of String, Players.PlayerMatch))
 
             Try
 
@@ -159,13 +160,13 @@
                                 name = System.Text.RegularExpressions.Regex.Match(line, "(?<=\>).*(?=\<\/)").Value.ToUpper.Replace("'", "’")
                                 If name <> "" Then
                                     name = Players.Data.ResolveName("", name, sq(0), wpl, False).GetName()
-                                    Call AddInfo(name, sq(0), site, pstate, info, perc, wpd)
+                                    Call AddInfo(name, sq(0), site, pstate, info, perc, wpd.Players)
                                 End If
                                 'Giorcatore Squadra fuori casa'
                                 name = System.Text.RegularExpressions.Regex.Match(lines(i + 3), "(?<=\>).*(?=\<\/)").Value.ToUpper.Replace("'", "’")
                                 If name <> "" Then
                                     name = Players.Data.ResolveName("", name, sq(1), wpl, False).GetName()
-                                    Call AddInfo(name, sq(1), site, pstate, info, perc, wpd)
+                                    Call AddInfo(name, sq(1), site, pstate, info, perc, wpd.Players)
                                 End If
 
                             ElseIf line.Contains("<th colspan=""2"">") Then
@@ -176,7 +177,7 @@
                                     name = s1(k).Trim.ToUpper
                                     If name <> "" Then
                                         name = Players.Data.ResolveName("", name, sq(0), wpl, False).GetName()
-                                        Call AddInfo(name, sq(0), site, pstate, "", perc, wpd)
+                                        Call AddInfo(name, sq(0), site, pstate, "", perc, wpd.Players)
                                     End If
                                 Next
 
@@ -186,7 +187,7 @@
                                     name = s2(k).Trim.ToUpper
                                     If name <> "" Then
                                         name = Players.Data.ResolveName("", s2(k).Trim.ToUpper, sq(0), wpl, False).GetName()
-                                        Call AddInfo(name, sq(1), site, pstate, "", perc, wpd)
+                                        Call AddInfo(name, sq(1), site, pstate, "", perc, wpd.Players)
                                     End If
                                 Next
 

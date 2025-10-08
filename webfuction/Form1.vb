@@ -79,7 +79,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-        Dim data As String = Torneo.CoppaData.ApiGetCoppa()
+        Dim data As String = Torneo.ProbablePlayers.ApiGetProbableFormation("")
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", data)
         data = ""
     End Sub

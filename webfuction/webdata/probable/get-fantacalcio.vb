@@ -5,14 +5,16 @@
 
             Dim dirt As String = Functions.DataPath & "\temp"
             Dim dird As String = Functions.DataPath & "\data\pforma"
-            Dim filet As String = dirt & "\pform-fantacalcio.txt"
-            Dim filed As String = dird & "\pform-fantacalcio.json"
-            Dim filep As String = dird & "\pform-fantacalcio-player.txt"
-            Dim filel As String = dird & "\pform-fantacalcio-log.txt"
             Dim site As String = "Fantacalcio"
+            Dim fileJson As String = GetDataFileName(site)
+            Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
+            Dim fileData As String = dirData & site.ToLower() & ".json"
+            Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
+            Dim fileLog As String = dirData & site.ToLower() & ".log"
+
             Dim enc As String = "iso-8859-1"
             Dim currgg As Integer = -1
-            Dim sr As New IO.StreamWriter(filel)
+            Dim sr As New IO.StreamWriter(fileLog)
             Dim rmsg As String = ""
 
             Try
@@ -36,10 +38,10 @@
                 If html <> "" Then
 
                     sr.WriteLine("Reading html page")
-                    IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding(enc))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding(enc))
 
-                    Dim lines() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding(enc))
-                    Dim wpd As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding(enc))
+                    Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                     Dim pstate As String = "Titolare"
                     Dim sq As New List(Of String)
@@ -57,8 +59,8 @@
 
                         If line <> "" Then
 
-                            If line.Contains("<h1 class=""h5"">Probabili formazioni Serie A</h1>") Then
-                                currgg = CInt(System.Text.RegularExpressions.Regex.Match(lines(i + 1), "\d+").Value)
+                            If line.Contains("class=""ml-auto"">Giornata") Then
+                                currgg = CInt(System.Text.RegularExpressions.Regex.Match(lines(i), "\d+").Value)
                             End If
                             If line.Contains("match-info") Then
                                 pstate = "Titolare"
@@ -87,15 +89,16 @@
                                     info = Functions.NormalizeText(lines(i + 5).Trim())
                                 End If
                                 name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-                                Call AddInfo(name, team, site, pstate, info, perc, wpd)
+                                Call AddInfo(name, team, site, pstate, info, perc, wpd.Players)
                                 If sq.Contains(team) = False Then sq.Add(team)
                             End If
                         End If
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(currgg, wpd, filed)
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filep)
+                        wpd.Day = currgg
+                        Dim out As String = WriteData(wpd, fileData)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
                 End If

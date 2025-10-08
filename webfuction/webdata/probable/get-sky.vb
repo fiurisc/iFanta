@@ -24,7 +24,7 @@
                     IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding(enc))
 
                     Dim lines() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding(enc))
-                    Dim wpd As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
+                    Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                     Dim sq As New List(Of String)
                     Dim sqid As Integer = 0
@@ -89,7 +89,7 @@
                                         name = val.Replace("-", " ").Trim
                                         If name <> "" Then
                                             name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-                                            Call AddInfo(name, team, site, pstate, "", -1, wpd)
+                                            Call AddInfo(name, team, site, pstate, "", -1, wpd.Players)
                                         End If
                                 End Select
 
@@ -101,7 +101,7 @@
                                     name = s(k).Replace("-", " ").Trim
                                     If name <> "" Then
                                         name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-                                        Call AddInfo(name, team, site, pstate, "", -1, wpd)
+                                        Call AddInfo(name, team, site, pstate, "", -1, wpd.Players)
                                     End If
                                 Next
                             End If
@@ -109,7 +109,8 @@
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(currgg, wpd, filed)
+                        wpd.Day = currgg
+                        Dim out As String = WriteData(wpd, filed)
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filep)
                         Return out.Replace(System.Environment.NewLine, "</br>")
                     Else

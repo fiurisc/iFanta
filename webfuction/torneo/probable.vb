@@ -1,49 +1,62 @@
 ﻿Imports Newtonsoft
 Imports System.Runtime.Remoting
-Imports webfuction.Torneo.Players
 
 Namespace Torneo
-    Public Class ProbablePlayer
+    Public Class ProbablePlayers
 
-        Public Shared Function ApiGetProbableFormation(site As String, day As String, state As String) As String
-            Dim dicData As New Dictionary(Of String, Player)
-            Dim tmp As New Dictionary(Of String, Dictionary(Of String, Player))
-            Dim json As String = IO.File.ReadAllText(WebData.ProbableFormations.GetDataFileName(site))
-            tmp = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Player)))(json)
-            If tmp.ContainsKey(day) Then
-                For Each n As String In tmp(day).Keys
-                    If state = "" OrElse tmp(day)(n).State = state Then
-                        dicData.Add(n, tmp(day)(n))
+        Public Shared Function ApiGetProbableFormation(state As String) As String
+            Dim dicData As New Dictionary(Of String, Probable) From {{"Gazzetta", New Probable}, {"Fantacalcio", New Probable}, {"PianetaFantacalcio", New Probable}}
+            For Each site As String In dicData.Keys.ToList()
+
+                Dim fname As String = WebData.ProbableFormations.GetDataFileName(site)
+
+                If IO.File.Exists(fname) Then
+
+                    Dim json As String = IO.File.ReadAllText(fname)
+                    Dim tmp = WebData.Functions.DeserializeJson(Of Probable)(json)
+
+                    If state <> "" Then
+                        For Each chiave In tmp.Players.Keys.ToList()
+                            If tmp.Players(chiave).State <> state Then
+                                tmp.Players.Remove(chiave)
+                            End If
+                        Next
                     End If
-                Next
-                Return WebData.Functions.SerializzaOggetto(dicData, True)
-            Else
-                Return "{}"
-            End If
+                    dicData(site) = tmp
+                End If
+            Next
+
+            Return WebData.Functions.SerializzaOggetto(dicData, True)
+
         End Function
 
-        Public Class Player
+        Public Class Probable
+            Public Property Day() As Integer = -1
+            Public Property Players() As New Dictionary(Of String, Player)
 
-            Sub New()
+            Public Class Player
 
-            End Sub
+                Sub New()
 
-            Sub New(ByVal Name As String, ByVal Team As String, Site As String, ByVal State As String, ByVal Info As String, Percentage As Integer)
-                _Name = Name
-                _Team = Team
-                _Site = Site
-                _State = State
-                _Info = Info
-                _Percentage = Percentage
-            End Sub
+                End Sub
 
-            Public Property Name() As String = ""
-            Public Property Team() As String = ""
-            Public Property Site() As String = ""
-            Public Property State() As String = "sconosciuto"
-            Public Property Info As String = ""
-            Public Property Percentage As Integer = 0
+                Sub New(ByVal Name As String, ByVal Team As String, Site As String, ByVal State As String, ByVal Info As String, Percentage As Integer)
+                    _Name = Name
+                    _Team = Team
+                    _Site = Site
+                    _State = State
+                    _Info = Info
+                    _Percentage = Percentage
+                End Sub
 
+                Public Property Name() As String = ""
+                Public Property Team() As String = ""
+                Public Property Site() As String = ""
+                Public Property State() As String = "sconosciuto"
+                Public Property Info As String = ""
+                Public Property Percentage As Integer = 0
+
+            End Class
         End Class
     End Class
 End Namespace

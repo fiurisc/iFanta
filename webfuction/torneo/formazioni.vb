@@ -54,7 +54,7 @@ Namespace Torneo
                     Return "{}"
                 End If
             Catch ex As Exception
-
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
 
             Return json

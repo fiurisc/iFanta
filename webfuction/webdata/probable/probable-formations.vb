@@ -8,10 +8,10 @@
             Return dirData & site.ToLower() & ".json"
         End Function
 
-        Shared Sub AddInfo(Name As String, Team As String, Site As String, State As String, Info As String, Percentage As Integer, wp As Dictionary(Of String, Torneo.ProbablePlayer.Player))
+        Shared Sub AddInfo(Name As String, Team As String, Site As String, State As String, Info As String, Percentage As Integer, wp As Dictionary(Of String, Torneo.ProbablePlayers.Probable.Player))
             If wp.ContainsKey(Name & "/" & Team) = False Then
                 If State = "Ballottaggio" Then State = "Panchina"
-                wp.Add(Name & "/" & Team, New Torneo.ProbablePlayer.Player(Name, Team, Site, State, Info, Percentage))
+                wp.Add(Name & "/" & Team, New Torneo.ProbablePlayers.Probable.Player(Name, Team, Site, State, Info, Percentage))
             Else
                 If wp(Name & "/" & Team).Info <> "" Then Info = "," & Info
                 If State = "Ballottaggio" Then State = wp(Name & "/" & Team).State
@@ -20,13 +20,14 @@
             End If
         End Sub
 
-        Shared Function WriteData(day As Integer, Data As Dictionary(Of String, Torneo.ProbablePlayer.Player), fileDestiNazione As String) As String
+        Shared Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String) As String
 
             Dim json As String = ""
             Try
-                Dim dicData As New Dictionary(Of String, Dictionary(Of String, Torneo.ProbablePlayer.Player))
-                dicData.Add(day.ToString(), Data)
-                json = WebData.Functions.SerializzaOggetto(dicData, False)
+                For Each p As String In Data.Players.Keys
+                    Data.Players(p).Info = Data.Players(p).Info.Trim(","c)
+                Next
+                json = WebData.Functions.SerializzaOggetto(Data, False)
                 IO.File.WriteAllText(fileDestiNazione, json)
             Catch ex As Exception
                 Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)

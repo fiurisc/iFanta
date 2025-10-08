@@ -6,10 +6,13 @@ Namespace WebData
 
             Dim dirt As String = Functions.DataPath & "\temp"
             Dim dird As String = Functions.DataPath & "\data\pforma"
-            Dim filet As String = dirt & "\pform-pianeta-fantacalcio.txt"
-            Dim filed As String = dird & "\pform-pianeta-fantacalcio.json"
-            Dim filep As String = dird & "\pform-pianeta-fantacalcio-player.txt"
             Dim site As String = "PianetaFantacalcio"
+            Dim fileJson As String = GetDataFileName(site)
+            Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
+            Dim fileData As String = dirData & site.ToLower() & ".json"
+            Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
+            Dim fileLog As String = dirData & site.ToLower() & ".log"
+
             Dim currgg As Integer = -1
 
             Try
@@ -21,7 +24,7 @@ Namespace WebData
 
                 If html <> "" Then
 
-                    IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding("iso-8859-1"))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding("iso-8859-1"))
 
                     Dim start As Boolean = False
                     Dim sq As New List(Of String)
@@ -29,8 +32,8 @@ Namespace WebData
                     Dim pstate As String = "Titolare"
                     Dim team As String = ""
 
-                    Dim line() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding("iso-8859-1"))
-                    Dim wpd As New Dictionary(Of String, Torneo.ProbablePlayer.Player)
+                    Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("iso-8859-1"))
+                    Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
 
                     For i As Integer = 0 To line.Length - 1
@@ -61,7 +64,7 @@ Namespace WebData
 
                                 line(i) = line(i).Replace(vbTab, "").Trim()
 
-                                Dim name As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Nomegio=)(.*?)(?="")").Value.Replace("'", "’")
+                                Dim name As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=nomegio=)(.*?)(?="")").Value.Replace("'", "’")
                                 Dim Ruolo As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Ruolo=)\w{1}").Value
                                 Dim info As String = ""
 
@@ -75,14 +78,14 @@ Namespace WebData
                                     If s.Length = 4 Then
                                         name = Players.Data.ResolveName(Ruolo, s(0), team, wpl, False).GetName()
                                         info = "In ballottagio con " & s(2).Trim() & " [" & s(1).Trim() & "]"
-                                        Call AddInfo(name, team, site, pstate, info, -1, wpd)
+                                        Call AddInfo(name, team, site, pstate, info, -1, wpd.Players)
                                         name = Players.Data.ResolveName(Ruolo, s(2), team, wpl, False).GetName()
                                         info = "In ballottagio con " & s(0).Trim() & " [" & s(3).Trim() & "]"
-                                        Call AddInfo(name, team, site, "Panchina", info, -1, wpd)
+                                        Call AddInfo(name, team, site, "Panchina", info, -1, wpd.Players)
                                     End If
                                 Else
                                     name = Players.Data.ResolveName(Ruolo, name, team, wpl, False).GetName()
-                                    Call AddInfo(name, team, site, pstate, info, -1, wpd)
+                                    Call AddInfo(name, team, site, pstate, info, -1, wpd.Players)
                                 End If
 
                             ElseIf line(i).Contains("<div class=""giocatori-indisponibili"">") Then
@@ -97,7 +100,7 @@ Namespace WebData
                                 If name <> "" Then
                                     pstate = "Infortunato"
                                     name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-                                    Call AddInfo(name, team, site, pstate, info, -1, wpd)
+                                    Call AddInfo(name, team, site, pstate, info, -1, wpd.Players)
                                 End If
 
                             ElseIf line(i).Contains("<div class=""giocatori-squalificati"">") Then
@@ -108,7 +111,7 @@ Namespace WebData
                                 If name <> "" Then
                                     pstate = "Squalificato"
                                     name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-                                    Call AddInfo(name, team, site, pstate, info, -1, wpd)
+                                    Call AddInfo(name, team, site, pstate, info, -1, wpd.Players)
                                 End If
 
                             End If
@@ -116,8 +119,9 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(currgg, wpd, filed)
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filep)
+                        wpd.Day = currgg
+                        Dim out As String = WriteData(wpd, fileData)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filePlayers)
                         Return out.Replace(System.Environment.NewLine, "</br>")
                     Else
                         Return ""
