@@ -69,9 +69,9 @@ Public Class Form1
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-        Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\Formazioni-2025-giornata-03.html")
-        Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const dati \= ).*(?=;\<\/script\>)").Value
-        Torneo.FormazioniData.ApiAddFormazione("3", "-1", False, json)
+        Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa-Me.ca.-2025.html")
+        Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
+        Torneo.RoseData.ApiAddRosa("1", json)
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", json)
         json = ""
         'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)

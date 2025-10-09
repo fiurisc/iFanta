@@ -5,36 +5,40 @@ Namespace Torneo
 
     Public Class FormazioniData
 
-        Public Shared Sub ApiAddFormazione(Day As String, TeamId As String, Top As Boolean, json As String)
-            Try
-                ApiDeleteFormazioni(Day, TeamId, Top)
-                Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
-                Dim formazioni As List(Of Formazione) = WebData.Functions.DeserializeJson(Of List(Of Formazione))(json)
-                If formazioni IsNot Nothing AndAlso formazioni.Count > 0 Then
-                    Dim dicform As Dictionary(Of Integer, Formazione) = formazioni.ToDictionary(Function(x) x.TeamId, Function(x) x)
-                    For Each tid As Integer In dicform.Keys
-                        Dim sqlinsert As New List(Of String)
-                        For Each p As PlayerFormazione In dicform(tid).Players
-                            If p.Type >= 10 Then
-                                Dim sqlp As New System.Text.StringBuilder
-                                sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
-                                sqlp.AppendLine(Day & "," & tid & "," & p.Type & "," & p.Punti & ")")
-                                sqlinsert.Add(sqlp.ToString())
-                            Else
-                                Dim sqlp As New System.Text.StringBuilder
-                                sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
-                                sqlp.AppendLine(Day & "," & tid & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
-                                sqlp.AppendLine("'" & p.Nome & "','" & p.Squadra & "'," & p.Voto & "," & p.Ammonito & "," & p.Espulso & "," & p.Assists & "," & p.AutoGoal & ",")
-                                sqlp.AppendLine(p.GoalSubiti & "," & p.GoalFatti & "," & p.RigoriSbagliati & "," & p.RigoriParati & "," & p.Punti & ")")
-                                sqlinsert.Add(sqlp.ToString())
-                            End If
-                        Next
-                        Functions.ExecuteSql(sqlinsert)
+        Public Shared Sub ApiAddFormazioni(Day As String, TeamId As String, Top As Boolean, json As String)
+
+            If json = "" Then Throw New Exception("Json not valid")
+
+            Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
+            Dim mData As MetaData = WebData.Functions.DeserializeJson(Of MetaData)(json)
+
+            If mData.teamId <> TeamId Then Throw New Exception("Json not valid")
+
+            ApiDeleteFormazioni(Day, TeamId, Top)
+
+            If mData IsNot Nothing AndAlso mData.data.Count > 0 Then
+                Dim dicform As Dictionary(Of Integer, Formazione) = mData.data.ToDictionary(Function(x) x.TeamId, Function(x) x)
+                For Each tid As Integer In dicform.Keys
+                    Dim sqlinsert As New List(Of String)
+                    For Each p As PlayerFormazione In dicform(tid).Players
+                        If p.Type >= 10 Then
+                            Dim sqlp As New System.Text.StringBuilder
+                            sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
+                            sqlp.AppendLine(Day & "," & tid & "," & p.Type & "," & p.Punti & ")")
+                            sqlinsert.Add(sqlp.ToString())
+                        Else
+                            Dim sqlp As New System.Text.StringBuilder
+                            sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
+                            sqlp.AppendLine(Day & "," & tid & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
+                            sqlp.AppendLine("'" & p.Nome.ToUpper() & "','" & p.Squadra.ToUpper() & "'," & p.Voto & "," & p.Ammonito & "," & p.Espulso & "," & p.Assists & "," & p.AutoGoal & ",")
+                            sqlp.AppendLine(p.GoalSubiti & "," & p.GoalFatti & "," & p.RigoriSbagliati & "," & p.RigoriParati & "," & p.Punti & ")")
+                            sqlinsert.Add(sqlp.ToString())
+                        End If
                     Next
-                End If
-            Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
-            End Try
+                    Functions.ExecuteSql(sqlinsert)
+                Next
+            End If
+
         End Sub
 
         Public Shared Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
@@ -163,7 +167,7 @@ Namespace Torneo
                         ElseIf type = 30 AndAlso PublicVariables.Settings.Bonus.EnableBonusAttack Then
                             list(tid).BonusDifesa = Functions.ReadFieldIntegerData("pt", row, 0)
                         ElseIf type = 40 AndAlso PublicVariables.Settings.SubstitutionType <> TorneoSettings.eSubstitutionType.Normal Then
-                            list(tid).CambioModulo = CBool(Functions.ReadFieldIntegerData("pt", row, 0))
+                            list(tid).CambioModulo = Functions.ReadFieldIntegerData("pt", row, 0)
                         End If
                     Next
                 End If
@@ -214,7 +218,7 @@ Namespace Torneo
                                 list(tid).BonusDifesa = CInt(values(2))
                                 list(tid).BonusCentrocampo = CInt(values(3))
                                 list(tid).BonusAttacco = CInt(values(4))
-                                list(tid).CambioModulo = CBool(values(2))
+                                list(tid).CambioModulo = CInt(values(2))
                             End If
                         End If
                     Next
@@ -227,6 +231,13 @@ Namespace Torneo
 
         End Function
 
+        Public Class MetaData
+            Public Property type As String = ""
+            Public Property giornata() As String = ""
+            Public Property teamId() As String = ""
+            Public Property data As List(Of Formazione)
+        End Class
+
         Public Class Formazione
 
             Public Property Giornata() As Integer = 1
@@ -236,7 +247,7 @@ Namespace Torneo
             Public Property BonusDifesa() As Integer = 0
             Public Property BonusCentrocampo() As Integer = 0
             Public Property BonusAttacco() As Integer = 0
-            Public Property CambioModulo() As Boolean = False
+            Public Property CambioModulo() As Integer = 0
             Public Property Punti() As Integer = 0
             Public Property Players() As List(Of PlayerFormazione) = New List(Of PlayerFormazione)
 

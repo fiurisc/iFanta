@@ -5,24 +5,28 @@ Namespace Torneo
     Public Class RoseData
 
         Public Shared Sub ApiAddRosa(TeamId As String, json As String)
-            Try
-                ApiDeleteRose(TeamId)
-                Dim rose As Dictionary(Of String, List(Of Player)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of Player)))(json)
-                If rose IsNot Nothing AndAlso rose.Count > 0 Then
-                    For Each tid As String In rose.Keys
-                        Dim sqlinsert As New List(Of String)
-                        For Each p As Player In rose(tid)
-                            Dim sqlp As New System.Text.StringBuilder
-                            sqlp.AppendLine("INSERT INTO tbrose (idteam,idrosa,ruolo,nome,costo,qini,riconfermato) values (")
-                            sqlp.AppendLine(tid & "," & p.IdRosa & ",'" & p.Ruolo & "','" & p.Nome & "'," & p.Costo & "," & p.Qini & "," & p.Riconfermato & ")")
-                            sqlinsert.Add(sqlp.ToString())
-                        Next
-                        Functions.ExecuteSql(sqlinsert)
+
+            If json = "" Then Throw New Exception("Json not valid")
+
+            Dim mData As MetaData = WebData.Functions.DeserializeJson(Of MetaData)(json)
+
+            If mData.teamId <> TeamId Then Throw New Exception("Json not valid")
+
+            ApiDeleteRose(TeamId)
+
+            If mData IsNot Nothing AndAlso mData.data.Count > 0 Then
+                For Each tid As String In mData.data.Keys
+                    Dim sqlinsert As New List(Of String)
+                    For Each p As Player In mData.data(tid)
+                        Dim sqlp As New System.Text.StringBuilder
+                        sqlp.AppendLine("INSERT INTO tbrose (idteam,idrosa,ruolo,nome,costo,qini,riconfermato) values (")
+                        sqlp.AppendLine(tid & "," & p.RosaId & ",'" & p.Ruolo & "','" & p.Nome.ToUpper() & "'," & p.Costo & "," & p.Qini & "," & p.Riconfermato & ")")
+                        sqlinsert.Add(sqlp.ToString())
                     Next
-                End If
-            Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
-            End Try
+                    Functions.ExecuteSql(sqlinsert)
+                Next
+            End If
+
         End Sub
 
         Public Shared Sub ApiDeleteRose(TeamId As String)
@@ -116,8 +120,8 @@ Namespace Torneo
                         If list.ContainsKey(key) = False Then list.Add(key, New List(Of Player))
 
                         Dim p As New Player
-                        p.IdTeam = CInt(tid)
-                        p.IdRosa = Functions.ReadFieldIntegerData("idrosa", row, 0)
+                        p.TeamId = CInt(tid)
+                        p.RosaId = Functions.ReadFieldIntegerData("idrosa", row, 0)
                         p.Ruolo = Functions.ReadFieldStringData("ruolo", row, "D")
                         p.NatCode = Functions.ReadFieldStringData("natcode", row, "")
                         p.Nome = Functions.ReadFieldStringData("nome", row, "D")
@@ -195,8 +199,8 @@ Namespace Torneo
                         If list.ContainsKey(tid) = False Then list.Add(tid, New List(Of Player))
 
                         Dim p As New Player
-                        p.IdTeam = CInt(values(0))
-                        p.IdRosa = CInt(values(1))
+                        p.TeamId = CInt(values(0))
+                        p.RosaId = CInt(values(1))
                         p.Ruolo = r
                         p.NatCode = values(3)
                         p.Nome = values(4)
@@ -231,29 +235,35 @@ Namespace Torneo
 
         End Function
 
+        Public Class MetaData
+            Public Property type As String = ""
+            Public Property teamId() As String = ""
+            Public Property data As Dictionary(Of String, List(Of Player))
+        End Class
+
         Public Class Player
 
             Sub New()
 
             End Sub
 
-            Sub New(ByVal IdRosa As Integer, ByVal Ruolo As String, ByVal Nome As String, ByVal Squadra As String)
-                Me.IdRosa = IdRosa
+            Sub New(ByVal RosaId As Integer, ByVal Ruolo As String, ByVal Nome As String, ByVal Squadra As String)
+                Me.RosaId = RosaId
                 Me.Ruolo = Ruolo
                 Me.Nome = Nome
                 Me.Squadra = Squadra
             End Sub
 
-            Sub New(ByVal IdRosa As Integer, ByVal Ruolo As String, ByVal Nome As String, ByVal Squadra As String, ByVal Costo As Integer)
-                Me.IdRosa = IdRosa
+            Sub New(ByVal RosaId As Integer, ByVal Ruolo As String, ByVal Nome As String, ByVal Squadra As String, ByVal Costo As Integer)
+                Me.RosaId = RosaId
                 Me.Ruolo = Ruolo
                 Me.Nome = Nome
                 Me.Squadra = Squadra
                 Me.Costo = Costo
             End Sub
 
-            Sub New(ByVal IdRosa As Integer, ByVal Ruolo As String, ByVal Nome As String, ByVal Squadra As String, ByVal Costo As Integer, ByVal Qini As Integer)
-                Me.IdRosa = IdRosa
+            Sub New(ByVal RosaId As Integer, ByVal Ruolo As String, ByVal Nome As String, ByVal Squadra As String, ByVal Costo As Integer, ByVal Qini As Integer)
+                Me.RosaId = RosaId
                 Me.Ruolo = Ruolo
                 Me.Nome = Nome
                 Me.Squadra = Squadra
@@ -261,8 +271,8 @@ Namespace Torneo
                 Me.Qini = Qini
             End Sub
 
-            Public Property IdTeam() As Integer = 0
-            Public Property IdRosa() As Integer = 0
+            Public Property TeamId() As Integer = 0
+            Public Property RosaId() As Integer = 0
             Public Property Ruolo() As String = ""
             Public Property Nome() As String = ""
             Public Property Squadra() As String = ""
