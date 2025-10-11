@@ -893,6 +893,7 @@ Partial Class LegaObject
 
             Public Function GetStatsticLastlDataFromDataRow(data As Data.DataRow) As StatisticData
 
+
                 Dim d As New StatisticData
 
                 'Dati statistici ultime giornate'

@@ -1,4 +1,6 @@
-﻿Imports System.Net.Http
+﻿Imports System.Net
+Imports System.Net.Http
+Imports System.Net.Mail
 Imports System.Text
 Imports Newtonsoft
 
@@ -6,7 +8,31 @@ Public Class Form1
 
     Dim year As String = "2025"
 
+    Public Class ArubaSmtpTest
+        Public Shared Function TestArubaSmtp() As String
+            Try
+                Dim mail As New System.Net.Mail.MailMessage()
+                mail.From = New MailAddress("postmaster@ifantacalcio.it") ' Inserisci la tua email Aruba
+                mail.To.Add("fernando.iurisci@gmail.com") ' Inserisci un destinatario valido
+                mail.Subject = "Test SMTP Aruba"
+                mail.Body = "Questa è una mail di test inviata da ASP.NET tramite SMTP Aruba."
+                mail.IsBodyHtml = False
+
+                Dim smtp As New System.Net.Mail.SmtpClient("smtp.aruba.it", 465)
+                smtp.Credentials = New System.Net.NetworkCredential("postmaster@ifantacalcio.it", "Anxanum1969!") ' Inserisci le credenziali
+                smtp.EnableSsl = True
+
+                smtp.Send(mail)
+                Return "Email inviata con successo!"
+            Catch ex As Exception
+                Return "Errore durante l'invio: " & ex.Message
+            End Try
+        End Function
+    End Class
+
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+
+        Torneo.General.SendMail("fernando.iurisci@gmail.com", "", "Reset password", "Reset password", "fd", New List(Of String))
 
         Dim data As String = "FORMAZIONI"
         Dim show As Boolean = True

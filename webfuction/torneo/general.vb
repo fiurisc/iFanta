@@ -1,8 +1,38 @@
 ﻿Imports System.Text.RegularExpressions
 Imports System.IO
+Imports System.Reflection
 
 Namespace Torneo
     Public Class General
+
+        Shared Sub LoadAccounts()
+            If PublicVariables.Accounts.Count = 0 Then
+                PublicVariables.Accounts.Add(New Account("carlo.simone", "carlo25!", "0", ""))
+                PublicVariables.Accounts.Add(New Account("luca.carelli", "luca189*", "1", ""))
+                PublicVariables.Accounts.Add(New Account("francesco.palestini", "checco89", "2", ""))
+                PublicVariables.Accounts.Add(New Account("giuseppe.polidoro", "poligold83", "3", "", "admin"))
+                PublicVariables.Accounts.Add(New Account("pino.paione", "juvemerda*", "4", ""))
+                PublicVariables.Accounts.Add(New Account("matteo.simone", "matteo78!", "5", ""))
+                PublicVariables.Accounts.Add(New Account("luca.dirisio", "lucchetto95", "6", ""))
+                PublicVariables.Accounts.Add(New Account("francesco.simone", "babbonatale", "7", ""))
+                PublicVariables.Accounts.Add(New Account("fernando.iurisci", "ferdy78!", "8", "", "admin"))
+                PublicVariables.Accounts.Add(New Account("gianluca.iurisci", "Anxanum69#", "9", ""))
+            End If
+        End Sub
+
+        Shared Function GetAccountByUsername(Username As String) As Account
+
+            Dim acc As New Account
+
+            For i As Integer = 0 To PublicVariables.Accounts.Count - 1
+                If PublicVariables.Accounts(i).Username.ToLower() = Username.ToLower() Then
+                    Return acc
+                End If
+            Next
+
+            Return acc
+
+        End Function
 
         Shared Function GetSettingsFileName(Year As String) As String
             Return PublicVariables.RootDataPath & Year & "/settings.txt"
@@ -354,6 +384,61 @@ Namespace Torneo
             End Try
         End Sub
 
+        Public Shared Function SendMail(ToAddress As String, CcAddress As String, Display As String, Subject As String, Body As String, AttachFileList As List(Of String)) As Boolean
+
+            Dim ris As Boolean = True
+            Dim cred As New Net.NetworkCredential("formazioni@ifantacalcio.it", "Anxanum1969!")
+            Dim smtp As New System.Net.Mail.SmtpClient
+            Dim mail As New System.Net.Mail.MailMessage()
+
+            Try
+
+                If ToAddress <> "" AndAlso System.Text.RegularExpressions.Regex.Match(ToAddress, "^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$").Value = ToAddress Then
+
+
+                    smtp.UseDefaultCredentials = False
+                    smtp.Credentials = cred
+                    smtp.DeliveryMethod = Net.Mail.SmtpDeliveryMethod.Network
+                    smtp.Port = 25
+                    smtp.EnableSsl = False
+                    smtp.Host = "smtps.aruba.it"
+
+                    If Display = "" Then Display = cred.UserName
+
+                    mail.From = New System.Net.Mail.MailAddress(cred.UserName, Display)
+                    mail.To.Add(ToAddress)
+                    If CcAddress <> "" Then
+                        mail.CC.Add(CcAddress)
+                    End If
+                    mail.Subject = Subject
+                    mail.IsBodyHtml = False
+                    mail.Body = Body
+
+                    For i As Integer = 0 To AttachFileList.Count - 1
+                        mail.Attachments.Add(New System.Net.Mail.Attachment(AttachFileList(i)))
+                    Next
+
+                    smtp.Send(mail)
+
+                Else
+
+                    WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, "Mail administrator lega missing or not valid")
+                    ris = False
+
+                End If
+
+            Catch ex As Exception
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                ris = False
+            End Try
+
+            mail.Dispose()
+            smtp = Nothing
+
+            Return ris
+
+        End Function
+
         Public Class YearTorneo
             Public Property Year As String = ""
             Public Property Active As Boolean = False
@@ -368,10 +453,33 @@ Namespace Torneo
             End Sub
         End Class
 
-        Public Class LoginUser
-            Public Property Username As String = ""
-            Public Property Password As String = ""
-            Public Property Hash As Boolean = False
+        Public Class Account
+
+            Public Username As String = ""
+            Public Password As String = ""
+            Public TeamId As String = "-1"
+            Public Role As String = "user"
+            Public Mail As String = ""
+
+            Public Sub New()
+
+            End Sub
+
+            Public Sub New(Username As String, Password As String, TeamId As String, Mail As String)
+                Me.Username = Username
+                Me.Password = Password
+                Me.TeamId = TeamId
+                Me.Mail = Mail
+            End Sub
+
+            Public Sub New(Username As String, Password As String, TeamId As String, Mail As String, role As String)
+                Me.Username = Username
+                Me.Password = Password
+                Me.TeamId = TeamId
+                Me.Mail = Mail
+                Me.Role = role
+            End Sub
+
         End Class
     End Class
 End Namespace
