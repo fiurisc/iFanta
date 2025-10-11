@@ -20,11 +20,6 @@ Namespace WebData
             Return DataPath
         End Function
 
-        Public Shared Sub InitPath1(rootDataPath As String, rootdatabasePath As String)
-            DataPath = rootDataPath & Year & "\webdata\"
-            Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
-        End Sub
-
         Public Shared Sub WriteLog(dirs As String, ByVal Form As String, ByVal SubName As String, ByVal Text As String)
             Try
                 If IO.Directory.Exists(dirs) Then IO.File.AppendAllText(dirs & "\debug.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & Form & "|" & SubName & "|" & Text & System.Environment.NewLine)

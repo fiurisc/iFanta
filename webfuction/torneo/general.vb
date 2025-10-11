@@ -52,7 +52,7 @@ Namespace Torneo
 
         End Function
 
-        Shared Function apiGetYearsList() As List(Of YearTorneo)
+        Shared Function ApiGetYearsList() As List(Of YearTorneo)
 
             Dim years As New List(Of YearTorneo)
 

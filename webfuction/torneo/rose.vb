@@ -1,6 +1,4 @@
-﻿Imports System.Data.OleDb
-Imports System.Data.SqlTypes
-
+﻿
 Namespace Torneo
     Public Class RoseData
 
@@ -111,7 +109,7 @@ Namespace Torneo
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
 
-                        Dim row As DataRow = ds.Tables(0).Rows(i)
+                        Dim row As System.Data.DataRow = ds.Tables(0).Rows(i)
                         Dim type As Integer = Functions.ReadFieldIntegerData("type", row, 0)
                         Dim tid As String = If(TeamId = "-2", "-1", Functions.ReadFieldIntegerData("idteam", row, 0).ToString())
                         Dim r As String = Functions.ReadFieldStringData("ruolo", row, "D")
