@@ -236,7 +236,6 @@ Namespace Torneo
 
             Try
 
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, "SELECT * FROM tbtabellini WHERE gio >=" & startDay & " AND gio<=" & endDay)
                 Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbtabellini WHERE gio >=" & startDay & " AND gio<=" & endDay)
 
                 If ds.Tables.Count > 0 Then

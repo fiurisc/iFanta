@@ -74,6 +74,9 @@ Namespace Torneo
         End Function
 
         Public Shared Sub UpdatePlayersQuotes(newmtxdata As List(Of PlayerQuotesItem))
+
+            Dim ckey As String = ""
+
             Try
 
                 Dim mtxdata As List(Of PlayerQuotesItem) = GetPlayersQuotesData("")
@@ -92,9 +95,10 @@ Namespace Torneo
                 Dim sqlupdate As New List(Of String)
 
                 For Each key In newdata.Keys
+                    ckey = key
                     Dim p As PlayerQuotesItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (Ruolo,Nome,Squadra,Qini,Qcur) values (" & p.Ruolo & "," & p.Nome & ",'" & p.Squadra & "'," & p.Qini & "," & p.Qcur & ")")
+                        sqlinsert.Add("INSERT INTO tbplayer (Ruolo,Nome,Squadra,Qini,Qcur) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & ")")
                     ElseIf WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
                         sqlupdate.Add("UPDATE tbplayer SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',Qini=" & p.Qini & ",Qcur=" & p.Qcur & " WHERE Nome='" & p.Nome & "'")
                     End If
@@ -169,7 +173,7 @@ Namespace Torneo
                 For Each key In newdata.Keys
                     Dim p As PlayerDataItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer_data (Ruolo,Nome,Squadra,nat,NatCode) values (" & p.Ruolo & "," & p.Nome & ",'" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "')")
+                        sqlinsert.Add("INSERT INTO tbplayer_data (Ruolo,Nome,Squadra,nat,NatCode) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "')")
                     ElseIf WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
                         sqlupdate.Add("UPDATE tbplayer_data SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',nat='" & p.Nazione & "',NatCode='" & p.NatCode & "' WHERE Nome='" & p.Nome & "'")
                     End If
