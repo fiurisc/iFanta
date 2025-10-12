@@ -5,14 +5,14 @@ Namespace Torneo
 
     Public Class FormazioniData
 
-        Public Shared Sub ApiAddFormazioni(Day As String, TeamId As String, Top As Boolean, json As String)
+        Public Shared Function ApiAddFormazioni(Day As String, TeamId As String, Top As Boolean, json As String) As String
 
             If json = "" Then Throw New Exception("Json not valid")
 
             Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
             Dim mData As MetaData = WebData.Functions.DeserializeJson(Of MetaData)(json)
 
-            If mData.teamId <> TeamId Then Throw New Exception("Json not valid")
+            If mData.teamId <> TeamId Then Throw New Exception("Json not related to right teamid")
 
             ApiDeleteFormazioni(Day, TeamId, Top)
 
@@ -39,11 +39,14 @@ Namespace Torneo
                 Next
             End If
 
-        End Sub
+            Return ""
+
+        End Function
 
         Public Shared Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
             Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
             Functions.ExecuteSql("DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
+            WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, "DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
         End Sub
 
         Public Shared Function ApiGetFormazione(Day As String, TeamId As String, Top As Boolean) As String
@@ -65,13 +68,14 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function ApiGetFormazioni(Day As String, Top As Boolean) As String
+        Public Shared Function ApiGetFormazioni(Day As String, TeamId As String, Top As Boolean) As String
 
             Dim json As String = ""
 
             Try
-                Dim list As List(Of Formazione) = GetFormazioni(Day, "-1", Top)
-                Return WebData.Functions.SerializzaOggetto(list, True)
+                Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Top)
+                Dim dicForma As Dictionary(Of String, Formazione) = list.ToDictionary(Function(x) x.TeamId.ToString(), Function(x) x)
+                Return WebData.Functions.SerializzaOggetto(dicForma, True)
             Catch ex As Exception
                 WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try

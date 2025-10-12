@@ -26,7 +26,7 @@ Namespace Torneo
 
             For i As Integer = 0 To PublicVariables.Accounts.Count - 1
                 If PublicVariables.Accounts(i).Username.ToLower() = Username.ToLower() Then
-                    Return acc
+                    Return PublicVariables.Accounts(i)
                 End If
             Next
 

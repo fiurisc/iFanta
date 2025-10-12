@@ -114,7 +114,7 @@ Namespace WebData
                 Dim obj As T = serializer.Deserialize(Of T)(json)
                 Return obj
             Catch ex As Exception
-                Return Nothing
+                Call WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
             End Try
         End Function
 

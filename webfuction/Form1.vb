@@ -32,7 +32,7 @@ Public Class Form1
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
-        Torneo.General.SendMail("fernando.iurisci@gmail.com", "", "Reset password", "Reset password", "fd", New List(Of String))
+        'Torneo.General.SendMail("fernando.iurisci@gmail.com", "", "Reset password", "Reset password", "fd", New List(Of String))
 
         Dim data As String = "FORMAZIONI"
         Dim show As Boolean = True
@@ -95,9 +95,9 @@ Public Class Form1
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-        Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa-Me.ca.-2025.html")
+        Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Formazioni-giornata-01-2025.html")
         Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
-        Torneo.RoseData.ApiAddRosa("1", json)
+        Torneo.FormazioniData.ApiAddFormazioni("1", "-1", False, json)
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", json)
         json = ""
         'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
@@ -105,7 +105,8 @@ Public Class Form1
     End Sub
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
-        Dim data As String = Torneo.ProbablePlayers.ApiGetProbableFormation("")
+
+        Dim data As String = Torneo.ProbablePlayers.ApiGetProbableFormation("Infortunato,Squalificato")
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", data)
         data = ""
     End Sub

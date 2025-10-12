@@ -6,6 +6,7 @@ Namespace Torneo
 
         Public Shared Function ApiGetProbableFormation(state As String) As String
             Dim dicData As New Dictionary(Of String, Probable) From {{"Gazzetta", New Probable}, {"Fantacalcio", New Probable}, {"PianetaFantacalcio", New Probable}}
+            Dim states() As String = state.Split(Convert.ToChar(","))
             For Each site As String In dicData.Keys.ToList()
 
                 Dim fname As String = WebData.ProbableFormations.GetDataFileName(site)
@@ -17,7 +18,7 @@ Namespace Torneo
 
                     If state <> "" Then
                         For Each chiave In tmp.Players.Keys.ToList()
-                            If tmp.Players(chiave).State <> state Then
+                            If states.Contains(tmp.Players(chiave).State) = False Then
                                 tmp.Players.Remove(chiave)
                             End If
                         Next

@@ -104,7 +104,7 @@ Namespace Torneo
                     strTeadId = "idteam is null"
                 End If
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM player WHERE " & strTeadId & If(role <> "all", " AND ruolo = " & role, "") & " ORDER BY idteam,idrosa")
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM player WHERE " & strTeadId & If(role <> "-1" AndAlso role <> "", " AND ruolo = '" & role & "'", "") & " ORDER BY idteam,idrosa")
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
