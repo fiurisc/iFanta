@@ -5,34 +5,40 @@ Imports System.Reflection
 Namespace Torneo
     Public Class General
 
-        Shared Sub LoadAccounts()
-            If PublicVariables.Accounts.Count = 0 Then
-                PublicVariables.Accounts.Add(New Account("carlo.simone", "carlo25!", "0", ""))
-                PublicVariables.Accounts.Add(New Account("luca.carelli", "luca189*", "1", ""))
-                PublicVariables.Accounts.Add(New Account("francesco.palestini", "checco89", "2", ""))
-                PublicVariables.Accounts.Add(New Account("giuseppe.polidoro", "poligold83", "3", "", "admin"))
-                PublicVariables.Accounts.Add(New Account("pino.paione", "juvemerda*", "4", ""))
-                PublicVariables.Accounts.Add(New Account("matteo.simone", "matteo78!", "5", ""))
-                PublicVariables.Accounts.Add(New Account("luca.dirisio", "lucchetto95", "6", ""))
-                PublicVariables.Accounts.Add(New Account("francesco.simone", "babbonatale", "7", ""))
-                PublicVariables.Accounts.Add(New Account("fernando.iurisci", "ferdy78!", "8", "", "admin"))
-                PublicVariables.Accounts.Add(New Account("gianluca.iurisci", "Anxanum69#", "9", ""))
-            End If
-        End Sub
-
         Shared Function GetAccountByUsername(Username As String) As Account
 
             Dim acc As New Account
 
-            For i As Integer = 0 To PublicVariables.Accounts.Count - 1
-                If PublicVariables.Accounts(i).Username.ToLower() = Username.ToLower() Then
-                    Return PublicVariables.Accounts(i)
+            Try
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM users where nome='" & Username & "';", True)
+
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim row As System.Data.DataRow = ds.Tables(0).Rows(i)
+                        acc.Id = Functions.ReadFieldIntegerData("id", row, 0)
+                        acc.Username = Functions.ReadFieldStringData("nome", row, "")
+                        acc.Password = Functions.ReadFieldStringData("password", row, "")
+                        acc.Role = Functions.ReadFieldStringData("role", row, "")
+                        acc.Mail = Functions.ReadFieldStringData("mail", row, "")
+                        acc.TeamId = Functions.ReadFieldStringData("teamid", row, "0")
+                    Next
                 End If
-            Next
+            Catch ex As Exception
+                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
 
             Return acc
 
         End Function
+
+        Shared Sub SendPassword(Username As String)
+            Dim acc As Account = GetAccountByUsername(Username)
+            If acc.Username <> "" AndAlso acc.Mail <> "" Then
+                SendMail(acc.Mail, "", "iFantacalcio", "Password account", "la password per l'account (" & acc.Username & ") è: <b>" & acc.Password & "</b>", New List(Of String))
+            Else
+                Throw New Exception("errore interno")
+            End If
+        End Sub
 
         Shared Function GetSettingsFileName(Year As String) As String
             Return PublicVariables.RootDataPath & Year & "/settings.txt"
@@ -40,7 +46,7 @@ Namespace Torneo
 
         Shared Function ApiGetYearAct() As String
 
-            Dim years As List(Of YearTorneo) = apiGetYearsList()
+            Dim years As List(Of YearTorneo) = ApiGetYearsList()
 
             For Each y As YearTorneo In years
                 If y.Active Then
@@ -401,7 +407,7 @@ Namespace Torneo
                     smtp.DeliveryMethod = Net.Mail.SmtpDeliveryMethod.Network
                     smtp.Port = 25
                     smtp.EnableSsl = False
-                    smtp.Host = "smtps.aruba.it"
+                    smtp.Host = "smtp.aruba.it"
 
                     If Display = "" Then Display = cred.UserName
 
@@ -411,7 +417,7 @@ Namespace Torneo
                         mail.CC.Add(CcAddress)
                     End If
                     mail.Subject = Subject
-                    mail.IsBodyHtml = False
+                    mail.IsBodyHtml = True
                     mail.Body = Body
 
                     For i As Integer = 0 To AttachFileList.Count - 1
@@ -455,11 +461,13 @@ Namespace Torneo
 
         Public Class Account
 
+            Public Id As Integer = -1
             Public Username As String = ""
             Public Password As String = ""
             Public TeamId As String = "-1"
             Public Role As String = "user"
             Public Mail As String = ""
+            Public Token As String = ""
 
             Public Sub New()
 

@@ -8,15 +8,16 @@ Namespace Torneo
             PublicVariables.Year = year
             PublicVariables.RootDataPath = rootDataPath
             PublicVariables.DataPath = rootDataPath & year & "\"
-            PublicVariables.DatabaseFileName = rootdatabasePath & year & ".accdb"
+            PublicVariables.DatabaseTorneo = rootdatabasePath & year & ".accdb"
+            PublicVariables.DatabaseUsers = rootdatabasePath & "users.accdb"
         End Sub
 
-        Public Shared Function ExecuteSqlReturnJSON(ByVal SqlString As String) As String
+        Public Shared Function ExecuteSqlReturnJSON(ByVal SqlString As String, Optional DbUser As Boolean = False) As String
 
             Dim risultati As New List(Of Dictionary(Of String, Object))()
 
             Try
-                Dim ds As System.Data.DataSet = ExecuteSqlReturnDataSet(SqlString)
+                Dim ds As System.Data.DataSet = ExecuteSqlReturnDataSet(SqlString, DbUser)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -32,30 +33,6 @@ Namespace Torneo
             End Try
 
             Return WebData.Functions.SerializzaOggetto(risultati, True)
-
-        End Function
-
-        Public Shared Function ApiGetRecordIdFromUpdate(table As String, lastRecordId As Integer) As Integer
-
-            Dim query As String = "SELECT max(id) as lastid FROM " & table & " WHERE id<=" & lastRecordId & ";"
-            Dim lastId As Integer = -1
-
-            Using conn As New OleDbConnection(Functions.GetDbConnectionString())
-                Try
-                    conn.Open()
-                    Using cmd As New OleDbCommand(query, conn)
-                        Using reader As OleDbDataReader = cmd.ExecuteReader()
-                            While reader.Read()
-                                lastId = CInt(reader("lastid"))
-                            End While
-                        End Using
-                    End Using
-                Catch ex As Exception
-                    Call WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
-                End Try
-            End Using
-
-            Return lastId
 
         End Function
 
@@ -128,13 +105,13 @@ Namespace Torneo
             Return defvalue
         End Function
 
-        Public Shared Sub ExecuteSql(ByVal SqlString As String)
-            ExecuteSql(New List(Of String) From {SqlString})
+        Public Shared Sub ExecuteSql(ByVal SqlString As String, Optional DbUser As Boolean = False)
+            ExecuteSql(New List(Of String) From {SqlString}, DbUser)
         End Sub
 
-        Public Shared Sub ExecuteSql(ByVal SqlString As List(Of String))
+        Public Shared Sub ExecuteSql(ByVal SqlString As List(Of String), Optional DbUser As Boolean = False)
             If SqlString.Count = 0 Then Exit Sub
-            Using conn As New OleDbConnection(GetDbConnectionString())
+            Using conn As New OleDbConnection(GetDbConnectionString(DbUser))
                 conn.Open()
                 For Each s In SqlString
                     Using cmd As New OleDbCommand(s, conn)
@@ -144,11 +121,11 @@ Namespace Torneo
             End Using
         End Sub
 
-        Public Shared Function ExecuteSqlReturnDataSet(ByVal SqlString As String) As System.Data.DataSet
+        Public Shared Function ExecuteSqlReturnDataSet(ByVal SqlString As String, Optional DbUser As Boolean = False) As System.Data.DataSet
 
             Dim ds As New System.Data.DataSet
 
-            Using conn As New OleDbConnection(GetDbConnectionString())
+            Using conn As New OleDbConnection(GetDbConnectionString(DbUser))
                 conn.Open()
                 Using da As New OleDbDataAdapter(SqlString, conn)
                     da.Fill(ds, "tabella")
@@ -159,8 +136,12 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function GetDbConnectionString() As String
-            Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & PublicVariables.DatabaseFileName & ";"
+        Public Shared Function GetDbConnectionString(DbUser As Boolean) As String
+            If DbUser Then
+                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & PublicVariables.DatabaseUsers & ";"
+            Else
+                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & PublicVariables.DatabaseTorneo & ";"
+            End If
         End Function
 
     End Class
