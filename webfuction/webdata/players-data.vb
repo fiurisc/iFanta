@@ -16,11 +16,6 @@ Namespace WebData
             Dim fileLog As String = dirData & Path.GetFileNameWithoutExtension(GetDataFileName) & ".log"
             Dim strdata As String = ""
             Dim playersd As New List(Of Torneo.Players.PlayerDataItem)
-
-            'Dim dirt As String = Functions.DataPath & "\temp"
-            'Dim dird As String = Functions.DataPath & "\data"
-            'Dim filed As String = dird & "\players-data.json"
-            'Dim strdata As New System.Text.StringBuilder
             Dim strnameerr As New System.Text.StringBuilder
             Dim strplayer As New System.Text.StringBuilder
 

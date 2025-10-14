@@ -366,7 +366,7 @@ Namespace WebData
 
                             End If
 
-                            If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title=""(Subentrato|Ammonizione|Gol segnato|Gol subito|Autorete|Espulsione)""></figure>").Success Then
+                            If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title=""(Subentrato|Ammonizione|Gol segnato|Gol subito|Autorete|Espulsione|Rigore sbagliato)""></figure>").Success Then
 
                                 Dim n1 As String = p(0).GetName()
                                 Dim r1 As String = p(0).GetRole()
@@ -384,6 +384,10 @@ Namespace WebData
                                 If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
                                     AddPlayer(matchp, CInt(day), team, n1)
                                     matchp(team)(n1).GoalSubiti += 1
+                                End If
+                                If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
+                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    matchp(team)(n1).RigoriSbagliati += 1
                                 End If
                                 If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
                                     AddPlayer(matchp, CInt(day), team, n1)

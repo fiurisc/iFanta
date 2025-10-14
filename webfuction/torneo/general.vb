@@ -5,6 +5,16 @@ Imports System.Reflection
 Namespace Torneo
     Public Class General
 
+        Shared Function GetApplication(role As String) As List(Of WebApplication)
+
+            Dim apps As New List(Of WebApplication)
+
+            apps.Add(New WebApplication("edit-formazioni.png", "Compila formazione", "Compila la formazione da inviare", "compila.html", ""))
+
+            Return apps
+
+        End Function
+
         Shared Function GetAccountByUsername(Username As String) As Account
 
             Dim acc As New Account
@@ -98,7 +108,7 @@ Namespace Torneo
             Return WebData.Functions.SerializzaOggetto(sett, True)
         End Function
 
-        Sub ReadSettings()
+        Shared Sub ReadSettings()
             If PublicVariables.SettingsLoaded Then Exit Sub
             PublicVariables.Settings = GetSettings(PublicVariables.Year)
         End Sub
@@ -444,6 +454,27 @@ Namespace Torneo
             Return ris
 
         End Function
+
+        Public Class WebApplication
+            Public Property Icon As String = ""
+            Public Property Text As String = ""
+            Public Property Description As String = ""
+            Public Property Link As String = ""
+            Public Property CustomCssStyle As String = ""
+
+            Sub New()
+
+            End Sub
+
+            Sub New(Icon As String, Text As String, Description As String, Link As String, CustomCssStyle As String)
+                Me.Icon = Icon
+                Me.Text = Text
+                Me.Description = Description
+                Me.Link = Link
+                Me.CustomCssStyle = CustomCssStyle
+            End Sub
+
+        End Class
 
         Public Class YearTorneo
             Public Property Year As String = ""

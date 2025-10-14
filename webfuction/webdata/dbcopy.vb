@@ -3,13 +3,15 @@ Imports System.Data.OleDb
 
 Public Class SQLiteToAccessCopier
     Public Shared Sub CopyData(sqlitePath As String, accessPath As String)
-        ' Connessione a SQLite
-        Dim sqliteConn As New SQLiteConnection($"Data Source={sqlitePath};Version=3;")
-        sqliteConn.Open()
 
         ' Connessione a Access
         Dim accessConn As New OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={accessPath};Persist Security Info=False;")
         accessConn.Open()
+
+        ' Connessione a SQLite
+        Dim sqliteConn As New System.Data.SQLite.SQLiteConnection($"Data Source={sqlitePath};")
+        sqliteConn.Open()
+
 
         ' Recupera tutte le tabelle SQLite
         Dim getTablesCmd As New SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table';", sqliteConn)
@@ -25,7 +27,7 @@ Public Class SQLiteToAccessCopier
             ' Prepara comando di inserimento per Access
             Dim schemaTable = sqliteDataReader.GetSchemaTable()
             Dim columnNames As New List(Of String)
-            For Each row As DataRow In schemaTable.Rows
+            For Each row As System.Data.DataRow In schemaTable.Rows
                 columnNames.Add(row("ColumnName").ToString())
             Next
 
@@ -40,10 +42,15 @@ Public Class SQLiteToAccessCopier
 
             ' Inserisce i dati
             While sqliteDataReader.Read()
-                For i = 0 To columnNames.Count - 1
-                    insertCmd.Parameters(i).Value = sqliteDataReader(columnNames(i))
-                Next
-                insertCmd.ExecuteNonQuery()
+                Try
+                    For i = 0 To columnNames.Count - 1
+                        insertCmd.Parameters(i).Value = sqliteDataReader(columnNames(i))
+                    Next
+                    insertCmd.ExecuteNonQuery()
+                Catch ex As Exception
+                    Debug.WriteLine(ex.Message)
+                End Try
+
             End While
 
             sqliteDataReader.Close()

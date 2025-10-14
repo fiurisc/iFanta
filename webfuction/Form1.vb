@@ -106,7 +106,9 @@ Public Class Form1
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
 
-        Dim data As String = Torneo.ProbablePlayers.ApiGetProbableFormation("Infortunato,Squalificato")
+        SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
+
+        Dim data As String = Torneo.CompilaData.ApiCompila("1")
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", data)
         data = ""
     End Sub
@@ -142,4 +144,7 @@ Public Class Form1
         'End If
     End Sub
 
+    Private Sub Button14_Click(sender As Object, e As EventArgs) Handles Button14.Click
+        WebData.PlayersData.GetPlayersData(False)
+    End Sub
 End Class

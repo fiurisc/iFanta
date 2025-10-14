@@ -1,5 +1,6 @@
 ﻿Imports System.Data
 Imports System.Data.OleDb
+Imports System.IO
 
 Namespace Torneo
     Public Class Functions
@@ -143,6 +144,37 @@ Namespace Torneo
                 Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & PublicVariables.DatabaseTorneo & ";"
             End If
         End Function
+
+        Public Shared Sub BackupDatabase(DbUser As Boolean)
+
+            Dim dirbakup As String = IO.Path.GetDirectoryName(PublicVariables.DatabaseTorneo) & "\backup"
+
+            If IO.Directory.Exists(dirbakup) = False Then IO.Directory.CreateDirectory(dirbakup)
+
+            If DbUser Then
+                Dim fbackup As String = dirbakup & "\" & IO.Path.GetFileNameWithoutExtension(PublicVariables.DatabaseUsers) & "_" & Date.Now.ToString("yyyyMMdd_HHmmss") & ".accdb"
+                IO.File.Copy(PublicVariables.DatabaseTorneo, fbackup, True)
+            Else
+                Dim fbackup As String = dirbakup & "\" & IO.Path.GetFileNameWithoutExtension(PublicVariables.DatabaseTorneo) & "_" & Date.Now.ToString("yyyyMMdd_HHmmss") & ".accdb"
+                IO.File.Copy(PublicVariables.DatabaseTorneo, fbackup, True)
+            End If
+            DeleteOldFiles(dirbakup, Date.Now.AddDays(-5))
+        End Sub
+
+        Public Shared Sub DeleteOldFiles(percorsoCartella As String, dataLimite As DateTime)
+            Try
+                Dim files As String() = Directory.GetFiles(percorsoCartella)
+
+                For Each file In files
+                    Dim info = New FileInfo(file)
+                    If info.LastWriteTime < dataLimite Then
+                        IO.File.Delete(file)
+                    End If
+                Next
+            Catch ex As Exception
+                Call WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+            End Try
+        End Sub
 
     End Class
 End Namespace
