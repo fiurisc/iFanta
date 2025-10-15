@@ -7,6 +7,8 @@ Namespace Torneo
 
             Dim cday As String = "38"
 
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Determino la giornata corrente dei matchs per l'anno: " & PublicVariables.Year)
+
             Try
                 If PublicVariables.DataFromDatabase Then
                     Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM current_championship_day")
@@ -35,7 +37,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return cday
@@ -43,6 +45,8 @@ Namespace Torneo
         End Function
 
         Public Shared Function ApiGetMatchsData(Day As String) As String
+
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiedo la lista dei matchs per la giornata: " & Day & " dell'anno: " & PublicVariables.Year)
 
             If PublicVariables.DataFromDatabase Then
 
@@ -153,7 +157,7 @@ Namespace Torneo
                 Functions.ExecuteSql(sqlupdate)
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -183,7 +187,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata
@@ -214,19 +218,30 @@ Namespace Torneo
                             Dim mp As MatchPlayer = newdata(g)(t)(n)
                             Dim key As String = n & "/" & t
                             If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
-                                sqlinsert.Add("INSERT INTO tbtabellini (gio,Nome,Squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & ",'" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
+                                sqlinsert.Add("INSERT INTO tbtabellini (gio,ruolo,nome,squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & ",'" & mp.Ruolo & "','" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
                             ElseIf WebData.Functions.GetCustomHashCode(olddata(g)(key)) <> WebData.Functions.GetCustomHashCode(mp) Then
-                                sqlupdate.Add("UPDATE tbtabellini SET Nome='" & mp.Nome & "',Squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND Nome='" & mp.Nome & "' AND Squadra='" & mp.Squadra & "'")
+                                olddata(g)(key).RecordId = -1
+                                sqlupdate.Add("UPDATE tbtabellini SET ruolo='" & mp.Ruolo & "',nome='" & mp.Nome & "',squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND Nome='" & mp.Nome & "' AND Squadra='" & mp.Squadra & "'")
                             End If
                         Next
                     Next
                 Next
 
+                Dim sqldelete As New List(Of String)
+
+                For Each g In olddata.Keys
+                    For Each k In olddata(g).Keys
+                        If olddata(g)(k).RecordId <> -1 Then
+                            sqldelete.Add("DELETE FROM tbtabellini WHERE id=" & olddata(g)(k).RecordId)
+                        End If
+                    Next
+                Next
                 Functions.ExecuteSql(sqlinsert)
                 Functions.ExecuteSql(sqlupdate)
+                Functions.ExecuteSql(sqldelete)
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -242,9 +257,11 @@ Namespace Torneo
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim m As New MatchPlayer
+                        m.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
                         m.Giornata = If(row.Item("gio") IsNot DBNull.Value, Convert.ToInt32(row.Item("gio")), 1)
-                        m.Nome = row.Item("Nome").ToString()
-                        m.Squadra = row.Item("Squadra").ToString()
+                        m.Ruolo = row.Item("ruolo").ToString()
+                        m.Nome = row.Item("nome").ToString()
+                        m.Squadra = row.Item("squadra").ToString()
                         m.Minuti = If(row.Item("mm") IsNot DBNull.Value, Convert.ToInt32(row.Item("mm")), 0)
                         m.Titolare = If(row.Item("tit") IsNot DBNull.Value, Convert.ToInt32(row.Item("tit")), 0)
                         m.Sostituito = If(row.Item("sos") IsNot DBNull.Value, Convert.ToInt32(row.Item("sos")), 0)
@@ -262,7 +279,7 @@ Namespace Torneo
 
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata
@@ -282,7 +299,9 @@ Namespace Torneo
         End Class
 
         Public Class MatchPlayer
+            Public Property RecordId As Integer = 1
             Public Property Giornata As Integer = 1
+            Public Property Ruolo As String = ""
             Public Property Nome As String = ""
             Public Property Squadra As String = ""
             Public Property Minuti As Integer = 90

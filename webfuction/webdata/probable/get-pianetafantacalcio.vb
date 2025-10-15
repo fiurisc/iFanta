@@ -131,7 +131,7 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                 Return ex.Message
             End Try
 

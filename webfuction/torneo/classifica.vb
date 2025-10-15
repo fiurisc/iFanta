@@ -22,7 +22,7 @@ Namespace Torneo
                     cday = dicdata.Keys.Last()
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return cday
@@ -42,7 +42,7 @@ Namespace Torneo
                     End If
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return ""
@@ -74,7 +74,7 @@ Namespace Torneo
                 CalcoloFantaMister(curr)
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return curr

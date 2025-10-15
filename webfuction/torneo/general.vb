@@ -20,6 +20,9 @@ Namespace Torneo
             Dim acc As New Account
 
             Try
+
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Get account per: " & Username)
+
                 Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM users where nome='" & Username & "';", True)
 
                 If ds.Tables.Count > 0 Then
@@ -34,7 +37,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return acc
@@ -42,6 +45,9 @@ Namespace Torneo
         End Function
 
         Shared Sub SendPassword(Username As String)
+
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Send password per: " & Username)
+
             Dim acc As Account = GetAccountByUsername(Username)
             If acc.Username <> "" AndAlso acc.Mail <> "" Then
                 SendMail(acc.Mail, "", "iFantacalcio", "Password account", "la password per l'account (" & acc.Username & ") è: <b>" & acc.Password & "</b>", New List(Of String))
@@ -114,6 +120,8 @@ Namespace Torneo
         End Sub
 
         Private Shared Function GetSettings(Year As String) As TorneoSettings
+
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Lettura delle impostazioni per il torneo: " & Year)
 
             Dim fname As String = GetSettingsFileName(Year)
             Dim sett As New TorneoSettings
@@ -248,7 +256,7 @@ Namespace Torneo
                                 End Select
 
                             Catch ex As Exception
-                                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                             End Try
                         End If
                     Next
@@ -257,7 +265,7 @@ Namespace Torneo
                     If sett.Points.SiteReferenceForBonus = "" Then sett.Points.SiteReferenceForBonus = "gazzetta"
 
                 Catch ex As Exception
-                    WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                 End Try
             End If
 
@@ -266,7 +274,9 @@ Namespace Torneo
         End Function
 
         ''' <summary>Consente di salvare le impostazioni su disco</summary>
-        Sub SaveSettings()
+        Sub SaveSettings(Year As String)
+
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Salvataggio impostazioni per il torneo: " & Year)
 
             Dim fname As String = GetSettingsFileName(PublicVariables.Year)
 
@@ -396,7 +406,7 @@ Namespace Torneo
                 Next
                 IO.File.WriteAllText(fname, str.ToString)
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -437,14 +447,13 @@ Namespace Torneo
                     smtp.Send(mail)
 
                 Else
-
-                    WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, "Mail administrator lega missing or not valid")
+                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Mail administrator lega missing or not valid")
                     ris = False
 
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                 ris = False
             End Try
 

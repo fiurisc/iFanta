@@ -10,6 +10,8 @@ Namespace Torneo
 
             Try
 
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiesta dati coppa")
+
                 LoadTeamScores()
 
                 Dim cup As New Coppa
@@ -93,7 +95,7 @@ Namespace Torneo
                 Return WebData.Functions.SerializzaOggetto(cup, True)
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return "{}"
@@ -213,7 +215,7 @@ Namespace Torneo
                 pt = -10
             End If
 
-            Return CInt(pt)
+            Return pt
 
         End Function
 

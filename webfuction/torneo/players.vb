@@ -66,7 +66,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata
@@ -75,7 +75,7 @@ Namespace Torneo
 
         Public Shared Sub UpdatePlayersQuotes(newmtxdata As List(Of PlayerQuotesItem))
 
-            Dim ckey As String = ""
+            Dim ckey As String
 
             Try
 
@@ -107,8 +107,11 @@ Namespace Torneo
                 Functions.ExecuteSql(sqlinsert)
                 Functions.ExecuteSql(sqlupdate)
 
+                Dim sql As String = "DELETE FROM tbplayer WHERE ID NOT IN (SELECT MIN(ID) FROM tbplayer GROUP BY Nome);"
+                Functions.ExecuteSql(sql)
+
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -145,7 +148,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata
@@ -182,8 +185,11 @@ Namespace Torneo
                 Functions.ExecuteSql(sqlinsert)
                 Functions.ExecuteSql(sqlupdate)
 
+                Dim sql As String = "DELETE FROM tbplayer_data WHERE ID NOT IN (SELECT MIN(ID) FROM tbplayer_data GROUP BY Nome);"
+                Functions.ExecuteSql(sql)
+
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 

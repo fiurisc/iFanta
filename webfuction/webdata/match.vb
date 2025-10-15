@@ -119,7 +119,7 @@ Namespace WebData
                 IO.File.WriteAllText(filed, Functions.SerializzaOggetto(matchs, False))
 
             Catch ex As Exception
-                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                 Return ""
             End Try
 
@@ -173,7 +173,7 @@ Namespace WebData
                         End If
                     Next
 
-                    If Torneo.PublicVariables.dataFromDatabase AndAlso matchsplayers.Count > 0 Then
+                    If Torneo.PublicVariables.DataFromDatabase AndAlso matchsplayers.Count > 0 Then
                         Torneo.MatchsData.UpdateMatchDataPlayers(matchsplayers)
                     End If
 
@@ -181,7 +181,7 @@ Namespace WebData
 
                 End If
             Catch ex As Exception
-                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -268,7 +268,7 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -296,7 +296,7 @@ Namespace WebData
                 IO.File.WriteAllText(GetMatchPlayersDayFileName(d), WebData.Functions.SerializzaOggetto(matchsplayers(d), False))
 
             Catch ex As Exception
-                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -335,13 +335,14 @@ Namespace WebData
                             If line(z).Contains("<div class=""player-role role"" data-value=") AndAlso line(z).Contains("data-value=""{{role}}""") = False Then
                                 Dim name As String = ""
                                 Dim Ruolo As String = Regex.Match(line(z).Trim, "(?<=data-value="")\w+").Value.ToUpper()
-                                team = Regex.Match(line(z + 2).Trim, "(?<=squadre\/)\w+(?=\/)").Value.ToUpper
-                                name = Regex.Match(line(z + 2).Trim.Replace("-", " "), "(?<=\/)[\w\s]{1,}(?=\/\d+)").Value.ToUpper
-                                If name.Contains("FOLORUNSHO") Then
+                                team = Regex.Match(line(z + 2).Trim, "(?<=squadre\/)\w+(?=\/)").Value.ToUpper()
+                                name = Regex.Match(line(z + 2).Trim.Replace("-", " "), "(?<=\/)[\w\s\&\#\;]{1,}(?=\/\d+)").Value.ToUpper()
+                                name = Functions.NormalizeText(name)
+                                If name.Contains("STREFEZZA") Then
                                     name = name
                                 End If
-                                name = Players.Data.ResolveName("", name, team, False).GetName()
-                                AddPlayer(matchp, CInt(day), team, name)
+                                name = Players.Data.ResolveName(Ruolo, name, team, False).GetName()
+                                AddPlayer(matchp, CInt(day), team, Ruolo, name)
                                 matchp(team)(name).Minuti = 90
                                 matchp(team)(name).Titolare = 1
                             End If
@@ -358,12 +359,12 @@ Namespace WebData
 
                             If startCronaca AndAlso line(z).Contains("https://www.fantacalcio.it/serie-a/squadre") AndAlso line(z).Contains("target=""_self"">") Then
                                 team = Regex.Match(line(z).Trim, "(?<=squadre\/)\w+(?=\/)").Value.ToUpper
-                                Dim n As String = Regex.Match(line(z).Trim.Replace("-", " "), "(?<=\/)[\w\s]{1,}(?=\/\d+)").Value.ToUpper
-                                p.Add(Players.Data.ResolveName("", n, team, False))
-                                If n.Contains("FOLO") Or n.Contains("ORSOLINI") Then
+                                Dim n As String = Regex.Match(line(z).Trim.Replace("-", " "), "(?<=\/)[\w\s\&\#\;]{1,}(?=\/\d+)").Value.ToUpper()
+                                n = Functions.NormalizeText(n)
+                                If n.Contains("STREFEZZA") Then
                                     n = n
                                 End If
-
+                                p.Add(Players.Data.ResolveName("", n, team, False))
                             End If
 
                             If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title=""(Subentrato|Ammonizione|Gol segnato|Gol subito|Autorete|Espulsione|Rigore sbagliato)""></figure>").Success Then
@@ -374,34 +375,34 @@ Namespace WebData
                                 Dim r2 As String = If(p.Count > 1, p(1).GetRole(), "")
 
                                 If line(z).Trim.Contains("Ammonizione") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
                                     matchp(team)(n1).Ammonizione += 1
                                 End If
                                 If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
                                     matchp(team)(n1).Espulsione += 1
                                 End If
                                 If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
                                     matchp(team)(n1).GoalSubiti += 1
                                 End If
                                 If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
                                     matchp(team)(n1).RigoriSbagliati += 1
                                 End If
                                 If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
                                     matchp(team)(n1).GoalFatti += 1
                                     If p.Count > 1 Then
-                                        AddPlayer(matchp, CInt(day), team, n2)
+                                        AddPlayer(matchp, CInt(day), team, r2, n2)
                                         matchp(team)(n2).Assists += 1
                                     End If
                                 End If
                                 If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
-                                    AddPlayer(matchp, CInt(day), team, n1)
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
                                     matchp(team)(n1).Subentrato = 1
                                     matchp(team)(n1).Minuti = min
-                                    AddPlayer(matchp, CInt(day), team, n2)
+                                    AddPlayer(matchp, CInt(day), team, r2, n2)
                                     matchp(team)(n2).Sostituito = 1
                                     matchp(team)(n2).Minuti = min
                                 End If
@@ -434,16 +435,17 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
         End Sub
 
-        Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)), giornata As Integer, team As String, name As String)
+        Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)), giornata As Integer, team As String, ruolo As String, name As String)
             If match.ContainsKey(team) = False Then match.Add(team, New Dictionary(Of String, Torneo.MatchsData.MatchPlayer))
             If match(team).ContainsKey(name) = False Then
                 match(team).Add(name, New Torneo.MatchsData.MatchPlayer())
                 match(team)(name).Giornata = giornata
+                match(team)(name).Ruolo = ruolo
                 match(team)(name).Nome = name
                 match(team)(name).Squadra = team
             Else

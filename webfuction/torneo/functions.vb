@@ -1,6 +1,7 @@
 ﻿Imports System.Data
 Imports System.Data.OleDb
 Imports System.IO
+Imports System.Reflection
 
 Namespace Torneo
     Public Class Functions
@@ -30,7 +31,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                Call WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return WebData.Functions.SerializzaOggetto(risultati, True)
@@ -172,7 +173,7 @@ Namespace Torneo
                     End If
                 Next
             Catch ex As Exception
-                Call WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 

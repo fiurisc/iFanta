@@ -1,5 +1,4 @@
-﻿Imports System.Data.OleDb
-Imports System.IO
+﻿Imports System.IO
 Imports System.Net
 Imports System.Reflection
 Imports System.Security.Cryptography
@@ -9,31 +8,90 @@ Imports System.Web.Script.Serialization
 Namespace WebData
     Public Class Functions
 
+        Public Enum eMessageType As Integer
+            Info = 0
+            Alert = 1
+            Errors = 2
+            Execution = 3
+        End Enum
+
         Public Shared Property Year As String = ""
+        Public Shared Property LogsPath As String = ""
         Public Shared Property DataPath As String = ""
+        Public Shared lastClean As Date = Date.Now
 
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
 
         Public Shared Function InitPath(rootDataPath As String, rootdatabasePath As String) As String
+            LogsPath = rootDataPath & "logs\"
             DataPath = rootDataPath & Year & "\webdata\"
             Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
             Return DataPath
         End Function
 
-        Public Shared Sub WriteLog(dirs As String, ByVal Form As String, ByVal SubName As String, ByVal Text As String)
+        Public Shared Sub WriteLog(ByVal MessageType As eMessageType, ByVal Message As String)
             Try
-                If IO.Directory.Exists(dirs) Then IO.File.AppendAllText(dirs & "\debug.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & Form & "|" & SubName & "|" & Text & System.Environment.NewLine)
+
+                Dim sframe As String() = Environment.StackTrace.Split(New String() {vbCrLf}, StringSplitOptions.None)
+
+                'Detemrino gli oggetti chiamanti'
+                Dim callers As List(Of String) = New List(Of String)
+                Dim methodfilter As List(Of String) = New List(Of String) From {"Functions.WriteLog", "System.Environment.GetStackTrace", "System.Environment.get_StackTrace"}
+
+                For i As Integer = 0 To sframe.Length - 1
+                    If sframe(i).Contains(" at ") OrElse sframe(i).Contains(") in ") Then
+                        Dim method As String = sframe(i).Replace(" at ", "").Trim().Replace(" in ", "|")
+                        If method.Contains("|") Then method = method.Split(Convert.ToChar("|"))(0)
+                        If method.Contains("(") Then method = method.Substring(0, method.IndexOf("("))
+                        If methodfilter.Where(Function(x) method.Contains(x)).ToList().Count() = 0 Then
+                            If callers.Contains(method) Then callers.Remove(method)
+                            callers.Add(method)
+                        End If
+                    End If
+                Next
+                callers.Reverse()
+
+                Dim methodname As String = If(callers.Count > 0, callers(callers.Count - 1), "")
+                Dim msgtypes As String = "INFO"
+
+                If methodname.Length > 200 Then methodname = methodname.Substring(0, 200)
+                If Message.Length > 500 Then Message = Message.Substring(0, 500)
+
+                If MessageType = eMessageType.Alert Then
+                    msgtypes = "ALERT"
+                ElseIf MessageType = eMessageType.Errors Then
+                    msgtypes = "ERROR"
+                ElseIf (MessageType = eMessageType.Execution) Then
+                    msgtypes = "EXE"
+                End If
+
+                If IO.Directory.Exists(LogsPath) Then IO.File.AppendAllText(LogsPath & "debug.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & msgtypes & "|" & methodname & "|" & Message & System.Environment.NewLine)
+                If IO.Directory.Exists(LogsPath) AndAlso msgtypes = "ERROR" Then IO.File.AppendAllText(LogsPath & "errors.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & msgtypes & "|" & methodname & "|" & Message & System.Environment.NewLine)
+
+                If Date.Now.Subtract(lastClean).TotalHours > 1 Then
+                    ResizeFile(LogsPath & "debug.log")
+                    ResizeFile(LogsPath & "errors.log")
+                    lastClean = Date.Now
+                End If
+
             Catch ex As Exception
 
             End Try
         End Sub
 
-        Public Shared Sub WriteError(ByVal Form As String, ByVal SubName As String, ByVal ErrMsg As String)
-            Try
-                If IO.Directory.Exists(DataPath) Then IO.File.AppendAllText(DataPath & "\error.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & Form & "|" & SubName & "|" & ErrMsg & System.Environment.NewLine)
-            Catch ex As Exception
+        Private Shared Sub ResizeFile(fname As String)
 
-            End Try
+            If IO.File.Exists(fname) Then
+
+                Dim lines As List(Of String) = File.ReadAllLines(fname).ToList()
+                Dim maxlines As Integer = 1000
+
+                If lines.Count > maxlines Then
+                    lines.RemoveRange(0, lines.Count - maxlines)
+                    IO.File.WriteAllLines(fname, lines)
+                End If
+            End If
+
         End Sub
 
         Public Shared Sub MakeDirectory()
@@ -114,7 +172,7 @@ Namespace WebData
                 Dim obj As T = serializer.Deserialize(Of T)(json)
                 Return obj
             Catch ex As Exception
-                Call WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WriteLog(eMessageType.Errors, ex.Message)
             End Try
         End Function
 
@@ -414,7 +472,7 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                Call WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WriteLog(eMessageType.Errors, ex.Message)
             End Try
 
             Return strdata.ToString()
@@ -451,7 +509,7 @@ Namespace WebData
                 IO.File.WriteAllText(filed, strdata.ToString, System.Text.Encoding.UTF8)
 
             Catch ex As Exception
-                Call WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WriteLog(eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -480,6 +538,7 @@ Namespace WebData
                 End Using
 
             Catch ex As Exception
+                WriteLog(eMessageType.Errors, ex.Message)
                 responseFromServer = ex.Message
             End Try
 

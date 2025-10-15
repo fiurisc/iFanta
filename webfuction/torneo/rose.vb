@@ -55,7 +55,7 @@ Namespace Torneo
                             Next
                         End If
                     Catch ex As Exception
-                        WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                        WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                     End Try
 
                     Return WebData.Functions.SerializzaOggetto(teams, True)
@@ -65,7 +65,7 @@ Namespace Torneo
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return strdata.ToString()
@@ -85,7 +85,7 @@ Namespace Torneo
                 End If
                 Return WebData.Functions.SerializzaOggetto(dicp, True)
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return json
@@ -156,7 +156,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return list
@@ -226,7 +226,7 @@ Namespace Torneo
                     End If
                 Next
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return list

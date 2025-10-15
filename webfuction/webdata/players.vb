@@ -6,7 +6,8 @@ Namespace WebData
 
             Public Shared players As New Dictionary(Of String, Dictionary(Of String, List(Of String)))
             'COGNome Nome/Nome LENGHT/LIST Nome ASSOCIATI'
-            Public Shared keyplayers As New Dictionary(Of String, WebPlayerKey)
+            'Public Shared keyplayers As New Dictionary(Of String, WebPlayerKey)
+            Public Shared keyplayers As New Dictionary(Of String, Dictionary(Of String, WebPlayerKey))
 
             Public Shared Sub ResetCacheData()
                 players.Clear()
@@ -34,13 +35,14 @@ Namespace WebData
                             If players(p.Squadra).ContainsKey(p.Ruolo) = False Then players(p.Squadra).Add(p.Ruolo, New List(Of String))
                             players(p.Squadra)(p.Ruolo).Add(p.Nome)
 
-                            If keyplayers.ContainsKey(p.Squadra) = False Then keyplayers.Add(p.Squadra, New WebPlayerKey)
+                            If keyplayers.ContainsKey(p.Squadra) = False Then keyplayers.Add(p.Squadra, New Dictionary(Of String, WebPlayerKey))
+                            If keyplayers(p.Squadra).ContainsKey(p.Ruolo) = False Then keyplayers(p.Squadra).Add(p.Ruolo, New WebPlayerKey)
 
                             Dim keylist As List(Of String) = GetKeyWordList(Functions.CleanSpecialChar(p.Nome))
 
                             For k As Integer = 0 To keylist.Count - 1
                                 Dim subkey() As String = keylist(k).Split(CChar("/"))
-                                Call AddwPlayerWordKey(keyplayers(p.Squadra), subkey, 0, p.Nome, p.Ruolo)
+                                Call AddwPlayerWordKey(keyplayers(p.Squadra)(p.Ruolo), subkey, 0, p.Nome, p.Ruolo)
                             Next
                         Next
                     End If
@@ -104,14 +106,18 @@ Namespace WebData
 
                     Dim keylist As List(Of String) = GetKeyWordList(Functions.CleanSpecialChar(Name))
                     Dim macthlist As New SortedDictionary(Of Integer, List(Of Players.WebPlayerKeyMatch))
-                    Dim macth As Players.WebPlayerKeyMatch = CheckName(keyplayers(Team), Team, keylist)
+                    Dim macth As New Players.WebPlayerKeyMatch
+                    If Role <> "" Then macth = CheckName(keyplayers(Team)(Role), Team, keylist)
+                    If macth Is Nothing OrElse macth.Name = "" Then
+                        macth = CheckName(keyplayers(Team), Team, keylist)
+                    End If
 
                     If macth IsNot Nothing Then
                         If macthlist.ContainsKey(macth.KeyLength) = False Then macthlist.Add(macth.KeyLength, New List(Of Players.WebPlayerKeyMatch))
                         macthlist(macth.KeyLength).Add(macth)
                     ElseIf FindAllTeam Then
                         For Each t As String In keyplayers.Keys
-                            macth = CheckName(keyplayers(t), t, keylist)
+                            macth = CheckName(keyplayers(t)(Role), t, keylist)
                             If macth IsNot Nothing Then
                                 If macth.Name = Name Then macth.KeyLength = Name.Length
                                 If macthlist.ContainsKey(macth.KeyLength) = False Then macthlist.Add(macth.KeyLength, New List(Of Players.WebPlayerKeyMatch))
@@ -133,6 +139,24 @@ Namespace WebData
                 If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
 
                 Return pm
+
+            End Function
+
+            Public Shared Function CheckName(wk As Dictionary(Of String, Players.WebPlayerKey), Team As String, keylist As List(Of String)) As Players.WebPlayerKeyMatch
+
+                For Each r As String In wk.Keys
+                    For k As Integer = 0 To keylist.Count - 1
+                        Dim subkey() As String = keylist(k).Split(CChar("/"))
+                        Dim macth As Players.WebPlayerKey = CheckName(wk(r), subkey, 0)
+                        If macth IsNot Nothing Then
+                            Return New Players.WebPlayerKeyMatch(macth.Name, Team, macth.Role, subkey(0).Length)
+                            Exit For
+                        End If
+                    Next
+                Next
+
+
+                Return Nothing
 
             End Function
 
@@ -315,6 +339,22 @@ Namespace WebData
                     Return _source
                 End If
             End Function
+
+        End Class
+
+        Public Class NewWebPlayerKey
+            Public Property key As New Dictionary(Of String, WebPlayerKey)
+            Public Property Name As String = ""
+            Public Property Role As String = ""
+
+            Sub New()
+
+            End Sub
+
+            Sub New(Name As String, Role As String)
+                Me.Name = Name
+                Me.Role = Role
+            End Sub
 
         End Class
 

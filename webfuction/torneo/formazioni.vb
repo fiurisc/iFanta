@@ -1,5 +1,4 @@
 ﻿Imports System.Data
-Imports System.Security.Cryptography
 
 Namespace Torneo
 
@@ -8,6 +7,8 @@ Namespace Torneo
         Public Shared Function ApiAddFormazioni(Day As String, TeamId As String, Top As Boolean, json As String) As String
 
             If json = "" Then Throw New Exception("Json not valid")
+
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Inserimento formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
 
             Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
             Dim mData As MetaData = WebData.Functions.DeserializeJson(Of MetaData)(json)
@@ -25,6 +26,7 @@ Namespace Torneo
         End Function
 
         Public Shared Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Cancellazione formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
             Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
             Functions.ExecuteSql("DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
         End Sub
@@ -32,6 +34,8 @@ Namespace Torneo
         Public Shared Function ApiGetFormazione(Day As String, TeamId As String, Top As Boolean) As String
 
             Dim json As String = ""
+
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiesta formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
 
             Try
                 Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Top)
@@ -41,7 +45,7 @@ Namespace Torneo
                     Return "{}"
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return json
@@ -52,12 +56,14 @@ Namespace Torneo
 
             Dim json As String = ""
 
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiesta formazioni giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+
             Try
                 Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Top)
                 Dim dicForma As Dictionary(Of String, Formazione) = list.ToDictionary(Function(x) x.TeamId.ToString(), Function(x) x)
                 Return WebData.Functions.SerializzaOggetto(dicForma, True)
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return json
@@ -65,6 +71,9 @@ Namespace Torneo
         End Function
 
         Public Shared Sub SaveFormazioni(day As String, lst As List(Of Formazione), top As Boolean)
+
+            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Salvataggio formazioni: " & day & " top: " & top.ToString())
+
             Dim tb As String = If(top, "tbformazionitop", "tbformazioni")
             For Each forma As Formazione In lst
                 Dim sqlinsert As New List(Of String)
@@ -191,7 +200,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
             Return list.Values.ToList()
         End Function
@@ -243,7 +252,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return list.Values.ToList()

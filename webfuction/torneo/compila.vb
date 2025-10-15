@@ -55,7 +55,7 @@ Namespace Torneo
                 Return "{""Compilazione"": ""eseguita""}"
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                 Return "{'Compilazione': '" & ex.Message & "'}"
             End Try
 
@@ -74,7 +74,7 @@ Namespace Torneo
                     Return WebData.Functions.SerializzaOggetto(New CompileStatus(), True)
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
             Return WebData.Functions.SerializzaOggetto(New CompileStatus(), True)
         End Function
@@ -83,7 +83,7 @@ Namespace Torneo
             Try
                 If IO.File.Exists(fstatus) Then IO.File.Delete(fstatus)
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -92,7 +92,7 @@ Namespace Torneo
                 Dim stato As New CompileStatus(text, value.ToString(), max.ToString())
                 System.IO.File.WriteAllText(fstatus, WebData.Functions.SerializzaOggetto(stato, True))
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -144,7 +144,7 @@ Namespace Torneo
                                 Dim rigp As String = cell(28)
                                 Dim rigt As String = cell(29)
 
-                                If name.Contains("DOUVIKAS") Then
+                                If name.Contains("CARNESECCHI M.") Then
                                     name = name
                                 End If
 
@@ -154,7 +154,7 @@ Namespace Torneo
 
                                     name = WebData.Functions.NormalizeText(name)
 
-                                    Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName("", name, squadra, True)
+                                    Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
 
                                     fname = pmath.MatchedPlayer.Name
 
@@ -282,13 +282,13 @@ Namespace Torneo
                     sw.WriteLine("#------------------------------------------")
 
                 Catch ex As Exception
-                    WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                 End Try
 
                 sw.Dispose()
 
             Else
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, "Dati non trovati")
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Dati non trovati")
             End If
 
             Return ngio
@@ -322,15 +322,12 @@ Namespace Torneo
                             End If
                         End If
                     Next
-                    'If r > 0 Then
-                    '    Functions.ExecuteSql(sins & str.ToString.Substring(1) & ";")
-                    'End If
 
                 Catch ex As Exception
-                    WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
                 End Try
             Else
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, "Not found " & FileName)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Not found " & FileName)
             End If
 
         End Sub
@@ -699,7 +696,7 @@ Namespace Torneo
 
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return f
@@ -796,7 +793,7 @@ Namespace Torneo
                 Next
 
             Catch ex As Exception
-                WebData.Functions.WriteError(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.FullName, System.Reflection.MethodBase.GetCurrentMethod().Name, ex.Message)
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return lst
@@ -838,10 +835,10 @@ Namespace Torneo
             Dim tot As Integer = CurrP + CurrD + CurrC + CurrA + 1
 
             Select Case Ruolo
-                Case "P" : CurrP = CurrP + 1
-                Case "D" : CurrD = CurrD + 1
-                Case "C" : CurrC = CurrC + 1
-                Case "A" : CurrA = CurrA + 1
+                Case "P" : CurrP += 1
+                Case "D" : CurrD += 1
+                Case "C" : CurrC += 1
+                Case "A" : CurrA += 1
             End Select
 
             If CurrP < 2 AndAlso CurrD < 4 AndAlso CurrC < 5 AndAlso CurrA < 4 Then
