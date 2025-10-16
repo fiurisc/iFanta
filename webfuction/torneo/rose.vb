@@ -72,14 +72,14 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function ApiGetPlayersTorneo(teamId As String, role As String) As String
+        Public Shared Function ApiGetPlayersTorneo(teamId As String, role As String, OutOfGame As String) As String
 
             Dim json As String = ""
 
             Try
                 Dim dicp As New Dictionary(Of String, List(Of Player))
                 If PublicVariables.DataFromDatabase Then
-                    dicp = GetPlayersFromDb(teamId, role)
+                    dicp = GetPlayersFromDb(teamId, role, OutOfGame)
                 Else
                     dicp = GetPlayersFromTxt(teamId, role)
                 End If
@@ -92,7 +92,7 @@ Namespace Torneo
 
         End Function
 
-        Private Shared Function GetPlayersFromDb(TeamId As String, role As String) As Dictionary(Of String, List(Of Player))
+        Private Shared Function GetPlayersFromDb(TeamId As String, role As String, OutOfGame As String) As Dictionary(Of String, List(Of Player))
 
             Dim list As New Dictionary(Of String, List(Of Player))
 
@@ -104,7 +104,7 @@ Namespace Torneo
                     strTeadId = "idteam is null"
                 End If
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM player WHERE " & strTeadId & If(role <> "-1" AndAlso role <> "", " AND ruolo = '" & role & "'", "") & " ORDER BY idteam,idrosa")
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM player WHERE " & strTeadId & If(role <> "-1" AndAlso role <> "", " AND ruolo = '" & role & "'", "") & If(OutOfGame = "0", " AND (outofgame is null OR outofgame <> 1)", "") & " ORDER BY idteam,idrosa")
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -128,6 +128,7 @@ Namespace Torneo
                         p.Costo = Functions.ReadFieldIntegerData("costo", row, 0)
                         p.Qini = Functions.ReadFieldIntegerData("qini", row, 0)
                         p.Qcur = Functions.ReadFieldIntegerData("qcur", row, 0)
+                        p.OutOfGame = Functions.ReadFieldIntegerData("outofgame", row, 0)
                         p.StatisticAll.Gs = Functions.ReadFieldIntegerData("gs_tot", row, 0)
                         p.StatisticAll.Gf = Functions.ReadFieldIntegerData("gf_tot", row, 0)
                         p.StatisticAll.Amm = Functions.ReadFieldIntegerData("amm_tot", row, 0)
@@ -279,6 +280,7 @@ Namespace Torneo
             Public Property Costo() As Integer = 0
             Public Property Qini() As Integer = 0
             Public Property Qcur() As Integer = 0
+            Public Property OutOfGame As Integer = 0
             Public Property Riconfermato As Integer = 0
             Public Property Variation() As Integer = 0
             Public Property Rating() As Integer = 0

@@ -147,14 +147,28 @@ Namespace Torneo
                         Dim m As Match = newdata(g)(mi)
                         If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(mi) = False Then
                             sqlinsert.Add("INSERT INTO tbmatch (gio,idmatch,teama,teamb,timem,goala,goalb) values (" & g & "," & mi & ",'" & m.TeamA & "','" & m.TeamB & "','" & m.Time & "','" & m.GoalA & "','" & m.GoalB & "')")
-                        ElseIf WebData.Functions.GetCustomHashCode(olddata(g)(mi)) <> WebData.Functions.GetCustomHashCode(m) Then
-                            sqlupdate.Add("UPDATE tbmatch SET teama='" & m.TeamA & "',teamb='" & m.TeamB & "',timem='" & m.Time & "',goala='" & m.GoalA & "',goalb='" & m.GoalB & "' WHERE gio=" & g & " AND idmatch=" & mi)
+                        Else
+                            olddata(g)(mi).RecordId = -1
+                            If WebData.Functions.GetCustomHashCode(olddata(g)(mi)) <> WebData.Functions.GetCustomHashCode(m) Then
+                                sqlupdate.Add("UPDATE tbmatch SET teama='" & m.TeamA & "',teamb='" & m.TeamB & "',timem='" & m.Time & "',goala='" & m.GoalA & "',goalb='" & m.GoalB & "' WHERE gio=" & g & " AND idmatch=" & mi)
+                            End If
+                        End If
+                    Next
+                Next
+
+                Dim sqldelete As New List(Of String)
+
+                For Each g In olddata.Keys
+                    For Each k In olddata(g).Keys
+                        If olddata(g)(k).RecordId <> -1 Then
+                            sqldelete.Add("DELETE FROM tbmatch WHERE id=" & olddata(g)(k).RecordId)
                         End If
                     Next
                 Next
 
                 Functions.ExecuteSql(sqlinsert)
                 Functions.ExecuteSql(sqlupdate)
+                Functions.ExecuteSql(sqldelete)
 
             Catch ex As Exception
                 WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
@@ -176,13 +190,14 @@ Namespace Torneo
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim m As New Match
-                        m.Giornata = If(row.Item("gio") IsNot DBNull.Value, Convert.ToInt32(row.Item("gio")), 1)
-                        m.MatchId = If(row.Item("idmatch") IsNot DBNull.Value, Convert.ToInt32(row.Item("idmatch")), 0)
-                        m.TeamA = row.Item("teama").ToString()
-                        m.TeamB = row.Item("teamb").ToString()
+                        m.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
+                        m.Giornata = Functions.ReadFieldIntegerData(row.Item("gio"), 1)
+                        m.MatchId = Functions.ReadFieldIntegerData(row.Item("idmatch"), 0)
+                        m.TeamA = Functions.ReadFieldStringData(row.Item("teama").ToString())
+                        m.TeamB = Functions.ReadFieldStringData(row.Item("teamb").ToString())
                         m.Time = Convert.ToDateTime(row.Item("timem")).ToString("yyyy/MM/dd HH:mm:ss")
-                        m.GoalA = row.Item("goala").ToString()
-                        m.GoalB = row.Item("goalb").ToString()
+                        m.GoalA = Functions.ReadFieldStringData(row.Item("goala").ToString())
+                        m.GoalB = Functions.ReadFieldStringData(row.Item("goalb").ToString())
                         mtxtdata.Add(m)
                     Next
                 End If
@@ -219,9 +234,11 @@ Namespace Torneo
                             Dim key As String = n & "/" & t
                             If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
                                 sqlinsert.Add("INSERT INTO tbtabellini (gio,ruolo,nome,squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & ",'" & mp.Ruolo & "','" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
-                            ElseIf WebData.Functions.GetCustomHashCode(olddata(g)(key)) <> WebData.Functions.GetCustomHashCode(mp) Then
+                            Else
                                 olddata(g)(key).RecordId = -1
-                                sqlupdate.Add("UPDATE tbtabellini SET ruolo='" & mp.Ruolo & "',nome='" & mp.Nome & "',squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND Nome='" & mp.Nome & "' AND Squadra='" & mp.Squadra & "'")
+                                If WebData.Functions.GetCustomHashCode(olddata(g)(key)) <> WebData.Functions.GetCustomHashCode(mp) Then
+                                    sqlupdate.Add("UPDATE tbtabellini SET ruolo='" & mp.Ruolo & "',nome='" & mp.Nome & "',squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND Nome='" & mp.Nome & "' AND Squadra='" & mp.Squadra & "'")
+                                End If
                             End If
                         Next
                     Next
@@ -236,6 +253,7 @@ Namespace Torneo
                         End If
                     Next
                 Next
+
                 Functions.ExecuteSql(sqlinsert)
                 Functions.ExecuteSql(sqlupdate)
                 Functions.ExecuteSql(sqldelete)
@@ -258,22 +276,22 @@ Namespace Torneo
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim m As New MatchPlayer
                         m.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
-                        m.Giornata = If(row.Item("gio") IsNot DBNull.Value, Convert.ToInt32(row.Item("gio")), 1)
-                        m.Ruolo = row.Item("ruolo").ToString()
-                        m.Nome = row.Item("nome").ToString()
-                        m.Squadra = row.Item("squadra").ToString()
-                        m.Minuti = If(row.Item("mm") IsNot DBNull.Value, Convert.ToInt32(row.Item("mm")), 0)
-                        m.Titolare = If(row.Item("tit") IsNot DBNull.Value, Convert.ToInt32(row.Item("tit")), 0)
-                        m.Sostituito = If(row.Item("sos") IsNot DBNull.Value, Convert.ToInt32(row.Item("sos")), 0)
-                        m.Subentrato = If(row.Item("sub") IsNot DBNull.Value, Convert.ToInt32(row.Item("sub")), 0)
-                        m.Ammonizione = If(row.Item("amm") IsNot DBNull.Value, Convert.ToInt32(row.Item("amm")), 0)
-                        m.Espulsione = If(row.Item("esp") IsNot DBNull.Value, Convert.ToInt32(row.Item("esp")), 0)
-                        m.Assists = If(row.Item("ass") IsNot DBNull.Value, Convert.ToInt32(row.Item("ass")), 0)
-                        m.GoalFatti = If(row.Item("gf") IsNot DBNull.Value, Convert.ToInt32(row.Item("gf")), 0)
-                        m.GoalSubiti = If(row.Item("gs") IsNot DBNull.Value, Convert.ToInt32(row.Item("gs")), 0)
-                        m.AutoGoal = If(row.Item("ag") IsNot DBNull.Value, Convert.ToInt32(row.Item("ag")), 0)
-                        m.RigoriParati = If(row.Item("rigp") IsNot DBNull.Value, Convert.ToInt32(row.Item("rigp")), 0)
-                        m.RigoriSbagliati = If(row.Item("rigs") IsNot DBNull.Value, Convert.ToInt32(row.Item("rigs")), 0)
+                        m.Giornata = Functions.ReadFieldIntegerData(row.Item("gio"), 1)
+                        m.Ruolo = Functions.ReadFieldStringData(row.Item("ruolo").ToString())
+                        m.Nome = Functions.ReadFieldStringData(row.Item("nome").ToString())
+                        m.Squadra = Functions.ReadFieldStringData(row.Item("squadra").ToString())
+                        m.Minuti = Functions.ReadFieldIntegerData(row.Item("mm"), 0)
+                        m.Titolare = Functions.ReadFieldIntegerData(row.Item("tit"), 0)
+                        m.Sostituito = Functions.ReadFieldIntegerData(row.Item("sos"), 0)
+                        m.Subentrato = Functions.ReadFieldIntegerData(row.Item("sub"), 0)
+                        m.Ammonizione = Functions.ReadFieldIntegerData(row.Item("amm"), 0)
+                        m.Espulsione = Functions.ReadFieldIntegerData(row.Item("esp"), 0)
+                        m.Assists = Functions.ReadFieldIntegerData(row.Item("ass"), 0)
+                        m.GoalFatti = Functions.ReadFieldIntegerData(row.Item("gf"), 0)
+                        m.GoalSubiti = Functions.ReadFieldIntegerData(row.Item("gs"), 0)
+                        m.AutoGoal = Functions.ReadFieldIntegerData(row.Item("ag"), 0)
+                        m.RigoriParati = Functions.ReadFieldIntegerData(row.Item("rigp"), 0)
+                        m.RigoriSbagliati = Functions.ReadFieldIntegerData(row.Item("rigs"), 0)
                         mtxtdata.Add(m)
                     Next
 
@@ -287,7 +305,7 @@ Namespace Torneo
         End Function
 
         Public Class Match
-
+            Public Property RecordId As Integer = 1
             Public Property Giornata As Integer = 1
             Public Property MatchId As Integer = 0
             Public Property TeamA As String = ""

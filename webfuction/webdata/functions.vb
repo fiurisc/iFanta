@@ -154,9 +154,11 @@ Namespace WebData
             Dim props As PropertyInfo() = obj.GetType().GetProperties(BindingFlags.Public Or BindingFlags.Instance)
 
             For Each prop In props
-                Dim value = prop.GetValue(obj, Nothing)
-                If value IsNot Nothing Then
-                    hash.Append(value.ToString())
+                If prop.Name <> "RecordId" Then
+                    Dim value = prop.GetValue(obj, Nothing)
+                    If value IsNot Nothing Then
+                        hash.Append(value.ToString())
+                    End If
                 End If
             Next
 

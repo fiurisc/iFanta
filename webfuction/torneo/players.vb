@@ -57,11 +57,13 @@ Namespace Torneo
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim p As New PlayerQuotesItem
-                        p.Ruolo = row.Item("Ruolo").ToString()
-                        p.Nome = row.Item("Nome").ToString()
-                        p.Squadra = row.Item("Squadra").ToString()
-                        p.Qini = If(row.Item("Qini") IsNot DBNull.Value, Convert.ToInt32(row.Item("Qini")), 0)
-                        p.Qcur = If(row.Item("Qcur") IsNot DBNull.Value, Convert.ToInt32(row.Item("Qcur")), 0)
+                        p.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
+                        p.Ruolo = Functions.ReadFieldStringData(row.Item("Ruolo").ToString())
+                        p.Nome = Functions.ReadFieldStringData(row.Item("Nome").ToString())
+                        p.Squadra = Functions.ReadFieldStringData(row.Item("Squadra").ToString())
+                        p.Qini = Functions.ReadFieldIntegerData(row.Item("Qini"), 0)
+                        p.Qcur = Functions.ReadFieldIntegerData(row.Item("Qcur"), 0)
+                        p.OutOfGame = Functions.ReadFieldIntegerData(row.Item("outofgame"), 0)
                         mtxtdata.Add(p)
                     Next
                 End If
@@ -98,15 +100,28 @@ Namespace Torneo
                     ckey = key
                     Dim p As PlayerQuotesItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (Ruolo,Nome,Squadra,Qini,Qcur) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & ")")
-                    ElseIf WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                        sqlupdate.Add("UPDATE tbplayer SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',Qini=" & p.Qini & ",Qcur=" & p.Qcur & " WHERE Nome='" & p.Nome & "'")
+                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,nome,squadra,qini,qcur, outfogame) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
+                    Else
+                        olddata(key).RecordId = -1
+                        If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
+                            sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.Ruolo & "',squadra='" & p.Squadra & "',qini=" & p.Qini & ",qcur=" & p.Qcur & ",outofgame=" & p.OutOfGame & " WHERE Nome='" & p.Nome & "'")
+                        End If
+                    End If
+                Next
+
+                Dim sqldelete As New List(Of String)
+
+                For Each g In olddata.Keys
+                    If olddata(g).RecordId <> -1 Then
+                        sqldelete.Add("DELETE FROM tbplayer WHERE id=" & olddata(g).RecordId)
                     End If
                 Next
 
                 Functions.ExecuteSql(sqlinsert)
                 Functions.ExecuteSql(sqlupdate)
+                Functions.ExecuteSql(sqldelete)
 
+                'Cancello gli eventuali duplicati'
                 Dim sql As String = "DELETE FROM tbplayer WHERE ID NOT IN (SELECT MIN(ID) FROM tbplayer GROUP BY Nome);"
                 Functions.ExecuteSql(sql)
 
@@ -139,11 +154,12 @@ Namespace Torneo
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim p As New PlayerDataItem
-                        p.Ruolo = row.Item("Ruolo").ToString()
-                        p.Nome = row.Item("Nome").ToString()
-                        p.Squadra = row.Item("Squadra").ToString()
-                        p.Nazione = row.Item("nat").ToString()
-                        p.NatCode = row.Item("NatCode").ToString()
+                        p.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
+                        p.Ruolo = Functions.ReadFieldStringData(row.Item("Ruolo").ToString())
+                        p.Nome = Functions.ReadFieldStringData(row.Item("Nome").ToString())
+                        p.Squadra = Functions.ReadFieldStringData(row.Item("Squadra").ToString())
+                        p.Nazione = Functions.ReadFieldStringData(row.Item("nat").ToString())
+                        p.NatCode = Functions.ReadFieldStringData(row.Item("NatCode").ToString())
                         mtxtdata.Add(p)
                     Next
                 End If
@@ -177,14 +193,27 @@ Namespace Torneo
                     Dim p As PlayerDataItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
                         sqlinsert.Add("INSERT INTO tbplayer_data (Ruolo,Nome,Squadra,nat,NatCode) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "')")
-                    ElseIf WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                        sqlupdate.Add("UPDATE tbplayer_data SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',nat='" & p.Nazione & "',NatCode='" & p.NatCode & "' WHERE Nome='" & p.Nome & "'")
+                    Else
+                        olddata(key).RecordId = -1
+                        If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
+                            sqlupdate.Add("UPDATE tbplayer_data SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',nat='" & p.Nazione & "',NatCode='" & p.NatCode & "' WHERE Nome='" & p.Nome & "'")
+                        End If
+                    End If
+                Next
+
+                Dim sqldelete As New List(Of String)
+
+                For Each g In olddata.Keys
+                    If olddata(g).RecordId <> -1 Then
+                        sqldelete.Add("DELETE FROM tbplayer WHERE id=" & olddata(g).RecordId)
                     End If
                 Next
 
                 Functions.ExecuteSql(sqlinsert)
                 Functions.ExecuteSql(sqlupdate)
+                Functions.ExecuteSql(sqldelete)
 
+                'Cancello gli eventuali duplicati'
                 Dim sql As String = "DELETE FROM tbplayer_data WHERE ID NOT IN (SELECT MIN(ID) FROM tbplayer_data GROUP BY Nome);"
                 Functions.ExecuteSql(sql)
 
@@ -194,27 +223,31 @@ Namespace Torneo
         End Sub
 
         Public Class PlayerQuotesItem
+            Public Property RecordId As Integer = 0
             Public Property Ruolo As String = ""
             Public Property Nome As String = ""
             Public Property Squadra As String = ""
             Public Property Qini As Integer = 0
             Public Property Qcur As Integer = 0
+            Public Property OutOfGame As Integer = 0
 
             Sub New()
 
             End Sub
 
-            Sub New(Ruolo As String, Nome As String, Squadra As String, Qini As Integer, Qcur As Integer)
+            Sub New(Ruolo As String, Nome As String, Squadra As String, Qini As Integer, Qcur As Integer, OutOfGame As Integer)
                 Me.Ruolo = Ruolo
                 Me.Nome = Nome
                 Me.Squadra = Squadra
                 Me.Qini = Qini
                 Me.Qcur = Qcur
+                Me.OutOfGame = OutOfGame
             End Sub
 
         End Class
 
         Public Class PlayerDataItem
+            Public Property RecordId As Integer = 0
             Public Property Ruolo As String = ""
             Public Property Nome As String = ""
             Public Property Squadra As String = ""

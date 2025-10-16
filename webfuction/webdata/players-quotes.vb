@@ -31,34 +31,42 @@ Namespace WebData
                     IO.File.WriteAllText(fileTemp, html)
 
                     Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("ISO-8859-1"))
-                    Dim Nome As String = ""
-                    Dim Ruolo As String = ""
-                    Dim Squadra As String = ""
-                    Dim Qini As String = ""
-                    Dim Qcur As String = ""
+                    'Dim Nome As String = ""
+                    'Dim Ruolo As String = ""
+                    'Dim Squadra As String = ""
+                    'Dim outofgame As String = "0"
+                    'Dim Qini As String = ""
+                    'Dim Qcur As String = ""
+
+                    Dim p As New Torneo.Players.PlayerQuotesItem
 
                     For i As Integer = 0 To line.Length - 1
 
                         'Leggo il Nome'
                         If line(i).Contains("data-filter-keywords") Then
-                            Nome = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim().Replace("&#X27;", "'"))
+                            p.Nome = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim().Replace("&#X27;", "'"))
                         End If
                         'Leggo il Ruolo'
                         If line(i).Contains("data-filter-role-classic") Then
-                            Ruolo = System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim()
+                            p.Ruolo = System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim()
+                        End If
+                        'Leggo se fuori dalla lista'
+                        If line(i).Contains("out-of-game") Then
+                            p.OutOfGame = 1
                         End If
                         'Leggo la Squadra'
                         If line(i).Contains("<td class=""player-team"" data-col-key=""sq"">") Then
-                            Squadra = Functions.GetTeamNameFromCode(line(i + 1).Trim())
+                            p.Squadra = Functions.GetTeamNameFromCode(line(i + 1).Trim())
                         End If
                         'Leggo la quotazione iniziale'
                         If line(i).Contains("player-classic-initial-price") Then
-                            Qini = line(i + 1).Trim()
+                            p.Qini = CInt(line(i + 1).Trim())
                         End If
                         'Leggo la quotazione iniziale'
                         If line(i).Contains("player-classic-current-price") Then
-                            Qcur = line(i + 1).Trim()
-                            playersq.Add(New Torneo.Players.PlayerQuotesItem(Ruolo, Nome, Squadra, CInt(Qini), CInt(Qcur)))
+                            p.Qcur = CInt(line(i + 1).Trim())
+                            playersq.Add(p)
+                            p = New Torneo.Players.PlayerQuotesItem()
                         End If
                     Next
 
