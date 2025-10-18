@@ -114,7 +114,12 @@ Namespace WebData
                                 End If
 
                                 If value <> "" AndAlso value.Contains("Nessuno") = False Then
-                                    Dim list() As String = value.Trim().Split(CChar(","))
+
+                                    If pstate <> "Infortunato" Then
+                                        value = value.Replace("<strong>Panchina: </strong>", "").Replace("<strong>Ballottaggio: </strong>", "").Replace("<strong>Squalificato: </strong>", "")
+                                        value = System.Text.RegularExpressions.Regex.Replace(value, "(?<=\w\s)(\d)", ",$1")
+                                    End If
+                                    Dim list() As String = value.Replace(") ", "),").Trim().Split(CChar(","))
                                     For Each Nome In list
                                         Try
                                             Dim info As String = ""
@@ -127,6 +132,8 @@ Namespace WebData
                                                 Nome = Nome.Substring(0, Nome.IndexOf("("))
                                             End If
                                             Nome = Nome.Trim().ToUpper()
+                                            Nome = Functions.NormalizeText(Nome)
+                                            info = Functions.NormalizeText(info)
                                             Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
                                             Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData.Players)
                                         Catch ex As Exception

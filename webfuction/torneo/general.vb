@@ -83,25 +83,31 @@ Namespace Torneo
             For i As Integer = 0 To d.Length - 1
 
                 Dim torneo As String = IO.Path.GetFileName(d(i))
-                Dim line() As String = IO.File.ReadAllLines(d(i) & "/settings.txt")
-                Dim act As Boolean = False
-                Dim year As String = ""
+                Dim fname As String = d(i) & "/settings.txt"
 
-                For k As Integer = 0 To line.Length - 1
+                If IO.File.Exists(fname) Then
 
-                    Dim para As String = Regex.Match(line(k), ".+(?=\= ')").Value.Trim
-                    Dim value As String = Regex.Match(line(k), "(?<= ').+(?=')").Value
+                    Dim line() As String = IO.File.ReadAllLines(fname)
+                    Dim act As Boolean = False
+                    Dim year As String = ""
 
-                    If para = "Year" Then
-                        year = value
-                    End If
+                    For k As Integer = 0 To line.Length - 1
 
-                    If line(k).Contains("Active = 'True'") Then
-                        act = True
-                    End If
-                Next
+                        Dim para As String = Regex.Match(line(k), ".+(?=\= ')").Value.Trim
+                        Dim value As String = Regex.Match(line(k), "(?<= ').+(?=')").Value
 
-                years.Add(New YearTorneo(year, act))
+                        If para = "Year" Then
+                            year = value
+                        End If
+
+                        If line(k).Contains("Active = 'True'") Then
+                            act = True
+                        End If
+                    Next
+
+                    years.Add(New YearTorneo(year, act))
+
+                End If
 
             Next
 

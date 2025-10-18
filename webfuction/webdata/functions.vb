@@ -260,7 +260,7 @@ Namespace WebData
 
         Public Shared Function NormalizeText(ByVal txt As String) As String
 
-            If txt.Contains("MARTINEZ") Then
+            If txt.Contains("distrazione muscolare al bicipite") Then
                 txt = txt
             End If
 
@@ -302,7 +302,8 @@ Namespace WebData
             txt = txt.Replace("&#XE0;", "a'").Replace("&#xE0;", "a'")
             txt = txt.Replace("&#XE8;", "E’").Replace("&#xE8;", "E’")
             txt = txt.Replace("&#XF2;", "O").Replace("&#xF2;", "O")
-            Dim regex As New System.Text.RegularExpressions.Regex("[0-9a-zA-Z\'\s\.\-\’]{0,}")
+            txt = txt.Replace("a\u0027", "a'")
+            Dim regex As New System.Text.RegularExpressions.Regex("[0-9a-zA-Z\'\s\.\-\’ª]{0,}")
             Dim newtxt As String = ""
 
             For Each match As System.Text.RegularExpressions.Match In regex.Matches(txt)

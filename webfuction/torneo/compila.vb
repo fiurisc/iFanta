@@ -14,7 +14,6 @@ Namespace Torneo
                 Dim fdata As String = PublicVariables.DataPath & "webdata\temp\DD" & giornata.PadLeft(2, CChar("0")) & ".txt"
                 Dim max As Integer = 7
 
-                General.ReadSettings()
                 WebData.Players.Data.LoadPlayers(True)
 
                 'eseguo il backup del database'

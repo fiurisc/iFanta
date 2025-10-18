@@ -1,14 +1,25 @@
 ﻿Namespace WebData
 
-    Public Class Ranking
+    Public Class Classifica
 
-        Public Shared Function GetRanking(ReturnData As Boolean) As String
+        Private Shared dirt As String = ""
+        Private Shared dird As String = ""
 
-            Dim dirt As String = Functions.DataPath & "\temp"
-            Dim dird As String = Functions.DataPath & "\data"
-            Dim filet As String = dirt & "\ranking-data.txt"
-            Dim filed As String = dird & "\ranking-data.txt"
-            Dim strdata As New System.Text.StringBuilder
+        Private Shared Sub SetFolder()
+            dirt = Functions.DataPath & "temp\"
+            dird = Functions.DataPath & "data\"
+        End Sub
+
+        Shared Function GetDataFileName() As String
+            SetFolder()
+            Return dird & "classifica-seriea.json"
+        End Function
+
+        Public Shared Function GetClassifica(ReturnData As Boolean) As String
+
+            Dim filet As String = dirt & "classifica-seriea.txt"
+            Dim filed As String = GetDataFileName()
+            Dim clasa As New List(Of ClassificaItem)
 
             Try
 
@@ -75,38 +86,30 @@
                                         gf(0) = gf(1) + gf(2)
                                         gs(0) = gs(1) + gs(2)
 
-                                        strdata.Append("name=" & tname & "|")
-
-                                        strdata.Append("pt_t=" & pt(0) & "|") 'punti totali;
-                                        strdata.Append("pt_d=" & pt(1) & "|") 'punti dentro casa'
-                                        strdata.Append("pt_f=" & pt(2) & "|") 'punti fuori casa'
-
-                                        strdata.Append("pg_t=" & pg(0) & "|") 'partite giocate'
-                                        strdata.Append("pg_d=" & pg(1) & "|") 'partite giocate dentro casa'
-                                        strdata.Append("pg_f=" & pg(2) & "|") 'partite giocate fuori casa'
-
-                                        strdata.Append("vit_t=" & vit(0) & "|") 'vittorie'
-                                        strdata.Append("vit_d=" & vit(1) & "|") 'vittorie dentro casa'
-                                        strdata.Append("vit_f=" & vit(2) & "|") 'vittorie fuori casa'
-
-                                        strdata.Append("par_t=" & par(0) & "|") 'pareggi'
-                                        strdata.Append("par_d=" & par(1) & "|") 'pareggi dentro casa'
-                                        strdata.Append("par_f=" & par(2) & "|") 'pareggi fuori casa'
-
-                                        strdata.Append("per_t=" & per(0) & "|") 'sconfitte'
-                                        strdata.Append("per_d=" & per(1) & "|") 'sconfitte dentro casa'
-                                        strdata.Append("per_f=" & per(2) & "|") 'sconfitte fuori casa'
-
-                                        strdata.Append("gf_t=" & gf(0) & "|") 'goal fatti'
-                                        strdata.Append("gf_d=" & gf(1) & "|") 'goal fatti dentro casa'
-                                        strdata.Append("gf_f=" & gf(2) & "|") 'goal fatti fuori casa'
-
-                                        strdata.Append("gs_t=" & gs(0) & "|") 'goal subiti'
-                                        strdata.Append("gs_d=" & gs(1) & "|") 'goal subiti dentro casa'
-                                        strdata.Append("gs_f=" & gs(2)) 'goal subiti fuori casa'
-
-                                        strdata.AppendLine()
-
+                                        Dim item As New ClassificaItem
+                                        item.Nome = tname
+                                        item.Punti.Totali = pt(0).ToString()
+                                        item.Punti.Dentro = pt(1).ToString()
+                                        item.Punti.Fuori = pt(2).ToString()
+                                        item.PartiteGiocate.Totali = pg(0).ToString()
+                                        item.PartiteGiocate.Dentro = pg(1).ToString()
+                                        item.PartiteGiocate.Fuori = pg(2).ToString()
+                                        item.Vittorie.Totali = vit(0).ToString()
+                                        item.Vittorie.Dentro = vit(1).ToString()
+                                        item.Vittorie.Fuori = vit(2).ToString()
+                                        item.Pareggi.Totali = par(0).ToString()
+                                        item.Pareggi.Dentro = par(1).ToString()
+                                        item.Pareggi.Fuori = par(2).ToString()
+                                        item.Sconfitte.Totali = per(0).ToString()
+                                        item.Sconfitte.Dentro = per(1).ToString()
+                                        item.Sconfitte.Fuori = per(2).ToString()
+                                        item.GoalFatti.Totali = gf(0).ToString()
+                                        item.GoalFatti.Dentro = gf(1).ToString()
+                                        item.GoalFatti.Fuori = gf(2).ToString()
+                                        item.GoalSubiti.Totali = gs(0).ToString()
+                                        item.GoalSubiti.Dentro = gs(1).ToString()
+                                        item.GoalSubiti.Fuori = gs(2).ToString()
+                                        clasa.Add(item)
                                     End If
                                 End If
                             Next
@@ -114,12 +117,12 @@
 
                     Next
 
-                    IO.File.WriteAllText(filed, strdata.ToString)
+                    IO.File.WriteAllText(filed, Functions.SerializzaOggetto(clasa, False))
 
                 End If
 
                 If ReturnData Then
-                    Return "</br><span style=color:red;font-size:bold;'>Ranking (" & Functions.Year & "):</span></br>" & strdata.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"
+                    Return "</br><span style=color:red;font-size:bold;'>Ranking (" & Functions.Year & "):</span></br>" & WebData.Functions.SerializzaOggetto(clasa, False).Replace(System.Environment.NewLine, "</br>") & "</br>"
                 Else
                     Return ("</br><span style=color:red;font-size:bold;'>Ranking (" & Functions.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
                 End If
@@ -130,6 +133,24 @@
             End Try
 
         End Function
+
+        Public Class ClassificaItem
+            Public Property Nome As String = ""
+            Public Property Punti As New SubItem
+            Public Property PartiteGiocate As New SubItem
+            Public Property Vittorie As New SubItem
+            Public Property Pareggi As New SubItem
+            Public Property Sconfitte As New SubItem
+            Public Property GoalFatti As New SubItem
+            Public Property GoalSubiti As New SubItem
+
+            Public Class SubItem
+                Public Property Totali As String = ""
+                Public Property Dentro As String = ""
+                Public Property Fuori As String = ""
+            End Class
+        End Class
+
     End Class
 
 End Namespace

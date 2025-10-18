@@ -1,6 +1,4 @@
-﻿Imports Newtonsoft
-Imports System.Runtime.Remoting
-
+﻿
 Namespace Torneo
     Public Class ProbablePlayers
 
@@ -56,7 +54,12 @@ Namespace Torneo
                 Public Property State() As String = "sconosciuto"
                 Public Property Info As String = ""
                 Public Property Percentage As Integer = 0
+                Public Property Infortunio As New InfortunioInfo
 
+                Public Class InfortunioInfo
+                    Public Property Giorni As Integer = -1
+                    Public Property Severity As Integer = 0
+                End Class
             End Class
         End Class
     End Class

@@ -174,6 +174,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="torneo\classifica-seriea.vb" />
     <Compile Include="torneo\classifica.vb" />
     <Compile Include="torneo\compila.vb" />
     <Compile Include="torneo\coppa.vb" />
@@ -203,7 +204,7 @@
     <Compile Include="webdata\probable\get-pianetafantacalcio.vb" />
     <Compile Include="webdata\probable\get-sky.vb" />
     <Compile Include="webdata\probable\probable-formations.vb" />
-    <Compile Include="webdata\ranking.vb" />
+    <Compile Include="webdata\classifica-seriea.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">

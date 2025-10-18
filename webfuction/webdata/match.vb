@@ -312,7 +312,7 @@ Namespace WebData
                 Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)
                 Dim matche As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)) = matchsevent(day)(MatchId)
 
-                Dim html As String = Functions.GetPage(Link)
+                Dim html As String = Functions.GetPage(Link & "/riepilogo")
 
                 If html <> "" Then
 

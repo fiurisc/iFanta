@@ -58,15 +58,15 @@ Public Class Form1
     End Sub
 
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        WebData.Ranking.GetRanking(False)
+        WebData.Classifica.GetClassifica(False)
     End Sub
 
     Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
-        WebData.ProbableFormations.GetGazzetta(False)
+        WebData.ProbableFormations.GetProbableFormation("gazzetta", False)
     End Sub
 
     Private Sub Button6_Click(sender As Object, e As EventArgs) Handles Button6.Click
-        WebData.ProbableFormations.GetFantacalcio(False)
+        WebData.ProbableFormations.GetProbableFormation("fantacalcio", False)
     End Sub
 
     Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click
@@ -74,7 +74,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
-        WebData.ProbableFormations.GetPianetaFantacalcio(False)
+        WebData.ProbableFormations.GetProbableFormation("pianetafantacalcio", False)
     End Sub
 
     Private Sub Button9_Click(sender As Object, e As EventArgs) Handles Button9.Click
@@ -95,9 +95,9 @@ Public Class Form1
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-        Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Formazioni-giornata-01-2025.html")
+        Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa.json")
         Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
-        Torneo.RoseData.ApiGetPlayersTorneo("5", "-1", "0")
+        Torneo.RoseData.ApiAddRosa("0", htmlstr)
         IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", json)
         json = ""
         'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
@@ -108,7 +108,7 @@ Public Class Form1
 
         'SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
         For i As Integer = 1 To 6
-            Torneo.CompilaData.ApiCompila(CStr(i))
+            'Torneo.CompilaData.ApiCompila(CStr(i))
         Next
 
         'Dim data As String = Torneo.CompilaData.ApiCompila("4")

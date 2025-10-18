@@ -175,7 +175,7 @@ Namespace Torneo
             End Try
         End Sub
 
-        Private Shared Function GetMatchsData(day As String) As List(Of Match)
+        Public Shared Function GetMatchsData(day As String) As List(Of Match)
             Return GetMatchsData(New List(Of String) From {day})
         End Function
 
