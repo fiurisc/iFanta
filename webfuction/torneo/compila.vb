@@ -3,7 +3,6 @@ Namespace Torneo
 
     Public Class CompilaData
 
-        Private Shared ReadOnly website As String = "www.pianetafantacalcio.it"
         Private Shared fstatus As String = PublicVariables.DataPath & "compila.json"
 
         Public Shared Function ApiCompila(giornata As String) As String
@@ -15,6 +14,8 @@ Namespace Torneo
                 Dim max As Integer = 7
 
                 WebData.Players.Data.LoadPlayers(True)
+
+                Torneo.General.ReadSettings()
 
                 'eseguo il backup del database'
                 Functions.BackupDatabase(False)
@@ -146,8 +147,6 @@ Namespace Torneo
                                 If name.Contains("CARNESECCHI M.") Then
                                     name = name
                                 End If
-
-                                name = name.Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC")
 
                                 If ruolo = "P" OrElse ruolo = "D" OrElse ruolo = "C" OrElse ruolo = "A" Then
 
@@ -336,6 +335,8 @@ Namespace Torneo
             Dim f As New FormazioniData.Formazione()
 
             Try
+
+                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Compilazione formazione  teamid: " & TeamId & " giornata: " & Giornata)
 
                 f.Giornata = CInt(Giornata)
                 f.TeamId = TeamId
@@ -675,11 +676,15 @@ Namespace Torneo
                         End If
                     Next
 
+                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Difensori con voto >=6: " & ndgoodd & "/" & ndt)
+
                     If PublicVariables.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = ndt Then
                         f.BonusDifesa = BonusDefense(ndgoodd)
                     Else
                         f.BonusDifesa = 0
                     End If
+
+                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Bonus defense: " & f.BonusDifesa)
 
                     If PublicVariables.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nct Then
                         f.BonusCentrocampo = BonusCenterField(ndgoodc)
@@ -907,6 +912,24 @@ Namespace Torneo
             Public Property rigs As String = ""
         End Class
 
+        Public Class DataRow
+            Public Property id As Integer = 0
+            Public Property giornata As Integer = 0
+            Public Property ruolo As String = ""
+            Public Property nome As String = ""
+            Public Property squadra As String = ""
+            Public Property gf As Integer = 0
+            Public Property gs As Integer = 0
+            Public Property amm As Integer = 0
+            Public Property esp As Integer = 0
+            Public Property ass As Integer = 0
+            Public Property rigp As Integer = 0
+            Public Property rigs As Integer = 0
+            Public Property rigt As Integer = 0
+            Public Property autogol As Integer = 0
+            Public Property voto As Integer = 0
+            Public Property punti As Integer = 0
+        End Class
     End Class
 
 End Namespace

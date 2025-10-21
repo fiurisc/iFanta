@@ -182,32 +182,25 @@ Namespace Torneo
 
             If PublicVariables.Settings.ConteggiaGoalFattiPerVittoria AndAlso PublicVariables.Settings.ConteggiaGoalSubitiPerVittoria Then
                 colptmax = "maxpt4"
-                stot = "sum(f.pt+2*(f.gf)-f.gs)"
+                stot = "sum(f.pt)+2*sum(f.gf)-sum(f.gs)"
             ElseIf PublicVariables.Settings.ConteggiaGoalSubitiPerVittoria Then
                 colptmax = "maxpt2"
-                stot = "sum(f.pt-f.gs) as stot"
+                stot = "sum(f.pt)-sum(f.gs)"
             ElseIf PublicVariables.Settings.ConteggiaGoalFattiPerVittoria Then
                 colptmax = "maxpt3"
-                stot = "sum(f.pt+f.gf) as stot"
+                stot = "sum(f.pt)+sum(f.gf)"
             End If
 
-            str.Append("SELECT tb1.idteam,teamq.Nome,teamq.allenatore,teamq.diff,SUM(tb1.pt) AS tot,SUM(tb1.ptgio) AS ptgio,")
-            str.Append("AVG(tb1.pt) AS avgpt, min(pt) AS minpt, max(pt) AS maxpt,sum(tb1.amm) AS amm,")
-            str.Append("sum(tb1.esp) AS esp, sum(tb1.ass) AS ass,sum(tb1.gs) AS gs,")
-            str.AppendLine("sum(tb1.gf) AS gf,sum(tb1.vitt) as vitt,sum(tb1.vittgio) as vittgio,sum(11-tb1.numg) as n10,sum(tb1.bonus) as bonus")
-            str.AppendLine("FROM (")
-            str.Append("SELECT f.idteam,f.gio,")
-            str.Append("sum(f.pt) as pt,IIF(f.gio=" & Giornata & ",sum(f.pt),0) as ptgio," & stot & " as stot,sum(f.amm) as amm,")
-            str.Append("sum(f.esp) as esp,sum(f.ass) as ass,")
-            str.Append("sum(f.gs) as gs,sum(f.gf) as gf,")
-            str.Append("sum(incampo) as numg,IIF(" & stot & "=p." & colptmax & ",1,0) as vitt,IIF(" & stot & "=p." & colptmax & " and f.gio=" & Giornata - 1 & ",1,0) as vittgio,")
-            str.AppendLine("sum(IIF(f.type>9,f.pt,0)) as bonus")
-            str.AppendLine("FROM " & tb & " as f LEFT JOIN " & tbptmax & " as p ON p.gio=f.gio ")
-            str.AppendLine("WHERE (incampo=1 OR type=10) and f.pt>-100 and f.gio<=" & Giornata & " ")
-            str.AppendLine("GROUP BY f.idteam,f.gio,p." & colptmax)
-            str.AppendLine(") AS tb1 ")
-            str.AppendLine("INNER JOIN teamq ON teamq.idteam=tb1.idteam ")
-            str.Append("GROUP BY tb1.idteam,teamq.Nome,teamq.allenatore,teamq.diff ORDER BY sum(tb1.pt) DESC;")
+            str.AppendLine("SELECT tb.*,teamq.Nome,teamq.allenatore,teamq.diff FROM (")
+            str.AppendLine("SELECT tb1.idteam,SUM(tb1.pt) AS tot,SUM(tb1.ptgio) AS ptgio,SUM(tb1.stot) AS stot,AVG(tb1.pt) AS avgpt, min(pt) AS minpt, max(pt) AS maxpt,sum(tb1.amm) AS amm,sum(tb1.esp) AS esp, sum(tb1.ass) AS ass,sum(tb1.gs) AS gs,sum(tb1.gf) AS gf,sum(tb1.vitt) as vitt,iif(sum(tb1.maxpt) =SUM(tb1.stot),1,0) as vittgio,sum(11-tb1.numg) as n10,sum(tb1.bonus) as bonus FROM (")
+            str.AppendLine("SELECT f.idteam,f.gio,sum(f.pt) as pt,IIF(f.gio=" & Giornata & ",sum(f.pt),0) as ptgio,IIF(f.gio=" & Giornata & "," & stot & ",0) as stot,sum(f.amm) as amm,sum(f.esp) as esp,sum(f.ass) as ass,sum(f.gs) as gs,sum(f.gf) as gf,sum(incampo) as numg,IIF(" & stot & "=p." & colptmax & ",1,0) as vitt,IIF(f.gio=" & Giornata & ",p." & colptmax & ",0) as maxpt,sum(IIF(f.type>9,f.pt,0)) as bonus")
+            str.AppendLine("FROM tbformazioni as f LEFT JOIN " & tbptmax & " as p ON p.gio=f.gio ")
+            str.AppendLine("WHERE (incampo=1 OR type=10) and f.pt>-100 and f.gio<=" & Giornata)
+            str.AppendLine("GROUP BY f.idteam,f.gio,p.maxpt4")
+            str.AppendLine(") AS tb1")
+            str.AppendLine("GROUP BY tb1.idteam) as tb")
+            str.AppendLine("LEFT JOIN teamq ON teamq.idteam=tb.idteam")
+            str.AppendLine("ORDER by tb.tot DESC")
 
             Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet(str.ToString)
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then

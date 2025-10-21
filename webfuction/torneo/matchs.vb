@@ -339,7 +339,7 @@ Namespace Torneo
         Public Class MatchEvent
             Public Property eventType As String = ""
             Public Property minute As String = ""
-            Public Property player As String = ""
+            Public Property players As String = ""
         End Class
 
     End Class

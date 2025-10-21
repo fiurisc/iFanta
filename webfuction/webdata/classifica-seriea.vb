@@ -17,8 +17,9 @@
 
         Public Shared Function GetClassifica(ReturnData As Boolean) As String
 
-            Dim filet As String = dirt & "classifica-seriea.txt"
             Dim filed As String = GetDataFileName()
+            Dim filet As String = dirt & "classifica-seriea.txt"
+
             Dim clasa As New List(Of ClassificaItem)
 
             Try

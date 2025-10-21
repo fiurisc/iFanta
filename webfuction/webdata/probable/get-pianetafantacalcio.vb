@@ -68,7 +68,7 @@ Namespace WebData
                                 Dim Ruolo As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Ruolo=)\w{1}").Value
                                 Dim info As String = ""
 
-                                If line(i).Contains("FERGUSON") Then
+                                If line(i).Contains("DEL PRATO") Then
                                     line(i) = line(i)
                                 End If
 
