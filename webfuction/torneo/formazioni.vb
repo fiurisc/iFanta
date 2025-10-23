@@ -167,7 +167,7 @@ Namespace Torneo
                         list(tid).Giornata = CInt(Day)
                         list(tid).TeamId = tid
 
-                        If type <= 10 Then
+                        If type < 10 Then
                             Dim p As New PlayerFormazione
                             p.RosaId = Functions.ReadFieldIntegerData("idrosa", row, 0)
                             p.Jolly = Functions.ReadFieldIntegerData("jolly", row, 0)

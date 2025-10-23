@@ -93,6 +93,8 @@ Namespace WebData
 
             Public Shared Function ResolveName(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
 
+                Name = Name.Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC").Replace("DEL PRATO", "DELPRATO")
+
                 Dim pm As New Players.PlayerMatch(Role, Name, Team)
 
                 If keyplayers.ContainsKey(Team) Then

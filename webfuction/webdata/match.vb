@@ -9,6 +9,7 @@ Namespace WebData
         Private Shared dird As String = ""
 
         Private Shared matchs As New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.Match))
+        'giornata/matchid/squadra'
         Private Shared matchsplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
         Private Shared matchsevent As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
 
@@ -100,7 +101,7 @@ Namespace WebData
                     t.Name = CStr(i)
                     thrmatch.Add(t)
 #If DEBUG Then
-                    'If i > 2 Then Exit For
+                    If i > 2 Then Exit For
 #End If
                 Next
 
@@ -374,42 +375,45 @@ Namespace WebData
                                 Dim n2 As String = If(p.Count > 1, p(1).GetName(), "")
                                 Dim r2 As String = If(p.Count > 1, p(1).GetRole(), "")
 
+                                If matche.ContainsKey(team) = False Then matche.Add(team, New Dictionary(Of String, Torneo.MatchsData.MatchEvent))
+
+
                                 If line(z).Trim.Contains("Ammonizione") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
-                                    matchp(team)(n1).Ammonizione += 1
-                                End If
-                                If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
-                                    matchp(team)(n1).Espulsione += 1
-                                End If
-                                If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
-                                    matchp(team)(n1).GoalSubiti += 1
-                                End If
-                                If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
-                                    matchp(team)(n1).RigoriSbagliati += 1
-                                End If
-                                If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
-                                    matchp(team)(n1).GoalFatti += 1
-                                    If p.Count > 1 Then
-                                        AddPlayer(matchp, CInt(day), team, r2, n2)
-                                        matchp(team)(n2).Assists += 1
+                                        AddPlayer(matchp, CInt(day), team, r1, n1)
+                                        matchp(team)(n1).Ammonizione += 1
                                     End If
-                                End If
-                                If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
-                                    matchp(team)(n1).Subentrato = 1
-                                    matchp(team)(n1).Minuti = min
-                                    AddPlayer(matchp, CInt(day), team, r2, n2)
-                                    matchp(team)(n2).Sostituito = 1
-                                    matchp(team)(n2).Minuti = min
+                                    If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
+                                        AddPlayer(matchp, CInt(day), team, r1, n1)
+                                        matchp(team)(n1).Espulsione += 1
+                                    End If
+                                    If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
+                                        AddPlayer(matchp, CInt(day), team, r1, n1)
+                                        matchp(team)(n1).GoalSubiti += 1
+                                    End If
+                                    If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
+                                        AddPlayer(matchp, CInt(day), team, r1, n1)
+                                        matchp(team)(n1).RigoriSbagliati += 1
+                                    End If
+                                    If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
+                                        AddPlayer(matchp, CInt(day), team, r1, n1)
+                                        matchp(team)(n1).GoalFatti += 1
+                                        If p.Count > 1 Then
+                                            AddPlayer(matchp, CInt(day), team, r2, n2)
+                                            matchp(team)(n2).Assists += 1
+                                        End If
+                                    End If
+                                    If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
+                                        AddPlayer(matchp, CInt(day), team, r1, n1)
+                                        matchp(team)(n1).Subentrato = 1
+                                        matchp(team)(n1).Minuti = min
+                                        AddPlayer(matchp, CInt(day), team, r2, n2)
+                                        matchp(team)(n2).Sostituito = 1
+                                        matchp(team)(n2).Minuti = min
+                                    End If
+
                                 End If
 
-                            End If
-
-                            If line(z).Contains("Rigore") Then
+                                If line(z).Contains("Rigore") Then
                                 line(z) = line(z)
                             End If
 
