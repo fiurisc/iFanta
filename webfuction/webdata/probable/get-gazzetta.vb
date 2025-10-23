@@ -91,8 +91,11 @@ Namespace WebData
                                     line(i) = line(i)
                                 End If
 
-                                name = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=""lineup-team__name\"">)[\w\s+]{1,}(?=\<)").Value.Replace("-", " ").ToUpper().Replace("'", "’")
+                                name = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=""lineup-team__name\"">)[\w\s+\-]{1,}(?=\<)").Value.Replace("-", " ").ToUpper().Replace("'", "’")
                                 If name = "LAUTARO" Then name = "MARTINEZ L."
+                                If name.Contains("MILINK") Then
+                                    name = name
+                                End If
                                 If name <> "" Then
                                     name = Players.Data.ResolveName("", name, sq(sqid), playersLog, False).GetName()
                                     Call AddInfo(name, sq(sqid), site, "Titolare", "", 100, plaryersData.Players)
@@ -119,7 +122,7 @@ Namespace WebData
                                         value = value.Replace("<strong>Panchina: </strong>", "").Replace("<strong>Ballottaggio: </strong>", "").Replace("<strong>Squalificato: </strong>", "")
                                         value = System.Text.RegularExpressions.Regex.Replace(value, "(?<=\w\s)(\d)", ",$1")
                                     End If
-                                    Dim list() As String = value.Replace(") ", "),").Trim().Split(CChar(","))
+                                    Dim list() As String = value.Replace(" e ", ",").Replace(") ", "),").Trim().Split(CChar(","))
                                     For Each Nome In list
                                         Try
                                             Dim info As String = ""

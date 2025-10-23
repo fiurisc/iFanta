@@ -27,7 +27,7 @@ Namespace WebData
 
                         For Each p As Torneo.Players.PlayerQuotesItem In playersq
 
-                            If p.Nome.Contains("RANOCCHIA") Then
+                            If p.Nome.Contains("BERNA") Then
                                 p.Nome = p.Nome
                             End If
 
@@ -93,7 +93,8 @@ Namespace WebData
 
             Public Shared Function ResolveName(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
 
-                Name = Name.Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC").Replace("DEL PRATO", "DELPRATO")
+                Name = Name.Replace("MILINKOVIC-SAVIC", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC").Replace("DEL PRATO", "DELPRATO").Replace("DEL PRATO", "DELPRATO")
+                Name = Name.Replace("P.ESPOSITO", "ESPOSITO F.P.")
 
                 Dim pm As New Players.PlayerMatch(Role, Name, Team)
 
@@ -156,7 +157,6 @@ Namespace WebData
                         End If
                     Next
                 Next
-
 
                 Return Nothing
 
