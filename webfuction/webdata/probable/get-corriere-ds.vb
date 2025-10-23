@@ -33,7 +33,7 @@
                 Dim linkp As New List(Of String)
 
                 'Determino i link delle varie partite'
-                Dim html As String = Functions.GetPage("https://www.corrieredellosport.it/calcio/serie-a/probabili-formazioni")
+                Dim html As String = Functions.GetPage("https://www.corrieredellosport.it/probabili-formazioni/calcio/serie-a")
 
                 If html <> "" Then
 
@@ -47,12 +47,15 @@
                         Dim line As String = lines(i)
 
                         If line <> "" Then
-                            If line.Contains("<ul class=""probabili-formazioni-list"">") Then
+                            If line.Contains("ListProbMatches_containerAll") Then
+                                IO.File.WriteAllText(filel, line.Replace("</div>", "</div>" & Environment.NewLine))
+                                Dim sublines() As String = line.Replace("</div>", "</div>" & Environment.NewLine).Split(Convert.ToChar(Environment.NewLine))
+
                                 start = True
                             Else
                                 If start AndAlso line.Contains("probabili-formazioni") Then
 
-                                    linkp.Add(System.Text.RegularExpressions.Regex.Match(line, "(?<="").*(?=\"")").Value)
+                                    linkp.Add(System.Text.RegularExpressions.Regex.Match(line, "(?<="").* (?=\ "")").Value)
 
                                     If currgg = -1 Then
 
@@ -136,11 +139,11 @@
                             Dim perc As Integer = -1
                             Dim info As String = ""
 
-                            If line.Contains("<div class=""team home"">") Then
+                            If line.Contains("<div class= ""team home"">") Then
                                 sq(0) = (Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i + 1), "(?<=\>).*(?=\<\/)").Value.ToUpper))
                             End If
 
-                            If line.Contains("<div class=""team away"">") Then
+                            If line.Contains("<div Class=""team away"">") Then
                                 sq(1) = (Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i + 1), "(?<=\>).*(?=\<\/)").Value.ToUpper))
                             End If
 
@@ -154,7 +157,7 @@
                                 pstate = "Squalificato"
                             End If
 
-                            If line.Contains("<td class=""a-right"">") Then
+                            If line.Contains("<td Class=""a-right"">") Then
 
                                 'Giorcatore Squadra in casa'
                                 name = System.Text.RegularExpressions.Regex.Match(line, "(?<=\>).*(?=\<\/)").Value.ToUpper.Replace("'", "’")

@@ -192,7 +192,7 @@ Namespace WebData
             End If
         End Function
 
-        Private Shared Function FormatJson(json As String) As String
+        Public Shared Function FormatJson(json As String) As String
 
             Dim indent As Integer = 0
             Dim quoted As Boolean = False
@@ -327,6 +327,7 @@ Namespace WebData
             Squadra = Squadra.ToUpper.Replace("HELLASVERONA", "VERONA").Trim
             Squadra = Squadra.ToUpper.Replace("HELLAS-VERONA", "VERONA").Trim
             Squadra = Squadra.ToUpper.Replace("HELLAS VERONA", "VERONA").Trim
+            Squadra = Squadra.ToUpper.Replace("HELLAS", "VERONA").Trim
             If Squadra = "GEN" Then Squadra = "GENOA"
             If Squadra = "CAG" Then Squadra = "CAGLIARI"
             If Squadra.ToUpper = "JUVE" Then Squadra = "JUVENTUS"

@@ -55,7 +55,7 @@ Namespace WebData
                                 sqid = -1
                             ElseIf line(i).Contains("class=""details-team__name""") Then
                                 'Aggiungo la Squadra alla lista di quelle che disputano il match'
-                                sq.Add(System.Text.RegularExpressions.Regex.Match(line(i + 2).Trim(), "(?<=\>)\w+(?=\<\/a)").Value.ToUpper)
+                                sq.Add(Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(line(i + 2).Trim(), "(?<=\>)[\w\s]{1,}(?=\<\/a)").Value.ToUpper))
                             ElseIf line(i).Contains("class=""match-details__info"">") Then
 
                                 'Cerco di determinare la giornata di riferiemnto'

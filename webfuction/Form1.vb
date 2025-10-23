@@ -85,7 +85,7 @@ Public Class Form1
     Private Sub Button10_Click(sender As Object, e As EventArgs) Handles Button10.Click
         'Determino i link delle varie partite'
         Dim enc As String = "utf-8"
-        Dim html As String = WebData.Functions.GetPage("https://sport.sky.it/calcio/serie-a/probabili-formazioni/", enc)
+        Dim html As String = WebData.Functions.GetPage("https://www.fantapazz.com/calcio/fantacalcio/serie-a/probabili-formazioni", enc)
 
         If html <> "" Then
 

@@ -53,6 +53,8 @@
                                 tname = System.Text.RegularExpressions.Regex.Match(m(k).Value, "(?<=team_?[nN]ame\"":"")\w+").Value.ToUpper
                                 If tname <> "" Then
 
+                                    tname = WebData.Functions.CheckTeamName(tname)
+
                                     Dim t As Integer = 1
 
                                     If m(k).Value.Contains("awayRanking") Then t = 2

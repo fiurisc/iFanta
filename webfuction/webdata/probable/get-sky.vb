@@ -1,4 +1,6 @@
-﻿Namespace WebData
+﻿Imports System.Web.Script.Serialization
+
+Namespace WebData
     Partial Class ProbableFormations
 
         Shared Function GetSky(ReturnData As Boolean) As String
@@ -39,8 +41,21 @@
 
                         If line <> "" Then
 
-                            If line.Contains("Titolari</td>") Then
-                                sez = "header"
+                            If line.Contains("competition-predicted-lineups") Then
+                                Dim json As String = System.Text.RegularExpressions.Regex.Match(line, "\{""create.*}(?=' query)").Value()
+                                Dim sublines() As String = Functions.FormatJson(json).Split(Convert.ToChar(System.Environment.NewLine))
+
+                                For k As Integer = 0 To sublines.Length
+                                    If sublines(k).Contains("startingLineup") Then
+                                        pstate = "Titolare"
+                                    End If
+                                    If sublines(k).Contains("seoName") Then
+                                        team = System.Text.RegularExpressions.Regex.Match(line, "(?<=\s"").*(?="")").Value()
+                                    ElseIf sublines(k).Contains("seoName") Then
+                                        team = System.Text.RegularExpressions.Regex.Match(line, "(?<=\s"").*(?="")").Value()
+                                    End If
+                                Next
+                                Dim dict As Object = New JavaScriptSerializer().Deserialize(Of Object)(json)
                                 sq.Clear()
                                 Dim s() As String = line.Split(New String() {"</div>"}, StringSplitOptions.None)
                                 s = s
