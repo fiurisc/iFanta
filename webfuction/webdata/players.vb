@@ -177,7 +177,7 @@ Namespace WebData
 
             Public Shared Function CheckName(wk As Players.WebPlayerKey, subkey As String(), ind As Integer) As Players.WebPlayerKey
 
-                If wk.key.ContainsKey(subkey(ind)) AndAlso subkey(ind).Length > 2 Then
+                If wk.key.ContainsKey(subkey(ind)) AndAlso subkey(ind) <> "UNK" AndAlso subkey(ind).Length > 2 Then
                     If wk.key(subkey(ind)).key.Count = 0 Then
                         Return wk.key(subkey(ind))
                     ElseIf wk.key(subkey(ind)).key.Count = 1 Then

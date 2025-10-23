@@ -25,7 +25,7 @@ Namespace WebData
             If site = "fantacalcio" OrElse site = "" Then str.Append(GetFantacalcio(show))
             If site = "pianetafantacalcio" OrElse site = "" Then str.Append(GetPianetaFantacalcio(show))
             'If site = "sky" OrElse site = "" Then str.Append(GetSky(show))
-            'If site = "cds" OrElse site = "" Then str.Append(GetCds(show))
+            ' If site = "cds" OrElse site = "" Then str.Append(GetCds(show))
 
             Return str.ToString()
 

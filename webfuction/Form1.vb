@@ -3,6 +3,7 @@ Imports System.Net.Http
 Imports System.Net.Mail
 Imports System.Text
 Imports Newtonsoft
+Imports webfuction.Torneo.ProbablePlayers
 
 Public Class Form1
 
@@ -107,6 +108,42 @@ Public Class Form1
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
 
         'SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
+        Dim dicData As Dictionary(Of String, Probable) = Torneo.ProbablePlayers.GetProbableFormation("")
+        Dim dicName As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Integer)))
+
+        For Each site As String In dicData.Keys
+            For Each pkey As String In dicData(site).Players.Keys
+                Dim p As Probable.Player = dicData(site).Players(pkey)
+                If dicName.ContainsKey(p.Team) = False Then dicName.Add(p.Team, New Dictionary(Of String, Dictionary(Of String, Integer)))
+                If dicName(p.Team).ContainsKey(p.Name) = False Then
+                    dicName(p.Team).Add(p.Name, New Dictionary(Of String, Integer))
+                    For Each s As String In dicData.Keys
+                        dicName(p.Team)(p.Name).Add(s, 0)
+                    Next
+                End If
+                dicName(p.Team)(p.Name)(p.Site) = 1
+            Next
+        Next
+
+        Dim strout As New System.Text.StringBuilder
+
+        For Each team As String In dicName.Keys
+            For Each name As String In dicName(team).Keys
+                strout.Append(team & "|" & name)
+                For Each s As String In dicName(team)(name).Keys
+                    If dicName(team)(name)(s) = 1 Then
+                        strout.Append("|" & s)
+                    Else
+                        strout.Append("|")
+                    End If
+                Next
+                strout.AppendLine()
+            Next
+        Next
+
+        IO.File.WriteAllText(AppContext.BaseDirectory & "test.txt", strout.ToString())
+
+
         For i As Integer = 1 To 6
             'Torneo.CompilaData.ApiCompila(CStr(i))
         Next

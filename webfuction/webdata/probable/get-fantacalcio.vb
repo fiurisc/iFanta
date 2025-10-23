@@ -62,7 +62,7 @@
                             If line.Contains("class=""ml-auto"">Giornata") Then
                                 currgg = CInt(System.Text.RegularExpressions.Regex.Match(lines(i), "\d+").Value)
                             End If
-                            If line.Contains("match-info") Then
+                            If line.Contains("match-info") OrElse line.Contains("player-list starters") Then
                                 pstate = "Titolare"
                                 sq.Clear()
                             ElseIf line.Contains(">Panchina") Then
@@ -78,6 +78,9 @@
                             If pstate <> "" AndAlso line.Contains("href=""https://www.fantacalcio.it/serie-a/squadre/") AndAlso lines(i + 2).Contains("</span>") Then
                                 team = Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=www\.fantacalcio\.it\/serie\-a\/squadre\/)\w+(?=\/)").Value.ToUpper())
                                 name = lines(i + 2).Replace("<span>", "").Replace("</span>", "").Trim().ToUpper().Replace("'", "’").Replace("&#X27;", "’")
+                                If name.Contains("CALLIGARIS") Then
+                                    name = name
+                                End If
                                 If pstate = "Titolare" OrElse pstate = "Panchina" Then
                                     info = ""
                                     Try
@@ -89,6 +92,9 @@
                                     info = Functions.NormalizeText(lines(i + 5).Trim())
                                 End If
                                 name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
+                                If name.Contains("SOMMER") Then
+                                    name = name
+                                End If
                                 Call AddInfo(name, team, site, pstate, info, perc, wpd.Players)
                                 If sq.Contains(team) = False Then sq.Add(team)
                             End If
