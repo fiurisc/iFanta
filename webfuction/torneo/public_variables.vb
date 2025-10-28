@@ -14,25 +14,29 @@
         Public Sub InitPath(rootDataPath As String, rootDatabasePath As String, year As String)
             Me.Year = year
             RootTorneiPath = rootDataPath
-            TorneoPath = rootDataPath & year & "\"
-            TorneoWebDataPath = rootDataPath & year & "\webdata\"
-            DatabaseTorneo = rootDatabasePath & year & ".accdb"
+            If year <> "" Then
+                TorneoPath = rootDataPath & year & "\"
+                TorneoWebDataPath = rootDataPath & year & "\webdata\"
+                DatabaseTorneo = rootDatabasePath & year & ".accdb"
+            End If
             DatabaseUsers = rootDatabasePath & "users.accdb"
             MakeDirectory()
         End Sub
 
         Private Sub MakeDirectory()
 
-            Dim dirt As String = TorneoWebDataPath & "temp"
-            Dim dird As String = TorneoWebDataPath & "data"
-            Dim dirdpf As String = TorneoWebDataPath & "data\pforma"
-            Dim dirdmt As String = TorneoWebDataPath & "data\matchs"
+            If TorneoWebDataPath <> "" Then
+                Dim dirt As String = TorneoWebDataPath & "temp"
+                Dim dird As String = TorneoWebDataPath & "data"
+                Dim dirdpf As String = TorneoWebDataPath & "data\pforma"
+                Dim dirdmt As String = TorneoWebDataPath & "data\matchs"
 
-            If IO.Directory.Exists(TorneoPath) = False Then IO.Directory.CreateDirectory(TorneoPath)
-            If IO.Directory.Exists(dirt) = False Then IO.Directory.CreateDirectory(dirt)
-            If IO.Directory.Exists(dird) = False Then IO.Directory.CreateDirectory(dird)
-            If IO.Directory.Exists(dirdpf) = False Then IO.Directory.CreateDirectory(dirdpf)
-            If IO.Directory.Exists(dirdmt) = False Then IO.Directory.CreateDirectory(dirdmt)
+                If IO.Directory.Exists(TorneoPath) = False Then IO.Directory.CreateDirectory(TorneoPath)
+                If IO.Directory.Exists(dirt) = False Then IO.Directory.CreateDirectory(dirt)
+                If IO.Directory.Exists(dird) = False Then IO.Directory.CreateDirectory(dird)
+                If IO.Directory.Exists(dirdpf) = False Then IO.Directory.CreateDirectory(dirdpf)
+                If IO.Directory.Exists(dirdmt) = False Then IO.Directory.CreateDirectory(dirdmt)
+            End If
 
         End Sub
 

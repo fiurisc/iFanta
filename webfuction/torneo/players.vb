@@ -1,15 +1,14 @@
 ﻿Imports System.Data
-Imports webfuction.WebData
 
 Namespace Torneo
     Public Class Players
 
         Dim appSett As PublicVariables
-        Dim pQuotes As PlayersQuotes
+        Dim pQuotes As WebData.PlayersQuotes
 
         Sub New(appSett As PublicVariables)
             Me.appSett = appSett
-            pQuotes = New PlayersQuotes(appSett)
+            pQuotes = New WebData.PlayersQuotes(appSett)
         End Sub
 
         Public Function ApiGetPlayersName() As String
@@ -145,7 +144,7 @@ Namespace Torneo
                 Dim mtxdata As List(Of PlayerDataItem) = GetPlayersData()
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
             Else
-                Dim pdata As New PlayersData(appSett)
+                Dim pdata As New WebData.PlayersData(appSett)
                 Dim j As String = IO.File.ReadAllText(pdata.GetDataFileName())
                 Dim mtxdata As List(Of PlayerDataItem) = WebData.Functions.DeserializeJson(Of List(Of PlayerDataItem))(j)
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)

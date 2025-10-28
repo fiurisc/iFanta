@@ -91,7 +91,6 @@ Namespace WebData
                                         If NatCode = "SCT" Then NatCode = "GBR"
 
                                         If dicNatCode.ContainsKey(NatCode) Then nat = dicNatCode(NatCode) Else nat = ""
-                                        If nat.Length > 40 Then nat = nat.Substring(0, 40)
 
                                         If role = "Goalkeeper" Then
                                             role = "P"

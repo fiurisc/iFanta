@@ -21,8 +21,6 @@ Namespace WebData
             Try
 
                 Players.Data.LoadPlayers(appSett, False)
-                Dim mdata As New MatchsData(appSett)
-                mdata.LoadWebMatchs()
 
                 Dim html As String = Functions.GetPage(appSett, "http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
 
@@ -42,8 +40,8 @@ Namespace WebData
                     srLog.WriteLine("Year -> " & appSett.Year)
                     srLog.WriteLine("Calendario match:")
                     srLog.WriteLine("---------------------------")
-                    For Each t As String In mdata.KeyMatchs.Keys
-                        srLog.WriteLine(mdata.KeyMatchs(t) & " -> " & t)
+                    For Each t As String In mdataw.KeyMatchs.Keys
+                        srLog.WriteLine(mdataw.KeyMatchs(t) & " -> " & t)
                     Next
                     srLog.WriteLine("")
                     srLog.WriteLine("linee file html => " & CStr(line.Length))
@@ -66,9 +64,9 @@ Namespace WebData
 
                                     srLog.WriteLine("match trovato -> " & match)
 
-                                    For Each key As String In mdata.KeyMatchs.Keys
+                                    For Each key As String In mdataw.KeyMatchs.Keys
                                         If key = match Then
-                                            currgg = mdata.KeyMatchs(key)
+                                            currgg = mdataw.KeyMatchs(key)
                                             plaryersData.Day = currgg
                                             srLog.WriteLine("giornata associata -> " & CStr(currgg))
                                             Exit For

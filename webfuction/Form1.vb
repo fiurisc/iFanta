@@ -194,7 +194,7 @@ Public Class Form1
     End Sub
 
     Private Sub Button14_Click(sender As Object, e As EventArgs) Handles Button14.Click
-        Dim pdata As New WebData.PlayersData(appSett)
-        pdata.GetPlayersData(False)
+        Dim pdata As New Torneo.ClassificaData(appSett)
+        pdata.ApiGetClassifica("9", True)
     End Sub
 End Class

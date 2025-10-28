@@ -1,15 +1,14 @@
 ﻿Imports System.IO
 Imports System.Net
 Imports System.Text
-Imports webfuction.Torneo
 
 Namespace WebData
 
     Public Class PlayersQuotes
 
-        Dim appSett As PublicVariables
+        Dim appSett As Torneo.PublicVariables
 
-        Sub New(appSett As PublicVariables)
+        Sub New(appSett As Torneo.PublicVariables)
             Me.appSett = appSett
         End Sub
 

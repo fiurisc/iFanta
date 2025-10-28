@@ -22,14 +22,11 @@
                 sr.WriteLine("Loading web player and matchs")
                 Players.Data.LoadPlayers(appSett, False)
 
-                Dim mdata As New MatchsData(appSett)
-                mdata.LoadWebMatchs()
-
                 sr.WriteLine("Year -> " & appSett.Year)
                 sr.WriteLine("Calendario match:")
                 sr.WriteLine("---------------------------")
-                For Each t As String In mdata.KeyMatchs.Keys
-                    sr.WriteLine(mdata.KeyMatchs(t) & " -> " & t)
+                For Each t As String In mdataw.KeyMatchs.Keys
+                    sr.WriteLine(mdataw.KeyMatchs(t) & " -> " & t)
                 Next
                 sr.WriteLine("")
 

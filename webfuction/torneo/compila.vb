@@ -52,15 +52,15 @@ Namespace Torneo
                 Next
 
                 UpdateStatus("Salvataggio formazioni...", 5, max)
-                forma.ApiDeleteFormazioni(giornata, "-1", False)
-                forma.SaveFormazioni(giornata, lst1, False)
+                'forma.ApiDeleteFormazioni(giornata, "-1", False)
+                forma.SaveFormazioni(CInt(giornata), lst1, False)
 
                 'Compilazione dati top player'
                 UpdateStatus("Compilazione top formazioni...", 6, max)
                 Dim lst2 As List(Of FormazioniData.Formazione) = CompileTopFormazioni(giornata)
                 UpdateStatus("Salvataggio top formazioni...", 7, max)
-                forma.ApiDeleteFormazioni(giornata, "-1", True)
-                forma.SaveFormazioni(giornata, lst2, True)
+                'forma.ApiDeleteFormazioni(giornata, "-1", True)
+                forma.SaveFormazioni(CInt(giornata), lst2, True)
 
                 ResetStatus()
 

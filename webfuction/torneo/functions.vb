@@ -6,15 +6,7 @@ Imports System.Reflection
 Namespace Torneo
     Public Class Functions
 
-        'Public Shared Sub InitPath(rootDataPath As String, rootdatabasePath As String, year As String)
-        '    PublicVariables.Year = year
-        '    PublicVariables.RootDataPath = rootDataPath
-        '    PublicVariables.DataPath = rootDataPath & year & "\"
-        '    PublicVariables.DatabaseTorneo = rootdatabasePath & year & ".accdb"
-        '    PublicVariables.DatabaseUsers = rootdatabasePath & "users.accdb"
-        'End Sub
-
-        Public Function ExecuteSqlReturnJSON(appSett As PublicVariables, ByVal SqlString As String, Optional DbUser As Boolean = False) As String
+        Public Shared Function ExecuteSqlReturnJSON(appSett As PublicVariables, ByVal SqlString As String, Optional DbUser As Boolean = False) As String
 
             Dim risultati As New List(Of Dictionary(Of String, Object))()
 

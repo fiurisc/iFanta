@@ -21,10 +21,8 @@ Namespace Torneo
 
             If mData.teamId <> TeamId Then Throw New Exception("Json not related to right teamid")
 
-            ApiDeleteFormazioni(Day, TeamId, Top)
-
             If mData IsNot Nothing AndAlso mData.data.Count > 0 Then
-                SaveFormazioni(Day, mData.data, False)
+                SaveFormazioni(CInt(Day), mData.data, False)
             End If
 
             Return ""
@@ -84,42 +82,54 @@ Namespace Torneo
             End Try
         End Sub
 
-        Public Sub SaveFormazioni(day As String, lst As List(Of Formazione), top As Boolean)
+        Public Sub SaveFormazioni(day As Integer, lst As List(Of Formazione), top As Boolean)
 
             WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio formazioni: " & day & " top: " & top.ToString())
 
             Dim tb As String = If(top, "tbformazionitop", "tbformazioni")
+
             For Each forma As Formazione In lst
+
                 Dim sqlinsert As New List(Of String)
+
                 If forma.BonusDifesa > 0 Then
                     Dim sqlp As New System.Text.StringBuilder
                     sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
-                    sqlp.AppendLine(day & "," & forma.TeamId & ",10," & forma.BonusDifesa & ")")
+                    sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",10," & forma.BonusDifesa & ")")
                     sqlinsert.Add(sqlp.ToString())
                 End If
+
                 If forma.BonusCentrocampo > 0 Then
                     Dim sqlp As New System.Text.StringBuilder
                     sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
-                    sqlp.AppendLine(day & "," & forma.TeamId & ",20," & forma.BonusDifesa & ")")
+                    sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",20," & forma.BonusDifesa & ")")
                     sqlinsert.Add(sqlp.ToString())
                 End If
+
                 If forma.BonusAttacco > 0 Then
                     Dim sqlp As New System.Text.StringBuilder
                     sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
-                    sqlp.AppendLine(day & "," & forma.TeamId & ",30," & forma.BonusDifesa & ")")
+                    sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",30," & forma.BonusDifesa & ")")
                     sqlinsert.Add(sqlp.ToString())
                 End If
 
                 For Each p As PlayerFormazione In forma.Players
                     Dim sqlp As New System.Text.StringBuilder
                     sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
-                    sqlp.AppendLine(day & "," & forma.TeamId & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
+                    sqlp.AppendLine(day + 1000 & "," & forma.TeamId & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
                     sqlp.AppendLine("'" & p.Nome.ToUpper() & "','" & p.Squadra.ToUpper() & "'," & p.Voto & "," & p.Ammonito & "," & p.Espulso & "," & p.Assists & "," & p.AutoGoal & ",")
                     sqlp.AppendLine(p.GoalSubiti & "," & p.GoalFatti & "," & p.RigoriSbagliati & "," & p.RigoriParati & "," & p.Punti & ")")
                     sqlinsert.Add(sqlp.ToString())
                 Next
+
+                Functions.ExecuteSql(appSett, "DELETE FROM " & tb & " WHERE gio=" & day + 1000 & " AND idteam=" & forma.TeamId)
                 Functions.ExecuteSql(appSett, sqlinsert)
+                ApiDeleteFormazioni(day.ToString(), forma.TeamId.ToString(), top)
+                Functions.ExecuteSql(appSett, "UPDATE " & tb & " SET gio=gio-1000 WHERE gio=" & day + 1000 & " AND idteam=" & forma.TeamId)
+
             Next
+
+
         End Sub
 
         Public Function GetFormazioni(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)

@@ -269,6 +269,58 @@ Namespace Torneo
             End Try
         End Sub
 
+        Public Sub UpdateMatchDataEvents(newdata As Dictionary(Of String, Dictionary(Of String, SortedDictionary(Of Integer, List(Of MatchEvent)))))
+            Try
+
+                Dim mtxtdata As List(Of MatchEvent) = GetMatchDataEvents(newdata.Keys.ToList().Select(Function(x) CInt(x)).Min.ToString(), newdata.Keys.ToList().Select(Function(x) CInt(x)).Max.ToString())
+                Dim olddata As New Dictionary(Of String, Dictionary(Of String, MatchEvent))
+
+                For Each data As MatchEvent In mtxtdata
+                    Dim g As String = data.Giornata.ToString()
+                    Dim key As String = data.MatchId & "/" & data.Minuto & "/" & data.EventType & "/" & data.Nome & "/" & data.Squadra
+                    If olddata.ContainsKey(g) = False Then olddata.Add(g, New Dictionary(Of String, MatchEvent))
+                    If olddata(g).ContainsKey(key) = False Then
+                        olddata(g).Add(key, data)
+                    End If
+                Next
+
+                Dim sqlinsert As New List(Of String)
+                Dim sqlupdate As New List(Of String)
+
+                For Each g In newdata.Keys
+                    For Each idm In newdata(g).Keys
+                        For Each min In newdata(g)(idm).Keys
+                            For Each mev As MatchEvent In newdata(g)(idm)(min)
+                                Dim key As String = idm & "/" & mev.Minuto & "/" & mev.EventType & "/" & mev.Nome & "/" & mev.Squadra
+                                If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
+                                    sqlinsert.Add("INSERT INTO tbcronaca (day,matchid,minute,event,team,player) values (" & g & "," & idm & "," & min & ",'" & mev.EventType & "','" & mev.Squadra & "','" & mev.Nome & "')")
+                                Else
+                                    olddata(g)(key).RecordId = -1
+                                End If
+                            Next
+                        Next
+                    Next
+                Next
+
+                Dim sqldelete As New List(Of String)
+
+                For Each g In olddata.Keys
+                    For Each k In olddata(g).Keys
+                        If olddata(g)(k).RecordId <> -1 Then
+                            sqldelete.Add("DELETE FROM tbcronaca WHERE id=" & olddata(g)(k).RecordId)
+                        End If
+                    Next
+                Next
+
+                Functions.ExecuteSql(appSett, sqlinsert)
+                Functions.ExecuteSql(appSett, sqlupdate)
+                Functions.ExecuteSql(appSett, sqldelete)
+
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
+
         Private Function GetMatchDataPlayers(startDay As String, endDay As String) As List(Of MatchPlayer)
 
             Dim mtxtdata As New List(Of MatchPlayer)
@@ -298,6 +350,37 @@ Namespace Torneo
                         m.AutoGoal = Functions.ReadFieldIntegerData(row.Item("ag"), 0)
                         m.RigoriParati = Functions.ReadFieldIntegerData(row.Item("rigp"), 0)
                         m.RigoriSbagliati = Functions.ReadFieldIntegerData(row.Item("rigs"), 0)
+                        mtxtdata.Add(m)
+                    Next
+
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+            Return mtxtdata
+
+        End Function
+
+        Private Function GetMatchDataEvents(Day As String, MatchId As String) As List(Of MatchEvent)
+
+            Dim mtxtdata As New List(Of MatchEvent)
+
+            Try
+
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbcronaca WHERE day =" & Day & " AND matchid=" & MatchId)
+
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim row As DataRow = ds.Tables(0).Rows(i)
+                        Dim m As New MatchEvent
+                        m.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
+                        m.Giornata = Functions.ReadFieldIntegerData(row.Item("day"), 1)
+                        m.MatchId = Functions.ReadFieldIntegerData(row.Item("matchid"), 0)
+                        m.Minuto = Functions.ReadFieldIntegerData(row.Item("minute"), 0)
+                        m.EventType = Functions.ReadFieldStringData(row.Item("event").ToString())
+                        m.Nome = Functions.ReadFieldStringData(row.Item("player").ToString())
+                        m.Squadra = Functions.ReadFieldStringData(row.Item("team").ToString())
                         mtxtdata.Add(m)
                     Next
 
@@ -343,9 +426,24 @@ Namespace Torneo
         End Class
 
         Public Class MatchEvent
-            Public Property eventType As String = ""
-            Public Property minute As String = ""
-            Public Property players As String = ""
+            Public Property RecordId As Integer = 1
+            Public Property Giornata As Integer = 1
+            Public Property MatchId As Integer = 0
+            Public Property Minuto As Integer = 0
+            Public Property EventType As String = ""
+            Public Property Squadra As String = ""
+            Public Property Nome As String = ""
+
+            Sub New()
+
+            End Sub
+
+            Sub New(EventType As String, Squadra As String, Nome As String)
+                Me.EventType = EventType
+                Me.Squadra = Squadra
+                Me.Nome = Nome
+            End Sub
+
         End Class
 
     End Class

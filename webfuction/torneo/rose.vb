@@ -1,4 +1,6 @@
 ﻿
+Imports System.Security.Cryptography
+
 Namespace Torneo
     Public Class RoseData
 
@@ -20,8 +22,12 @@ Namespace Torneo
 
             If mData IsNot Nothing AndAlso mData.data.Count > 0 Then
                 For Each tid As String In mData.data.Keys
+
+                    Functions.ExecuteSql(appSett, "DELETE FROM tbteam WHERE idteam=" & tid)
+                    Functions.ExecuteSql(appSett, "INSERT INTO tbteam (idteam,nome,allenatore) values (" & tid & ",'" & mData.data(tid).name & "','" & mData.data(tid).coach & "');")
+
                     Dim sqlinsert As New List(Of String)
-                    For Each p As Player In mData.data(tid)
+                    For Each p As Player In mData.data(tid).players
                         Dim sqlp As New System.Text.StringBuilder
                         sqlp.AppendLine("INSERT INTO tbrose (idteam,idrosa,ruolo,nome,costo,qini,riconfermato) values (")
                         sqlp.AppendLine(tid & "," & p.RosaId & ",'" & p.Ruolo & "','" & p.Nome.ToUpper() & "'," & p.Costo & "," & p.Qini & "," & p.Riconfermato & ")")
@@ -151,6 +157,11 @@ Namespace Torneo
                         p.Nome = Functions.ReadFieldStringData("nome", row, "D")
                         p.Squadra = Functions.ReadFieldStringData("squadra", row, "D")
                         p.Riconfermato = Functions.ReadFieldIntegerData("riconfermato", row, 0)
+                        p.Anni = Functions.ReadFieldIntegerData("anni", row, 0)
+                        p.Compleanno = Functions.ReadFieldStringData("birthday", row, "")
+                        p.Altezza = Functions.ReadFieldStringData("altezza", row, "")
+                        p.Peso = Functions.ReadFieldStringData("peso", row, "")
+                        p.Costo = Functions.ReadFieldIntegerData("costo", row, 0)
                         p.Costo = Functions.ReadFieldIntegerData("costo", row, 0)
                         p.Qini = Functions.ReadFieldIntegerData("qini", row, 0)
                         p.Qcur = Functions.ReadFieldIntegerData("qcur", row, 0)
@@ -264,7 +275,14 @@ Namespace Torneo
         Public Class MetaData
             Public Property type As String = ""
             Public Property teamId() As String = ""
-            Public Property data As Dictionary(Of String, List(Of Player))
+            Public Property data As Dictionary(Of String, TeamData)
+
+            Public Class TeamData
+                Public Property name As String = ""
+                Public Property coach() As String = ""
+                Public Property players As List(Of Player)
+            End Class
+
         End Class
 
         Public Class Player
@@ -304,6 +322,10 @@ Namespace Torneo
             Public Property Squadra() As String = ""
             Public Property Nat() As String = ""
             Public Property NatCode() As String = ""
+            Public Property Anni() As Integer = 0
+            Public Property Compleanno() As String = ""
+            Public Property Altezza() As String = ""
+            Public Property Peso() As String = ""
             Public Property Costo() As Integer = 0
             Public Property Qini() As Integer = 0
             Public Property Qcur() As Integer = 0

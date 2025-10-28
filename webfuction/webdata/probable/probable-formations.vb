@@ -1,17 +1,20 @@
 ﻿
-Imports webfuction.Torneo
+
+Imports webfuction.WebData.Players
 
 Namespace WebData
     Public Class ProbableFormations
 
-        Dim appSett As New PublicVariables
-        Dim mdata As Torneo.MatchsData
+        Dim appSett As New Torneo.PublicVariables
+        Dim mdatat As Torneo.MatchsData
+        Dim mdataw As MatchsData
         Dim dirTemp As String = ""
         Dim dirData As String = ""
 
-        Sub New(appSett As PublicVariables)
+        Sub New(appSett As Torneo.PublicVariables)
             Me.appSett = appSett
-            mdata = New Torneo.MatchsData(appSett)
+            mdatat = New Torneo.MatchsData(appSett)
+            mdataw = New MatchsData(appSett)
             dirTemp = appSett.TorneoWebDataPath & "temp\"
             dirData = appSett.TorneoWebDataPath & "data\pforma\"
         End Sub
@@ -22,8 +25,7 @@ Namespace WebData
         Public Function GetProbableFormation(site As String, show As Boolean) As String
 
             Dim str As New System.Text.StringBuilder
-
-            Dim matchs As List(Of Torneo.MatchsData.Match) = mdata.GetMatchsData("-1")
+            Dim matchs As List(Of Torneo.MatchsData.Match) = mdatat.GetMatchsData("-1")
 
             dicMatchDays.Clear()
 
@@ -33,6 +35,9 @@ Namespace WebData
                 If dicMatchDays.ContainsKey(m.Giornata) = False Then dicMatchDays.Add(m.Giornata, 0)
                 If dicMatchDays(m.Giornata) < ndays Then dicMatchDays(m.Giornata) = ndays
             Next
+
+            mdataw.ResetCacheData()
+            mdataw.LoadWebMatchs()
 
             If site = "gazzetta" OrElse site = "" Then str.Append(GetGazzetta(show))
             If site = "fantacalcio" OrElse site = "" Then str.Append(GetFantacalcio(show))

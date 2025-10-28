@@ -121,22 +121,22 @@ Namespace Torneo
 
         End Function
 
-        Public Function ApiGetSettings() As String
-            Dim sett As TorneoSettings = GetSettings()
+        Public Function ApiGetSettings(year As String) As String
+            Dim sett As TorneoSettings = GetSettings(year)
             Return WebData.Functions.SerializzaOggetto(sett, True)
         End Function
 
         Public Sub ReadSettings()
             If appSett.SettingsLoaded Then Exit Sub
-            appSett.Settings = GetSettings()
+            appSett.Settings = GetSettings(appSett.Year)
             appSett.SettingsLoaded = True
         End Sub
 
-        Private Function GetSettings() As TorneoSettings
+        Private Function GetSettings(year As String) As TorneoSettings
 
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Lettura delle impostazioni per il torneo: " & appSett.Year)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Lettura delle impostazioni per il torneo: " & year)
 
-            Dim fname As String = GetSettingsFileName(appSett.Year)
+            Dim fname As String = GetSettingsFileName(year)
             Dim sett As New TorneoSettings
 
             sett.Bonus.BonusDefense.Clear()

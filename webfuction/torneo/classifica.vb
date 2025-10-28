@@ -201,7 +201,7 @@ Namespace Torneo
             str.AppendLine("SELECT tb.*,teamq.Nome,teamq.allenatore,teamq.diff FROM (")
             str.AppendLine("SELECT tb1.idteam,SUM(tb1.pt) AS tot,SUM(tb1.ptgio) AS ptgio,SUM(tb1.stot) AS stot,AVG(tb1.pt) AS avgpt, min(pt) AS minpt, max(pt) AS maxpt,sum(tb1.amm) AS amm,sum(tb1.esp) AS esp, sum(tb1.ass) AS ass,sum(tb1.gs) AS gs,sum(tb1.gf) AS gf,sum(tb1.vitt) as vitt,iif(sum(tb1.maxpt) =SUM(tb1.stot),1,0) as vittgio,sum(11-tb1.numg) as n10,sum(tb1.bonus) as bonus FROM (")
             str.AppendLine("SELECT f.idteam,f.gio,sum(f.pt) as pt,IIF(f.gio=" & Giornata & ",sum(f.pt),0) as ptgio,IIF(f.gio=" & Giornata & "," & stot & ",0) as stot,sum(f.amm) as amm,sum(f.esp) as esp,sum(f.ass) as ass,sum(f.gs) as gs,sum(f.gf) as gf,sum(incampo) as numg,IIF(" & stot & "=p." & colptmax & ",1,0) as vitt,IIF(f.gio=" & Giornata & ",p." & colptmax & ",0) as maxpt,sum(IIF(f.type>9,f.pt,0)) as bonus")
-            str.AppendLine("FROM tbformazioni as f LEFT JOIN " & tbptmax & " as p ON p.gio=f.gio ")
+            str.AppendLine("FROM " & tb & " as f LEFT JOIN " & tbptmax & " as p ON p.gio=f.gio ")
             str.AppendLine("WHERE (incampo=1 OR type=10) and f.pt>-100 and f.gio<=" & Giornata)
             str.AppendLine("GROUP BY f.idteam,f.gio,p.maxpt4")
             str.AppendLine(") AS tb1")
@@ -239,7 +239,7 @@ Namespace Torneo
                     citem.GoalFatti = CInt(ds.Tables(0).Rows(i).Item("gf"))
                     citem.NumeroGiocateIn10 = CInt(ds.Tables(0).Rows(i).Item("n10"))
                     citem.NbrWinner = CInt(ds.Tables(0).Rows(i).Item("vitt"))
-                    citem.WinnerDay = CInt(ds.Tables(0).Rows(i).Item("vittgio"))
+                    citem.WinnerDay = If(citem.PtGio > 0, CInt(ds.Tables(0).Rows(i).Item("vittgio")), 0)
                     citem.PtBonus = CInt(ds.Tables(0).Rows(i).Item("bonus")) / 10
                     If ds.Tables(0).Rows(i).Item("diff") IsNot DBNull.Value Then
                         citem.DiffQ = CInt(ds.Tables(0).Rows(i).Item("diff"))
