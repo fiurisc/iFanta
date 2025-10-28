@@ -4,19 +4,24 @@ Namespace Torneo
 
     Public Class CoppaData
 
-        Public Shared data As New Dictionary(Of Integer, Dictionary(Of Integer, Integer))
+        Dim data As New Dictionary(Of Integer, Dictionary(Of Integer, Integer))
+        Dim appSett As New PublicVariables
 
-        Public Shared Function ApiGetCoppa() As String
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function ApiGetCoppa() As String
 
             Try
 
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiesta dati coppa")
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta dati coppa")
 
                 LoadTeamScores()
 
                 Dim cup As New Coppa
 
-                cup.TipoSecondoTurno = PublicVariables.Settings.Coppa.TipoSecondoTurno
+                cup.TipoSecondoTurno = appSett.Settings.Coppa.TipoSecondoTurno
 
                 cup.GironiEliminatori.Add(New Coppa.Girone)
                 cup.GironiEliminatori.Add(New Coppa.Girone)
@@ -53,30 +58,30 @@ Namespace Torneo
                 cup.PlayOff.Add(New Coppa.Girone)
                 cup.PlayOff.Add(New Coppa.Girone)
 
-                For i As Integer = 0 To PublicVariables.Settings.Coppa.PlayOffGiorone1Team.Length - 1
-                    cup.PlayOff(0).Clasa.Add(New Coppa.Girone.ClasaGirone(i, PublicVariables.Settings.Coppa.PlayOffGiorone1Team(i)))
+                For i As Integer = 0 To appSett.Settings.Coppa.PlayOffGiorone1Team.Length - 1
+                    cup.PlayOff(0).Clasa.Add(New Coppa.Girone.ClasaGirone(i, appSett.Settings.Coppa.PlayOffGiorone1Team(i)))
                 Next
-                For i As Integer = 0 To PublicVariables.Settings.Coppa.PlayOffGiorone2Team.Length - 1
-                    cup.PlayOff(1).Clasa.Add(New Coppa.Girone.ClasaGirone(i, PublicVariables.Settings.Coppa.PlayOffGiorone2Team(i)))
+                For i As Integer = 0 To appSett.Settings.Coppa.PlayOffGiorone2Team.Length - 1
+                    cup.PlayOff(1).Clasa.Add(New Coppa.Girone.ClasaGirone(i, appSett.Settings.Coppa.PlayOffGiorone2Team(i)))
                 Next
 
-                cup.PlayOff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.PlayOffGiorone1Match(0), -1, 0, 2, cup.PlayOff(0).Clasa(0).TeamId, cup.PlayOff(0).Clasa(2).TeamId))
-                cup.PlayOff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, PublicVariables.Settings.Coppa.PlayOffGiorone1Match(1), -1, 1, 2, cup.PlayOff(0).Clasa(1).TeamId, cup.PlayOff(0).Clasa(2).TeamId))
-                cup.PlayOff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, PublicVariables.Settings.Coppa.PlayOffGiorone1Match(2), -1, 0, 1, cup.PlayOff(0).Clasa(0).TeamId, cup.PlayOff(0).Clasa(1).TeamId))
+                cup.PlayOff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.PlayOffGiorone1Match(0), -1, 0, 2, cup.PlayOff(0).Clasa(0).TeamId, cup.PlayOff(0).Clasa(2).TeamId))
+                cup.PlayOff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, appSett.Settings.Coppa.PlayOffGiorone1Match(1), -1, 1, 2, cup.PlayOff(0).Clasa(1).TeamId, cup.PlayOff(0).Clasa(2).TeamId))
+                cup.PlayOff(0).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, appSett.Settings.Coppa.PlayOffGiorone1Match(2), -1, 0, 1, cup.PlayOff(0).Clasa(0).TeamId, cup.PlayOff(0).Clasa(1).TeamId))
 
-                cup.PlayOff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.PlayOffGiorone2Match(0), -1, 0, 2, cup.PlayOff(1).Clasa(0).TeamId, cup.PlayOff(1).Clasa(2).TeamId))
-                cup.PlayOff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, PublicVariables.Settings.Coppa.PlayOffGiorone2Match(1), -1, 1, 2, cup.PlayOff(1).Clasa(1).TeamId, cup.PlayOff(1).Clasa(2).TeamId))
-                cup.PlayOff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, PublicVariables.Settings.Coppa.PlayOffGiorone2Match(2), -1, 0, 1, cup.PlayOff(1).Clasa(0).TeamId, cup.PlayOff(1).Clasa(1).TeamId))
+                cup.PlayOff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.PlayOffGiorone2Match(0), -1, 0, 2, cup.PlayOff(1).Clasa(0).TeamId, cup.PlayOff(1).Clasa(2).TeamId))
+                cup.PlayOff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 2, appSett.Settings.Coppa.PlayOffGiorone2Match(1), -1, 1, 2, cup.PlayOff(1).Clasa(1).TeamId, cup.PlayOff(1).Clasa(2).TeamId))
+                cup.PlayOff(1).Partite.Add(New Coppa.Girone.PartitaGirone(0, 3, appSett.Settings.Coppa.PlayOffGiorone2Match(2), -1, 0, 1, cup.PlayOff(1).Clasa(0).TeamId, cup.PlayOff(1).Clasa(1).TeamId))
 
-                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale1Match(0), PublicVariables.Settings.Coppa.QuartiDiFinale1Match(1), 0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale1Team(0), PublicVariables.Settings.Coppa.QuartiDiFinale1Team(1)))
-                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale2Match(0), PublicVariables.Settings.Coppa.QuartiDiFinale2Match(1), 0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale2Team(0), PublicVariables.Settings.Coppa.QuartiDiFinale2Team(1)))
-                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale3Match(0), PublicVariables.Settings.Coppa.QuartiDiFinale3Match(1), 0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale3Team(0), PublicVariables.Settings.Coppa.QuartiDiFinale3Team(1)))
-                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale4Match(0), PublicVariables.Settings.Coppa.QuartiDiFinale4Match(1), 0, 1, PublicVariables.Settings.Coppa.QuartiDiFinale4Team(0), PublicVariables.Settings.Coppa.QuartiDiFinale4Team(1)))
+                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.QuartiDiFinale1Match(0), appSett.Settings.Coppa.QuartiDiFinale1Match(1), 0, 1, appSett.Settings.Coppa.QuartiDiFinale1Team(0), appSett.Settings.Coppa.QuartiDiFinale1Team(1)))
+                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.QuartiDiFinale2Match(0), appSett.Settings.Coppa.QuartiDiFinale2Match(1), 0, 1, appSett.Settings.Coppa.QuartiDiFinale2Team(0), appSett.Settings.Coppa.QuartiDiFinale2Team(1)))
+                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.QuartiDiFinale3Match(0), appSett.Settings.Coppa.QuartiDiFinale3Match(1), 0, 1, appSett.Settings.Coppa.QuartiDiFinale3Team(0), appSett.Settings.Coppa.QuartiDiFinale3Team(1)))
+                cup.QuartiDiFinale.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.QuartiDiFinale4Match(0), appSett.Settings.Coppa.QuartiDiFinale4Match(1), 0, 1, appSett.Settings.Coppa.QuartiDiFinale4Team(0), appSett.Settings.Coppa.QuartiDiFinale4Team(1)))
 
-                cup.SemiFinali.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.Semifinale1Match(0), PublicVariables.Settings.Coppa.Semifinale1Match(1), 0, 1, PublicVariables.Settings.Coppa.Semifinale1Team(0), PublicVariables.Settings.Coppa.Semifinale1Team(1)))
-                cup.SemiFinali.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.Semifinale2Match(0), PublicVariables.Settings.Coppa.Semifinale2Match(1), 0, 1, PublicVariables.Settings.Coppa.Semifinale2Team(0), PublicVariables.Settings.Coppa.Semifinale2Team(1)))
+                cup.SemiFinali.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.Semifinale1Match(0), appSett.Settings.Coppa.Semifinale1Match(1), 0, 1, appSett.Settings.Coppa.Semifinale1Team(0), appSett.Settings.Coppa.Semifinale1Team(1)))
+                cup.SemiFinali.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.Semifinale2Match(0), appSett.Settings.Coppa.Semifinale2Match(1), 0, 1, appSett.Settings.Coppa.Semifinale2Team(0), appSett.Settings.Coppa.Semifinale2Team(1)))
 
-                cup.Finale.Add(New Coppa.Girone.PartitaGirone(0, 1, PublicVariables.Settings.Coppa.FinaleMatch(0), PublicVariables.Settings.Coppa.FinaleMatch(1), 0, 1, PublicVariables.Settings.Coppa.FinaleTeam(0), PublicVariables.Settings.Coppa.FinaleTeam(1)))
+                cup.Finale.Add(New Coppa.Girone.PartitaGirone(0, 1, appSett.Settings.Coppa.FinaleMatch(0), appSett.Settings.Coppa.FinaleMatch(1), 0, 1, appSett.Settings.Coppa.FinaleTeam(0), appSett.Settings.Coppa.FinaleTeam(1)))
 
                 For Each gir As Coppa.Girone In cup.GironiEliminatori
                     SetRisultatiFinali(gir.Partite)
@@ -95,16 +100,16 @@ Namespace Torneo
                 Return WebData.Functions.SerializzaOggetto(cup, True)
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return "{}"
 
         End Function
 
-        Private Shared Sub LoadTeamScores()
+        Private Sub LoadTeamScores()
 
-            Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet("SELECT gio,idteam,sum(f.pt) AS pt FROM tbformazioni AS f WHERE (f.incampo = 1 OR f.TYPE = 10) AND f.pt > -100 GROUP BY f.gio, f.idteam ORDER BY f.gio, f.idteam")
+            Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT gio,idteam,sum(f.pt) AS pt FROM tbformazioni AS f WHERE (f.incampo = 1 OR f.TYPE = 10) AND f.pt > -100 GROUP BY f.gio, f.idteam ORDER BY f.gio, f.idteam")
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
                 For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                     Dim gio As Integer = CInt(ds.Tables(0).Rows(i).Item("gio"))
@@ -117,7 +122,7 @@ Namespace Torneo
             ds.Dispose()
         End Sub
 
-        Private Shared Sub SetClassifica(partite As List(Of Coppa.Girone.PartitaGirone), clasa As List(Of Coppa.Girone.ClasaGirone))
+        Private Sub SetClassifica(partite As List(Of Coppa.Girone.PartitaGirone), clasa As List(Of Coppa.Girone.ClasaGirone))
 
 
             For Each partita As Coppa.Girone.PartitaGirone In partite
@@ -167,7 +172,7 @@ Namespace Torneo
 
         End Sub
 
-        Private Shared Sub SetRisultatiFinali(partite As List(Of Coppa.Girone.PartitaGirone))
+        Private Sub SetRisultatiFinali(partite As List(Of Coppa.Girone.PartitaGirone))
             For Each partita As Coppa.Girone.PartitaGirone In partite
                 If partita.TeamId1 <> -1 Then partita.GoalAnd1 = GetGoal(partita.GiornataAndata, partita.TeamId1, True)
                 If partita.TeamId2 <> -1 Then partita.GoalAnd2 = GetGoal(partita.GiornataAndata, partita.TeamId2, False)
@@ -176,7 +181,7 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Sub SetTypeOfResult(ByRef TeamCup As Coppa.Girone.ClasaGirone, ByVal Pt As Integer)
+        Private Sub SetTypeOfResult(ByRef TeamCup As Coppa.Girone.ClasaGirone, ByVal Pt As Integer)
             Select Case Pt
                 Case 3 : TeamCup.Vittorie += 1
                 Case 1 : TeamCup.Pareggi += 1
@@ -184,7 +189,7 @@ Namespace Torneo
             End Select
         End Sub
 
-        Private Shared Function GetPtTeam(ByVal Goal1 As Integer, ByVal Goal2 As Integer) As Integer
+        Private Function GetPtTeam(ByVal Goal1 As Integer, ByVal Goal2 As Integer) As Integer
             If Goal1 > -10 AndAlso Goal2 > -10 Then
                 If Goal1 > Goal2 Then
                     Return 3
@@ -198,7 +203,7 @@ Namespace Torneo
             End If
         End Function
 
-        Private Shared Function GetGoal(gio As Integer, teamId As Integer, ByVal Dentro As Boolean) As Integer
+        Private Function GetGoal(gio As Integer, teamId As Integer, ByVal Dentro As Boolean) As Integer
 
             Dim pt As Integer = 0
 

@@ -1,7 +1,14 @@
 ﻿Imports System.Text.RegularExpressions
+Imports webfuction.Torneo
 
 Namespace WebData
     Public Class MatchsData
+
+        Dim appSett As PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
 
         Private Shared thrmatch As New List(Of Threading.Thread)
         Private Shared diclinkdaymatch As New SortedDictionary(Of String, Dictionary(Of String, String))
@@ -13,41 +20,33 @@ Namespace WebData
         Private Shared matchsplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
         Private Shared matchsevent As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
 
-        Public Shared Property KeyMatchs As New Dictionary(Of String, Integer)
+        Public Property KeyMatchs As New Dictionary(Of String, Integer)
 
-        Public Shared Sub ResetCacheData()
+        Public Sub ResetCacheData()
             KeyMatchs.Clear()
         End Sub
 
-        Private Shared Sub SetFolder()
-            dirt = Functions.DataPath & "temp\"
-            dird = Functions.DataPath & "data\matchs\"
-        End Sub
-
-        Shared Function GetMatchFileName() As String
-            SetFolder()
-            Return dird & "matchs-data.json"
+        Shared Function GetMatchFileName(appsett As Torneo.PublicVariables) As String
+            Return appsett.TorneoWebDataPath & "data\matchs\matchs-data.json"
         End Function
 
-        Shared Function GetMatchPlayersFileName() As String
-            SetFolder()
-            Return dird & "matchs-players-data.json"
+        Shared Function GetMatchPlayersFileName(appsett As Torneo.PublicVariables) As String
+            Return appsett.TorneoWebDataPath & "data\matchs\matchs-players-data.json"
         End Function
 
-        Shared Function GetMatchPlayersDayFileName(day As String) As String
-            Return dird & "matchs-players-data-" & day & ".json"
+        Shared Function GetMatchPlayersDayFileName(appsett As Torneo.PublicVariables, day As String) As String
+            Return appsett.TorneoWebDataPath & "data\matchs\matchs-players-data-" & day & ".json"
         End Function
 
-        Shared Function GetMatchEventFileName() As String
-            SetFolder()
-            Return dird & "matchs-events-data.json"
+        Shared Function GetMatchEventFileName(appsett As Torneo.PublicVariables) As String
+            Return appsett.TorneoWebDataPath & "data\matchs\matchs-events-data.json"
         End Function
 
-        Public Shared Sub LoadWebMatchs()
+        Public Sub LoadWebMatchs()
 
             If KeyMatchs.Count = 0 Then
 
-                Dim fname As String = GetMatchFileName()
+                Dim fname As String = GetMatchFileName(appSett)
 
                 If IO.File.Exists(fname) Then
 
@@ -66,13 +65,12 @@ Namespace WebData
 
         End Sub
 
-        Shared Function GetDataMatchs(ReturnData As Boolean) As String
+        Public Function GetDataMatchs(ReturnData As Boolean) As String
 
             Dim strresp As New System.Text.StringBuilder
-            Dim year As String = Functions.Year
+            Dim year As String = appSett.Year
 
-            Functions.MakeDirectory()
-            Players.Data.LoadPlayers(False)
+            Players.Data.LoadPlayers(appSett, False)
 
             matchs.Clear()
             matchsplayers.Clear()
@@ -88,11 +86,11 @@ Namespace WebData
 
         End Function
 
-        Private Shared Function GetCalendarMatchs(ReturnData As Boolean) As String
+        Private Function GetCalendarMatchs(ReturnData As Boolean) As String
 
             Try
 
-                Dim filed As String = GetMatchFileName()
+                Dim filed As String = GetMatchFileName(appSett)
 
                 'Creo la lista di thread da eseguire'
                 thrmatch.Clear()
@@ -101,7 +99,7 @@ Namespace WebData
                     t.Name = CStr(i)
                     thrmatch.Add(t)
 #If DEBUG Then
-                    If i > 2 Then Exit For
+                    'If i > 2 Then Exit For
 #End If
                 Next
 
@@ -113,30 +111,31 @@ Namespace WebData
                     System.Threading.Thread.Sleep(100)
                 Next
 
-                If Torneo.PublicVariables.dataFromDatabase Then
-                    Torneo.MatchsData.UpdateMatchData(matchs)
+                If appSett.DataFromDatabase Then
+                    Dim mdata As New Torneo.MatchsData(appSett)
+                    mdata.UpdateMatchData(matchs)
                 End If
 
                 IO.File.WriteAllText(filed, Functions.SerializzaOggetto(matchs, False))
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 Return ""
             End Try
 
             If ReturnData Then
-                Return "</br><span style=color:red;font-size:bold;'>Match data (" & Functions.Year & "):</span></br>" & WebData.Functions.SerializzaOggetto(matchs, False).Replace(System.Environment.NewLine, "</br>") & "</br>"
+                Return "</br><span style=color:red;font-size:bold;'>Match data (" & appSett.Year & "):</span></br>" & WebData.Functions.SerializzaOggetto(matchs, False).Replace(System.Environment.NewLine, "</br>") & "</br>"
             Else
-                Return ("</br><span style=color:red;font-size:bold;'>Match data (" & Functions.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br><span style=color:red;font-size:bold;'>Detail match data:</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
+                Return ("</br><span style=color:red;font-size:bold;'>Match data (" & appSett.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br><span style=color:red;font-size:bold;'>Detail match data:</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
             End If
 
         End Function
 
-        Private Shared Sub GetMatchsPlayersData()
+        Private Sub GetMatchsPlayersData()
 
             Try
 
-                Dim filedetd As String = GetMatchPlayersFileName()
+                Dim filedetd As String = GetMatchPlayersFileName(appSett)
 
                 'Carico i dati dell'ultima lettura'
                 Dim lastday As Integer = GetLastMatchsDayLoaded()
@@ -167,33 +166,34 @@ Namespace WebData
                     Dim dicalldata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
 
                     For i As Integer = 1 To 38
-                        Dim fday As String = GetMatchPlayersDayFileName(i.ToString())
+                        Dim fday As String = GetMatchPlayersDayFileName(appSett, i.ToString())
                         If IO.File.Exists(fday) Then
                             Dim dicdata As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))(IO.File.ReadAllText(fday))
                             dicalldata.Add(CStr(i), dicdata)
                         End If
                     Next
 
-                    If Torneo.PublicVariables.DataFromDatabase AndAlso matchsplayers.Count > 0 Then
-                        Torneo.MatchsData.UpdateMatchDataPlayers(matchsplayers)
+                    If appSett.DataFromDatabase AndAlso matchsplayers.Count > 0 Then
+                        Dim mdata As New Torneo.MatchsData(appSett)
+                        mdata.UpdateMatchDataPlayers(matchsplayers)
                     End If
 
                     IO.File.WriteAllText(filedetd, Functions.SerializzaOggetto(dicalldata, False))
 
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Private Shared Sub GetMatchsDay()
+        Private Sub GetMatchsDay()
             Try
                 'Determino la giornata di riferimento'
                 Dim d As String = Threading.Thread.CurrentThread.Name
                 Dim datamatch As New Dictionary(Of String, String)
                 Dim filet As String = dirt & "match-day-" & d & ".txt"
                 Dim filed As String = dirt & "match-day-" & d & ".txt"
-                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/serie-a/calendario/" & d)
+                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/serie-a/calendario/" & d)
 
                 If html <> "" Then
 
@@ -269,20 +269,20 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Private Shared Function GetLastMatchsDayLoaded() As Integer
+        Private Function GetLastMatchsDayLoaded() As Integer
             For i As Integer = 1 To 38
-                If IO.File.Exists(GetMatchPlayersDayFileName(i.ToString())) = False Then
+                If IO.File.Exists(GetMatchPlayersDayFileName(appSett, i.ToString())) = False Then
                     Return i - 1
                 End If
             Next
             Return -1
         End Function
 
-        Private Shared Sub GetMatchsPlayersDataByDay()
+        Private Sub GetMatchsPlayersDataByDay()
             Try
                 'Determino la giornata di riferimento'
                 Dim d As String = Threading.Thread.CurrentThread.Name
@@ -294,14 +294,14 @@ Namespace WebData
                     Call GetMatchsPlayersDataByDayMatchId(d, m, diclinkdaymatch(d)(m))
                 Next
 
-                IO.File.WriteAllText(GetMatchPlayersDayFileName(d), WebData.Functions.SerializzaOggetto(matchsplayers(d), False))
+                IO.File.WriteAllText(GetMatchPlayersDayFileName(appSett, d), WebData.Functions.SerializzaOggetto(matchsplayers(d), False))
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Private Shared Sub GetMatchsPlayersDataByDayMatchId(day As String, MatchId As String, Link As String)
+        Private Sub GetMatchsPlayersDataByDayMatchId(day As String, MatchId As String, Link As String)
 
             Dim filet As String = dirt & "match-day-" & day & "-matchid-" & MatchId & ".txt"
             Dim str As New System.Text.StringBuilder
@@ -313,7 +313,7 @@ Namespace WebData
                 Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)
                 Dim matche As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)) = matchsevent(day)(MatchId)
 
-                Dim html As String = Functions.GetPage(Link & "/riepilogo")
+                Dim html As String = Functions.GetPage(appSett, Link & "/riepilogo")
 
                 If html <> "" Then
 
@@ -379,51 +379,46 @@ Namespace WebData
 
 
                                 If line(z).Trim.Contains("Ammonizione") AndAlso p.Count > 0 Then
-                                        AddPlayer(matchp, CInt(day), team, r1, n1)
-                                        matchp(team)(n1).Ammonizione += 1
-                                    End If
-                                    If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
-                                        AddPlayer(matchp, CInt(day), team, r1, n1)
-                                        matchp(team)(n1).Espulsione += 1
-                                    End If
-                                    If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
-                                        AddPlayer(matchp, CInt(day), team, r1, n1)
-                                        matchp(team)(n1).GoalSubiti += 1
-                                    End If
-                                    If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
-                                        AddPlayer(matchp, CInt(day), team, r1, n1)
-                                        matchp(team)(n1).RigoriSbagliati += 1
-                                    End If
-                                    If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
-                                        AddPlayer(matchp, CInt(day), team, r1, n1)
-                                        matchp(team)(n1).GoalFatti += 1
-                                        If p.Count > 1 Then
-                                            AddPlayer(matchp, CInt(day), team, r2, n2)
-                                            matchp(team)(n2).Assists += 1
-                                        End If
-                                    End If
-                                    If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
-                                        AddPlayer(matchp, CInt(day), team, r1, n1)
-                                        matchp(team)(n1).Subentrato = 1
-                                        matchp(team)(n1).Minuti = min
-                                        AddPlayer(matchp, CInt(day), team, r2, n2)
-                                        matchp(team)(n2).Sostituito = 1
-                                        matchp(team)(n2).Minuti = min
-                                    End If
-
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    matchp(team)(n1).Ammonizione += 1
                                 End If
-
-                                If line(z).Contains("Rigore") Then
-                                line(z) = line(z)
+                                If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    matchp(team)(n1).Espulsione += 1
+                                End If
+                                If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    matchp(team)(n1).GoalSubiti += 1
+                                End If
+                                If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    matchp(team)(n1).RigoriSbagliati += 1
+                                End If
+                                If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    matchp(team)(n1).GoalFatti += 1
+                                    If p.Count > 1 Then
+                                        AddPlayer(matchp, CInt(day), team, r2, n2)
+                                        matchp(team)(n2).Assists += 1
+                                    End If
+                                End If
+                                If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
+                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    matchp(team)(n1).Subentrato = 1
+                                    matchp(team)(n1).Minuti = min
+                                    AddPlayer(matchp, CInt(day), team, r2, n2)
+                                    matchp(team)(n2).Sostituito = 1
+                                    matchp(team)(n2).Minuti = min
+                                End If
                             End If
-
-                            If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title="".*""></figure>").Success Then
-                                p.Clear()
-                            End If
-
+                        End If
+                        If line(z).Contains("Rigore") Then
+                            line(z) = line(z)
+                        End If
+                        If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title="".*""></figure>").Success Then
+                            p.Clear()
                         End If
                     Next
-
                     For Each t As String In matchp.Keys
                         For Each n As String In matchp(t).Keys
                             If matchp(t)(n).Subentrato = 1 Then
@@ -439,7 +434,7 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
         End Sub

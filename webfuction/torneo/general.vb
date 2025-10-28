@@ -1,11 +1,17 @@
 ﻿Imports System.Text.RegularExpressions
 Imports System.IO
-Imports System.Reflection
 
 Namespace Torneo
+
     Public Class General
 
-        Shared Function GetApplication(role As String) As List(Of WebApplication)
+        Dim appSett As New PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function GetApplication(role As String) As List(Of WebApplication)
 
             Dim apps As New List(Of WebApplication)
 
@@ -15,15 +21,15 @@ Namespace Torneo
 
         End Function
 
-        Shared Function GetAccountByUsername(Username As String) As Account
+        Public Function GetAccountByUsername(Username As String) As Account
 
             Dim acc As New Account
 
             Try
 
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Get account per: " & Username)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Get account per: " & Username)
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM users where nome='" & Username & "';", True)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM users where nome='" & Username & "';", True)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -37,16 +43,16 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return acc
 
         End Function
 
-        Shared Sub SendPassword(Username As String)
+        Public Sub SendPassword(Username As String)
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Send password per: " & Username)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Send password per: " & Username)
 
             Dim acc As Account = GetAccountByUsername(Username)
             If acc.Username <> "" AndAlso acc.Mail <> "" Then
@@ -56,11 +62,11 @@ Namespace Torneo
             End If
         End Sub
 
-        Shared Function GetSettingsFileName(Year As String) As String
-            Return PublicVariables.RootDataPath & Year & "/settings.txt"
+        Public Function GetSettingsFileName(Year As String) As String
+            Return appSett.RootTorneiPath & Year & "/settings.txt"
         End Function
 
-        Shared Function ApiGetYearAct() As String
+        Public Function ApiGetYearAct() As String
 
             Dim years As List(Of YearTorneo) = ApiGetYearsList()
 
@@ -74,11 +80,11 @@ Namespace Torneo
 
         End Function
 
-        Shared Function ApiGetYearsList() As List(Of YearTorneo)
+        Public Function ApiGetYearsList() As List(Of YearTorneo)
 
             Dim years As New List(Of YearTorneo)
 
-            Dim d() As String = IO.Directory.GetDirectories(PublicVariables.RootDataPath)
+            Dim d() As String = IO.Directory.GetDirectories(appSett.RootTorneiPath)
 
             For i As Integer = 0 To d.Length - 1
 
@@ -115,21 +121,22 @@ Namespace Torneo
 
         End Function
 
-        Shared Function ApiGetSettings(Year As String) As String
-            Dim sett As TorneoSettings = GetSettings(Year)
+        Public Function ApiGetSettings() As String
+            Dim sett As TorneoSettings = GetSettings()
             Return WebData.Functions.SerializzaOggetto(sett, True)
         End Function
 
-        Shared Sub ReadSettings()
-            If PublicVariables.SettingsLoaded Then Exit Sub
-            PublicVariables.Settings = GetSettings(PublicVariables.Year)
+        Public Sub ReadSettings()
+            If appSett.SettingsLoaded Then Exit Sub
+            appSett.Settings = GetSettings()
+            appSett.SettingsLoaded = True
         End Sub
 
-        Private Shared Function GetSettings(Year As String) As TorneoSettings
+        Private Function GetSettings() As TorneoSettings
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Lettura delle impostazioni per il torneo: " & Year)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Lettura delle impostazioni per il torneo: " & appSett.Year)
 
-            Dim fname As String = GetSettingsFileName(Year)
+            Dim fname As String = GetSettingsFileName(appSett.Year)
             Dim sett As New TorneoSettings
 
             sett.Bonus.BonusDefense.Clear()
@@ -262,7 +269,7 @@ Namespace Torneo
                                 End Select
 
                             Catch ex As Exception
-                                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                             End Try
                         End If
                     Next
@@ -271,7 +278,7 @@ Namespace Torneo
                     If sett.Points.SiteReferenceForBonus = "" Then sett.Points.SiteReferenceForBonus = "gazzetta"
 
                 Catch ex As Exception
-                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 End Try
             End If
 
@@ -282,141 +289,141 @@ Namespace Torneo
         ''' <summary>Consente di salvare le impostazioni su disco</summary>
         Sub SaveSettings(Year As String)
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Salvataggio impostazioni per il torneo: " & Year)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio impostazioni per il torneo: " & Year)
 
-            Dim fname As String = GetSettingsFileName(PublicVariables.Year)
+            Dim fname As String = GetSettingsFileName(appSett.Year)
 
             Try
                 Dim str As New System.Text.StringBuilder
                 str.AppendLine("[Lega]")
-                str.AppendLine("Active = '" & PublicVariables.Settings.Active & "'")
-                str.AppendLine("Year = '" & PublicVariables.Settings.Year & "'")
-                str.AppendLine("Number teams = '" & PublicVariables.Settings.NumberOfTeams & "'")
-                str.AppendLine("Number days = '" & PublicVariables.Settings.NumberOfDays & "'")
-                str.AppendLine("Enable trace reconfirmations = '" & PublicVariables.Settings.EnableTraceReconfirmations & "'")
-                str.AppendLine("Counts goals scored for winner of day = '" & PublicVariables.Settings.ConteggiaGoalFattiPerVittoria & "'")
-                str.AppendLine("Counts goals conceded for winner of day = '" & PublicVariables.Settings.ConteggiaGoalSubitiPerVittoria & "'")
-                str.AppendLine("Number of reserver = '" & PublicVariables.Settings.NumberOfReserve & "'")
-                str.AppendLine("Forced goalkeeper as first reserve = '" & PublicVariables.Settings.ForcedGoalkeeperAsFirstReserve & "'")
-                str.AppendLine("Number of substitution = '" & PublicVariables.Settings.NumberOfSubstitution & "'")
-                str.AppendLine("Substitution type = '" & PublicVariables.Settings.SubstitutionType & "'")
+                str.AppendLine("Active = '" & appSett.Settings.Active & "'")
+                str.AppendLine("Year = '" & appSett.Settings.Year & "'")
+                str.AppendLine("Number teams = '" & appSett.Settings.NumberOfTeams & "'")
+                str.AppendLine("Number days = '" & appSett.Settings.NumberOfDays & "'")
+                str.AppendLine("Enable trace reconfirmations = '" & appSett.Settings.EnableTraceReconfirmations & "'")
+                str.AppendLine("Counts goals scored for winner of day = '" & appSett.Settings.ConteggiaGoalFattiPerVittoria & "'")
+                str.AppendLine("Counts goals conceded for winner of day = '" & appSett.Settings.ConteggiaGoalSubitiPerVittoria & "'")
+                str.AppendLine("Number of reserver = '" & appSett.Settings.NumberOfReserve & "'")
+                str.AppendLine("Forced goalkeeper as first reserve = '" & appSett.Settings.ForcedGoalkeeperAsFirstReserve & "'")
+                str.AppendLine("Number of substitution = '" & appSett.Settings.NumberOfSubstitution & "'")
+                str.AppendLine("Substitution type = '" & appSett.Settings.SubstitutionType & "'")
                 str.AppendLine("[Points]")
-                str.AppendLine("Site reference for points = '" & Functions.ConvertListStringToString(PublicVariables.Settings.Points.SiteReferenceForPoints, ",") & "'")
-                str.AppendLine("Site reference for bonus = '" & PublicVariables.Settings.Points.SiteReferenceForBonus & "'")
-                str.AppendLine("Points Admonition = '" & PublicVariables.Settings.Points.Admonition & "'")
-                str.AppendLine("Points Expulsion = '" & PublicVariables.Settings.Points.Expulsion & "'")
-                str.AppendLine("Points Assist [P] = '" & PublicVariables.Settings.Points.Assist("P") & "'")
-                str.AppendLine("Points Assist [D] = '" & PublicVariables.Settings.Points.Assist("D") & "'")
-                str.AppendLine("Points Assist [C] = '" & PublicVariables.Settings.Points.Assist("C") & "'")
-                str.AppendLine("Points Assist [A] = '" & PublicVariables.Settings.Points.Assist("A") & "'")
-                str.AppendLine("Points GoalConceded = '" & PublicVariables.Settings.Points.GoalConceded & "'")
-                str.AppendLine("Points GoalScored [P] = '" & PublicVariables.Settings.Points.GoalScored("P") & "'")
-                str.AppendLine("Points GoalScored [D] = '" & PublicVariables.Settings.Points.GoalScored("D") & "'")
-                str.AppendLine("Points GoalScored [C] = '" & PublicVariables.Settings.Points.GoalScored("C") & "'")
-                str.AppendLine("Points GoalScored [A] = '" & PublicVariables.Settings.Points.GoalScored("A") & "'")
-                str.AppendLine("Points OwnGoal [P] = '" & PublicVariables.Settings.Points.OwnGoal("P") & "'")
-                str.AppendLine("Points OwnGoal [D] = '" & PublicVariables.Settings.Points.OwnGoal("D") & "'")
-                str.AppendLine("Points OwnGoal [C] = '" & PublicVariables.Settings.Points.OwnGoal("C") & "'")
-                str.AppendLine("Points OwnGoal [A] = '" & PublicVariables.Settings.Points.OwnGoal("A") & "'")
-                str.AppendLine("Points Missed penalty points [P] = '" & PublicVariables.Settings.Points.MissedPenalty("P") & "'")
-                str.AppendLine("Points Missed penalty points [D] = '" & PublicVariables.Settings.Points.MissedPenalty("D") & "'")
-                str.AppendLine("Points Missed penalty points [C] = '" & PublicVariables.Settings.Points.MissedPenalty("C") & "'")
-                str.AppendLine("Points Missed penalty points [A] = '" & PublicVariables.Settings.Points.MissedPenalty("A") & "'")
+                str.AppendLine("Site reference for points = '" & Functions.ConvertListStringToString(appSett.Settings.Points.SiteReferenceForPoints, ",") & "'")
+                str.AppendLine("Site reference for bonus = '" & appSett.Settings.Points.SiteReferenceForBonus & "'")
+                str.AppendLine("Points Admonition = '" & appSett.Settings.Points.Admonition & "'")
+                str.AppendLine("Points Expulsion = '" & appSett.Settings.Points.Expulsion & "'")
+                str.AppendLine("Points Assist [P] = '" & appSett.Settings.Points.Assist("P") & "'")
+                str.AppendLine("Points Assist [D] = '" & appSett.Settings.Points.Assist("D") & "'")
+                str.AppendLine("Points Assist [C] = '" & appSett.Settings.Points.Assist("C") & "'")
+                str.AppendLine("Points Assist [A] = '" & appSett.Settings.Points.Assist("A") & "'")
+                str.AppendLine("Points GoalConceded = '" & appSett.Settings.Points.GoalConceded & "'")
+                str.AppendLine("Points GoalScored [P] = '" & appSett.Settings.Points.GoalScored("P") & "'")
+                str.AppendLine("Points GoalScored [D] = '" & appSett.Settings.Points.GoalScored("D") & "'")
+                str.AppendLine("Points GoalScored [C] = '" & appSett.Settings.Points.GoalScored("C") & "'")
+                str.AppendLine("Points GoalScored [A] = '" & appSett.Settings.Points.GoalScored("A") & "'")
+                str.AppendLine("Points OwnGoal [P] = '" & appSett.Settings.Points.OwnGoal("P") & "'")
+                str.AppendLine("Points OwnGoal [D] = '" & appSett.Settings.Points.OwnGoal("D") & "'")
+                str.AppendLine("Points OwnGoal [C] = '" & appSett.Settings.Points.OwnGoal("C") & "'")
+                str.AppendLine("Points OwnGoal [A] = '" & appSett.Settings.Points.OwnGoal("A") & "'")
+                str.AppendLine("Points Missed penalty points [P] = '" & appSett.Settings.Points.MissedPenalty("P") & "'")
+                str.AppendLine("Points Missed penalty points [D] = '" & appSett.Settings.Points.MissedPenalty("D") & "'")
+                str.AppendLine("Points Missed penalty points [C] = '" & appSett.Settings.Points.MissedPenalty("C") & "'")
+                str.AppendLine("Points Missed penalty points [A] = '" & appSett.Settings.Points.MissedPenalty("A") & "'")
                 str.AppendLine("[Bonus roles]")
-                str.AppendLine("Enable bonus defense = '" & PublicVariables.Settings.Bonus.EnableBonusDefense & "'")
-                str.AppendLine("Bonus defense source = '" & PublicVariables.Settings.Bonus.BonudDefenseSource & "'")
-                str.AppendLine("Bonus defense over and equal value = '" & PublicVariables.Settings.Bonus.BonusDefenseOverEqual & "'")
-                str.AppendLine("Bonus defense 3 = '" & PublicVariables.Settings.Bonus.BonusDefense("3") & "'")
-                str.AppendLine("Bonus defense 4 = '" & PublicVariables.Settings.Bonus.BonusDefense("4") & "'")
-                str.AppendLine("Bonus defense 5 = '" & PublicVariables.Settings.Bonus.BonusDefense("5") & "'")
-                str.AppendLine("Enable bonus center field = '" & PublicVariables.Settings.Bonus.EnableCenterField & "'")
-                str.AppendLine("Bonus center field source = '" & PublicVariables.Settings.Bonus.BonudCenterFieldSource & "'")
-                str.AppendLine("Bonus center field over and equal value = '" & PublicVariables.Settings.Bonus.BonusCenterFieldOverEqual & "'")
-                str.AppendLine("Bonus center field 3 = '" & PublicVariables.Settings.Bonus.BonusCenterField("3") & "'")
-                str.AppendLine("Bonus center field 4 = '" & PublicVariables.Settings.Bonus.BonusCenterField("4") & "'")
-                str.AppendLine("Bonus center field 5 = '" & PublicVariables.Settings.Bonus.BonusCenterField("5") & "'")
-                str.AppendLine("Enable bonus attack = '" & PublicVariables.Settings.Bonus.EnableBonusAttack & "'")
-                str.AppendLine("Bonus attack source = '" & PublicVariables.Settings.Bonus.BonudAttackSource & "'")
-                str.AppendLine("Bonus attack over and equal value = '" & PublicVariables.Settings.Bonus.BonusAttackOverEqual & "'")
-                str.AppendLine("Bonus attack 2 = '" & PublicVariables.Settings.Bonus.BonusAttack("2") & "'")
-                str.AppendLine("Bonus attack 3 = '" & PublicVariables.Settings.Bonus.BonusAttack("3") & "'")
+                str.AppendLine("Enable bonus defense = '" & appSett.Settings.Bonus.EnableBonusDefense & "'")
+                str.AppendLine("Bonus defense source = '" & appSett.Settings.Bonus.BonudDefenseSource & "'")
+                str.AppendLine("Bonus defense over and equal value = '" & appSett.Settings.Bonus.BonusDefenseOverEqual & "'")
+                str.AppendLine("Bonus defense 3 = '" & appSett.Settings.Bonus.BonusDefense("3") & "'")
+                str.AppendLine("Bonus defense 4 = '" & appSett.Settings.Bonus.BonusDefense("4") & "'")
+                str.AppendLine("Bonus defense 5 = '" & appSett.Settings.Bonus.BonusDefense("5") & "'")
+                str.AppendLine("Enable bonus center field = '" & appSett.Settings.Bonus.EnableCenterField & "'")
+                str.AppendLine("Bonus center field source = '" & appSett.Settings.Bonus.BonudCenterFieldSource & "'")
+                str.AppendLine("Bonus center field over and equal value = '" & appSett.Settings.Bonus.BonusCenterFieldOverEqual & "'")
+                str.AppendLine("Bonus center field 3 = '" & appSett.Settings.Bonus.BonusCenterField("3") & "'")
+                str.AppendLine("Bonus center field 4 = '" & appSett.Settings.Bonus.BonusCenterField("4") & "'")
+                str.AppendLine("Bonus center field 5 = '" & appSett.Settings.Bonus.BonusCenterField("5") & "'")
+                str.AppendLine("Enable bonus attack = '" & appSett.Settings.Bonus.EnableBonusAttack & "'")
+                str.AppendLine("Bonus attack source = '" & appSett.Settings.Bonus.BonudAttackSource & "'")
+                str.AppendLine("Bonus attack over and equal value = '" & appSett.Settings.Bonus.BonusAttackOverEqual & "'")
+                str.AppendLine("Bonus attack 2 = '" & appSett.Settings.Bonus.BonusAttack("2") & "'")
+                str.AppendLine("Bonus attack 3 = '" & appSett.Settings.Bonus.BonusAttack("3") & "'")
                 str.AppendLine("[Jolly]")
-                str.AppendLine("Enable jolly player = '" & PublicVariables.Settings.Jolly.EnableJollyPlayer & "'")
-                str.AppendLine("Enable jolly goalkeeper = '" & PublicVariables.Settings.Jolly.EnableJollyPlayerGoalkeeper & "'")
-                str.AppendLine("Enable jolly defender = '" & PublicVariables.Settings.Jolly.EnableJollyPlayerDefender & "'")
-                str.AppendLine("Enable jolly midfielder = '" & PublicVariables.Settings.Jolly.EnableJollyPlayerMidfielder & "'")
-                str.AppendLine("Enable jolly forward = '" & PublicVariables.Settings.Jolly.EnableJollyPlayerForward & "'")
-                str.AppendLine("Maximum number jolly playable = '" & PublicVariables.Settings.Jolly.MaximumNumberJollyPlayable & "'")
-                str.AppendLine("Maximum number jolly playable for day = '" & PublicVariables.Settings.Jolly.MaximumNumberJollyPlayableForDay & "'")
+                str.AppendLine("Enable jolly player = '" & appSett.Settings.Jolly.EnableJollyPlayer & "'")
+                str.AppendLine("Enable jolly goalkeeper = '" & appSett.Settings.Jolly.EnableJollyPlayerGoalkeeper & "'")
+                str.AppendLine("Enable jolly defender = '" & appSett.Settings.Jolly.EnableJollyPlayerDefender & "'")
+                str.AppendLine("Enable jolly midfielder = '" & appSett.Settings.Jolly.EnableJollyPlayerMidfielder & "'")
+                str.AppendLine("Enable jolly forward = '" & appSett.Settings.Jolly.EnableJollyPlayerForward & "'")
+                str.AppendLine("Maximum number jolly playable = '" & appSett.Settings.Jolly.MaximumNumberJollyPlayable & "'")
+                str.AppendLine("Maximum number jolly playable for day = '" & appSett.Settings.Jolly.MaximumNumberJollyPlayableForDay & "'")
                 str.AppendLine("[Cup]")
-                str.AppendLine("Type of second round  = '" & PublicVariables.Settings.Coppa.TipoSecondoTurno & "'")
+                str.AppendLine("Type of second round  = '" & appSett.Settings.Coppa.TipoSecondoTurno & "'")
                 For i As Integer = 0 To 2
-                    str.AppendLine("PlayOff 1 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.PlayOffGiorone1Team(i) & "'")
-                Next
-                For i As Integer = 0 To 2
-                    str.AppendLine("PlayOff 2 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.PlayOffGiorone2Team(i) & "'")
+                    str.AppendLine("PlayOff 1 Player " & i + 1 & " = '" & appSett.Settings.Coppa.PlayOffGiorone1Team(i) & "'")
                 Next
                 For i As Integer = 0 To 2
-                    str.AppendLine("PlayOff 1 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.PlayOffGiorone1Match(i) & "'")
+                    str.AppendLine("PlayOff 2 Player " & i + 1 & " = '" & appSett.Settings.Coppa.PlayOffGiorone2Team(i) & "'")
                 Next
                 For i As Integer = 0 To 2
-                    str.AppendLine("PlayOff 2 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.PlayOffGiorone2Match(i) & "'")
+                    str.AppendLine("PlayOff 1 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.PlayOffGiorone1Match(i) & "'")
+                Next
+                For i As Integer = 0 To 2
+                    str.AppendLine("PlayOff 2 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.PlayOffGiorone2Match(i) & "'")
                 Next
                 For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 1 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale1Team(i) & "'")
+                    str.AppendLine("Quartersfinal 1 Player " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale1Team(i) & "'")
                 Next
                 For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 2 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale2Team(i) & "'")
-                Next
-
-                For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 3 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale3Team(i) & "'")
-                Next
-                For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 4 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale4Team(i) & "'")
+                    str.AppendLine("Quartersfinal 2 Player " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale2Team(i) & "'")
                 Next
 
                 For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 1 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale1Match(i) & "'")
+                    str.AppendLine("Quartersfinal 3 Player " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale3Team(i) & "'")
+                Next
+                For i As Integer = 0 To 1
+                    str.AppendLine("Quartersfinal 4 Player " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale4Team(i) & "'")
                 Next
 
                 For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 2 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale2Match(i) & "'")
+                    str.AppendLine("Quartersfinal 1 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale1Match(i) & "'")
                 Next
 
                 For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 3 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale3Match(i) & "'")
+                    str.AppendLine("Quartersfinal 2 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale2Match(i) & "'")
                 Next
 
                 For i As Integer = 0 To 1
-                    str.AppendLine("Quartersfinal 4 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.QuartiDiFinale4Match(i) & "'")
+                    str.AppendLine("Quartersfinal 3 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale3Match(i) & "'")
                 Next
 
                 For i As Integer = 0 To 1
-                    str.AppendLine("Semifinal 1 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.Semifinale1Team(i) & "'")
+                    str.AppendLine("Quartersfinal 4 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.QuartiDiFinale4Match(i) & "'")
+                Next
+
+                For i As Integer = 0 To 1
+                    str.AppendLine("Semifinal 1 Player " & i + 1 & " = '" & appSett.Settings.Coppa.Semifinale1Team(i) & "'")
                 Next
                 For i As Integer = 0 To 1
-                    str.AppendLine("Semifinal 2 Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.Semifinale2Team(i) & "'")
+                    str.AppendLine("Semifinal 2 Player " & i + 1 & " = '" & appSett.Settings.Coppa.Semifinale2Team(i) & "'")
                 Next
                 For i As Integer = 0 To 1
-                    str.AppendLine("Semifinal 1 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.Semifinale1Match(i) & "'")
+                    str.AppendLine("Semifinal 1 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.Semifinale1Match(i) & "'")
                 Next
                 For i As Integer = 0 To 1
-                    str.AppendLine("Semifinal 2 Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.Semifinale2Match(i) & "'")
+                    str.AppendLine("Semifinal 2 Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.Semifinale2Match(i) & "'")
                 Next
                 For i As Integer = 0 To 1
-                    str.AppendLine("Final Player " & i + 1 & " = '" & PublicVariables.Settings.Coppa.FinaleTeam(i) & "'")
+                    str.AppendLine("Final Player " & i + 1 & " = '" & appSett.Settings.Coppa.FinaleTeam(i) & "'")
                 Next
                 For i As Integer = 0 To 1
-                    str.AppendLine("Final Matchs " & i + 1 & " = '" & PublicVariables.Settings.Coppa.FinaleMatch(i) & "'")
+                    str.AppendLine("Final Matchs " & i + 1 & " = '" & appSett.Settings.Coppa.FinaleMatch(i) & "'")
                 Next
                 IO.File.WriteAllText(fname, str.ToString)
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Public Shared Function SendMail(ToAddress As String, CcAddress As String, Display As String, Subject As String, Body As String, AttachFileList As List(Of String)) As Boolean
+        Public Function SendMail(ToAddress As String, CcAddress As String, Display As String, Subject As String, Body As String, AttachFileList As List(Of String)) As Boolean
 
             Dim ris As Boolean = True
             Dim cred As New Net.NetworkCredential("formazioni@ifantacalcio.it", "Anxanum1969!")
@@ -453,13 +460,13 @@ Namespace Torneo
                     smtp.Send(mail)
 
                 Else
-                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Mail administrator lega missing or not valid")
+                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Mail administrator lega missing or not valid")
                     ris = False
 
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 ris = False
             End Try
 

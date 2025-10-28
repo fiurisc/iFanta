@@ -1,12 +1,18 @@
-﻿Imports webfuction.Torneo
-
+﻿
 Namespace Torneo
     Public Class ClassificaSerieA
-        Public Shared Function ApiGetData() As String
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiedo la classifica della serie a dell'anno: " & PublicVariables.Year)
+        Dim appSett As New PublicVariables
 
-            Dim fname As String = WebData.Classifica.GetDataFileName()
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function ApiGetData() As String
+
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiedo la classifica della serie a dell'anno: " & appSett.Year)
+
+            Dim fname As String = WebData.Classifica.GetDataFileName(appSett)
 
             If IO.File.Exists(fname) Then
                 Dim json As String = IO.File.ReadAllText(fname)

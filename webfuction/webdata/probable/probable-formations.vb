@@ -1,16 +1,29 @@
 ﻿
+Imports webfuction.Torneo
+
 Namespace WebData
     Public Class ProbableFormations
 
-        Public Shared dirTemp As String = Functions.DataPath & "temp\"
-        Public Shared dirData As String = Functions.DataPath & "data\pforma\"
+        Dim appSett As New PublicVariables
+        Dim mdata As Torneo.MatchsData
+        Dim dirTemp As String = ""
+        Dim dirData As String = ""
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+            mdata = New Torneo.MatchsData(appSett)
+            dirTemp = appSett.TorneoWebDataPath & "temp\"
+            dirData = appSett.TorneoWebDataPath & "data\pforma\"
+        End Sub
+
+
         Public Shared dicMatchDays As New Dictionary(Of Integer, Integer)
 
-        Public Shared Function GetProbableFormation(site As String, show As Boolean) As String
+        Public Function GetProbableFormation(site As String, show As Boolean) As String
 
             Dim str As New System.Text.StringBuilder
 
-            Dim matchs As List(Of Torneo.MatchsData.Match) = Torneo.MatchsData.GetMatchsData("-1")
+            Dim matchs As List(Of Torneo.MatchsData.Match) = mdata.GetMatchsData("-1")
 
             dicMatchDays.Clear()
 
@@ -31,8 +44,8 @@ Namespace WebData
 
         End Function
 
-        Shared Function GetDataFileName(site As String) As String
-            Return dirData & site.ToLower() & ".json"
+        Function GetDataFileName(site As String) As String
+            Return appSett.TorneoWebDataPath & "data\pforma\" & site.ToLower() & ".json"
         End Function
 
         Shared Sub AddInfo(Name As String, Team As String, Site As String, State As String, Info As String, Percentage As Integer, wpList As Dictionary(Of String, Torneo.ProbablePlayers.Probable.Player))
@@ -141,7 +154,7 @@ Namespace WebData
 
         End Sub
 
-        Shared Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String) As String
+        Public Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String) As String
 
             Dim json As String = ""
             Try
@@ -151,7 +164,7 @@ Namespace WebData
                 json = WebData.Functions.SerializzaOggetto(Data, False)
                 IO.File.WriteAllText(fileDestiNazione, json)
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return json

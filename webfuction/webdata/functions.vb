@@ -15,21 +15,25 @@ Namespace WebData
             Execution = 3
         End Enum
 
-        Public Shared Property Year As String = ""
-        Public Shared Property LogsPath As String = ""
-        Public Shared Property DataPath As String = ""
+        'Public Shared Property Year As String = ""
+        'Public Shared Property LogsPath As String = ""
+        'Public Shared Property DataPath As String = ""
         Public Shared lastClean As Date = Date.Now
 
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
 
-        Public Shared Function InitPath(rootDataPath As String, rootdatabasePath As String) As String
-            LogsPath = rootDataPath & "logs\"
-            DataPath = rootDataPath & Year & "\webdata\"
-            Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
-            Return DataPath
-        End Function
+        'Public Shared Function InitPath(rootDataPath As String, rootdatabasePath As String) As String
+        '    LogsPath = rootDataPath & "logs\"
+        '    DataPath = rootDataPath & Year & "\webdata\"
+        '    Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
+        '    Return DataPath
+        'End Function
 
-        Public Shared Sub WriteLog(ByVal MessageType As eMessageType, ByVal Message As String)
+        Public Shared Sub WriteLog(appSett As Torneo.PublicVariables, ByVal MessageType As eMessageType, ByVal Message As String)
+
+            Dim flog As String = appSett.RootTorneiPath
+            If IO.Directory.Exists(appSett.TorneoPath) Then flog = appSett.TorneoPath
+
             Try
 
                 Dim sframe As String() = Environment.StackTrace.Split(New String() {vbCrLf}, StringSplitOptions.None)
@@ -65,12 +69,12 @@ Namespace WebData
                     msgtypes = "EXE"
                 End If
 
-                If IO.Directory.Exists(LogsPath) Then IO.File.AppendAllText(LogsPath & "debug.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & msgtypes & "|" & methodname & "|" & Message & System.Environment.NewLine)
-                If IO.Directory.Exists(LogsPath) AndAlso msgtypes = "ERROR" Then IO.File.AppendAllText(LogsPath & "errors.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & msgtypes & "|" & methodname & "|" & Message & System.Environment.NewLine)
+                IO.File.AppendAllText(flog & "debug.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & msgtypes & "|" & methodname & "|" & Message & System.Environment.NewLine)
+                If msgtypes = "ERROR" Then IO.File.AppendAllText(flog & "errors.log", Date.Now.ToString("yyyy/MM/dd HH:mm:ss") & "|" & msgtypes & "|" & methodname & "|" & Message & System.Environment.NewLine)
 
                 If Date.Now.Subtract(lastClean).TotalHours > 1 Then
-                    ResizeFile(LogsPath & "debug.log")
-                    ResizeFile(LogsPath & "errors.log")
+                    ResizeFile(flog & "debug.log")
+                    ResizeFile(flog & "errors.log")
                     lastClean = Date.Now
                 End If
 
@@ -91,20 +95,6 @@ Namespace WebData
                     IO.File.WriteAllLines(fname, lines)
                 End If
             End If
-
-        End Sub
-
-        Public Shared Sub MakeDirectory()
-
-            Dim dirt As String = DataPath & "temp"
-            Dim dird As String = DataPath & "data"
-            Dim dirdpf As String = DataPath & "data\pforma"
-            Dim dirdmt As String = DataPath & "data\matchs"
-
-            If IO.Directory.Exists(dirt) = False Then IO.Directory.CreateDirectory(dirt)
-            If IO.Directory.Exists(dird) = False Then IO.Directory.CreateDirectory(dird)
-            If IO.Directory.Exists(dirdpf) = False Then IO.Directory.CreateDirectory(dirdpf)
-            If IO.Directory.Exists(dirdmt) = False Then IO.Directory.CreateDirectory(dirdmt)
 
         End Sub
 
@@ -169,13 +159,9 @@ Namespace WebData
 
         Public Shared Function DeserializeJson(Of T)(json As String) As T
             Dim serializer As New JavaScriptSerializer()
-            Try
-                ' Esegue la deserializzazione JSON -> T
-                Dim obj As T = serializer.Deserialize(Of T)(json)
-                Return obj
-            Catch ex As Exception
-                WriteLog(eMessageType.Errors, ex.Message)
-            End Try
+            ' Esegue la deserializzazione JSON -> T
+            Dim obj As T = serializer.Deserialize(Of T)(json)
+            Return obj
         End Function
 
         Public Shared Function SerializzaOggetto(obj As Object, compatta As Boolean) As String
@@ -232,6 +218,7 @@ Namespace WebData
             Next
 
             Return sb.ToString()
+
         End Function
 
         Public Shared Function CompactJson(jsonFormattato As String) As String
@@ -440,7 +427,7 @@ Namespace WebData
 
         End Function
 
-        Public Shared Function GetDataPlayerMatchedData(wp As Dictionary(Of String, Players.PlayerMatch), PlayerList As Boolean) As String
+        Public Shared Function GetDataPlayerMatchedData(appSett As Torneo.PublicVariables, wp As Dictionary(Of String, Players.PlayerMatch), PlayerList As Boolean) As String
 
             Dim strdata As New System.Text.StringBuilder
 
@@ -476,14 +463,14 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                WriteLog(eMessageType.Errors, ex.Message)
+                WriteLog(appSett, eMessageType.Errors, ex.Message)
             End Try
 
             Return strdata.ToString()
 
         End Function
 
-        Public Shared Sub WriteDataPlayerMatch(wp As Dictionary(Of String, Players.PlayerMatch), filed As String)
+        Public Shared Sub WriteDataPlayerMatch(appSett As Torneo.PublicVariables, wp As Dictionary(Of String, Players.PlayerMatch), filed As String)
             Try
 
                 Dim strdata As New System.Text.StringBuilder
@@ -513,11 +500,11 @@ Namespace WebData
                 IO.File.WriteAllText(filed, strdata.ToString, System.Text.Encoding.UTF8)
 
             Catch ex As Exception
-                WriteLog(eMessageType.Errors, ex.Message)
+                WriteLog(appSett, eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Public Shared Function GetPage(ByVal Url As String, Optional Encoding As String = "ISO-8859-1") As String
+        Public Shared Function GetPage(appSett As Torneo.PublicVariables, ByVal Url As String, Optional Encoding As String = "ISO-8859-1") As String
 
             Dim responseFromServer As String = ""
 
@@ -542,7 +529,7 @@ Namespace WebData
                 End Using
 
             Catch ex As Exception
-                WriteLog(eMessageType.Errors, ex.Message)
+                WriteLog(appSett, eMessageType.Errors, ex.Message)
                 responseFromServer = ex.Message
             End Try
 

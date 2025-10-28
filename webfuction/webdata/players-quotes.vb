@@ -1,19 +1,26 @@
 ﻿Imports System.IO
 Imports System.Net
 Imports System.Text
+Imports webfuction.Torneo
 
 Namespace WebData
 
     Public Class PlayersQuotes
 
-        Shared Function GetDataFileName() As String
-            Return Functions.DataPath & "data\players-quotes.json"
+        Dim appSett As PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function GetDataFileName() As String
+            Return appSett.TorneoWebDataPath & "data\players-quotes.json"
         End Function
 
-        Shared Function GetPlayersQuotes(ReturnData As Boolean) As String
+        Public Function GetPlayersQuotes(ReturnData As Boolean) As String
 
-            Dim dirTemp As String = Functions.DataPath & "temp\"
-            Dim dirData As String = Functions.DataPath & "data\"
+            Dim dirTemp As String = appSett.TorneoWebDataPath & "temp\"
+            Dim dirData As String = appSett.TorneoWebDataPath & "data\"
             Dim fileJson As String = GetDataFileName()
             Dim fileTemp As String = dirTemp & Path.GetFileNameWithoutExtension(GetDataFileName()) & ".html.txt"
             Dim fileLog As String = dirData & Path.GetFileNameWithoutExtension(GetDataFileName) & ".log"
@@ -22,21 +29,13 @@ Namespace WebData
 
             Try
 
-                Functions.MakeDirectory()
-
-                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/quotazioni-fantacalcio")
+                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/quotazioni-fantacalcio")
 
                 If html <> "" Then
 
                     IO.File.WriteAllText(fileTemp, html)
 
                     Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("ISO-8859-1"))
-                    'Dim Nome As String = ""
-                    'Dim Ruolo As String = ""
-                    'Dim Squadra As String = ""
-                    'Dim outofgame As String = "0"
-                    'Dim Qini As String = ""
-                    'Dim Qcur As String = ""
 
                     Dim p As New Torneo.Players.PlayerQuotesItem
 
@@ -70,8 +69,9 @@ Namespace WebData
                         End If
                     Next
 
-                    If Torneo.PublicVariables.dataFromDatabase Then
-                        Torneo.Players.UpdatePlayersQuotes(playersq)
+                    If appSett.DataFromDatabase Then
+                        Dim pdata As New Torneo.Players(appSett)
+                        pdata.UpdatePlayersQuotes(playersq)
                     End If
 
                     strdata = Functions.SerializzaOggetto(playersq, False)
@@ -80,25 +80,25 @@ Namespace WebData
 
                 End If
 
-                Players.Data.LoadPlayers(True)
+                'Players.Data.LoadPlayers(appSett, True)
 
                 If ReturnData Then
-                    Return "</br><span style=color:red;font-size:bold;'>Players quotes (" & Functions.Year & "):</span></br>" & strdata.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"
+                    Return "</br><span style=color:red;font-size:bold;'>Players quotes (" & appSett.Year & "):</span></br>" & strdata.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"
                 Else
-                    Return ("</br><span style=color:red;font-size:bold;'>Players quotes (" & Functions.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
+                    Return ("</br><span style=color:red;font-size:bold;'>Players quotes (" & appSett.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 Return ex.Message
             End Try
 
         End Function
 
-        Shared Function GetPlayersQuoteFantacalcio2(ReturnData As Boolean) As String
+        Public Function GetPlayersQuoteFantacalcio2(ReturnData As Boolean) As String
 
-            Dim dirt As String = Functions.DataPath & "\temp"
-            Dim dird As String = Functions.DataPath & "\data"
+            Dim dirt As String = appSett.TorneoWebDataPath & "\temp"
+            Dim dird As String = appSett.TorneoWebDataPath & "\data"
             Dim filet1 As String = dirt & "\players-quote.zip"
             Dim filet2 As String = dirt & "\players-quote.zip"
             Dim filed As String = dird & "\players-quote.txt"
@@ -108,7 +108,7 @@ Namespace WebData
 
             Try
 
-                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/quotazioni-fantacalcio")
+                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/quotazioni-fantacalcio")
                 Dim link As String = ""
 
                 If html <> "" Then
@@ -197,22 +197,22 @@ Namespace WebData
 
                 End If
 
-                Players.Data.LoadPlayers(True)
+                'Players.Data.LoadPlayers(appSett, True)
 
                 If ReturnData Then
-                    Return "</br><span style=color:red;font-size:bold;'>Players quotes (" & Functions.Year & "):</span></br>" & strdata.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"
+                    Return "</br><span style=color:red;font-size:bold;'>Players quotes (" & appSett.Year & "):</span></br>" & strdata.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"
                 Else
-                    Return ("</br><span style=color:red;font-size:bold;'>Players quotes (" & Functions.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
+                    Return ("</br><span style=color:red;font-size:bold;'>Players quotes (" & appSett.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 Return ex.Message
             End Try
 
         End Function
 
-        Public Shared Function GetDictionaryString(f1 As String, f2 As String) As List(Of String)
+        Public Function GetDictionaryString(f1 As String, f2 As String) As List(Of String)
 
             Dim lst As New List(Of String)
 
@@ -233,7 +233,7 @@ Namespace WebData
                     lst.Add(m_node.InnerText)
                 Next
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return lst

@@ -1,16 +1,25 @@
 ﻿Imports System.Data
+Imports webfuction.WebData
 
 Namespace Torneo
     Public Class Players
 
-        Public Shared Function ApiGetPlayersName() As String
+        Dim appSett As PublicVariables
+        Dim pQuotes As PlayersQuotes
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+            pQuotes = New PlayersQuotes(appSett)
+        End Sub
+
+        Public Function ApiGetPlayersName() As String
 
             Dim mtxdata As List(Of PlayerQuotesItem)
 
-            If PublicVariables.DataFromDatabase Then
+            If appSett.DataFromDatabase Then
                 mtxdata = GetPlayersQuotesData("")
             Else
-                Dim json As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+                Dim json As String = IO.File.ReadAllText(pQuotes.GetDataFileName())
                 mtxdata = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(json)
             End If
             Dim dicNames As New Dictionary(Of String, List(Of String))
@@ -22,14 +31,14 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function ApiGetPlayersQuotes(Ruolo As String) As String
+        Public Function ApiGetPlayersQuotes(Ruolo As String) As String
 
             Dim mtxdata As New List(Of PlayerQuotesItem)
 
-            If PublicVariables.DataFromDatabase Then
+            If appSett.DataFromDatabase Then
                 mtxdata = GetPlayersQuotesData("")
             Else
-                Dim json As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+                Dim json As String = IO.File.ReadAllText(pQuotes.GetDataFileName())
                 mtxdata = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(json)
                 If Ruolo <> "" Then mtxdata.RemoveAll(Function(x) x.Ruolo <> Ruolo)
             End If
@@ -38,7 +47,7 @@ Namespace Torneo
 
         End Function
 
-        Private Shared Function GetPlayersQuotesData(Ruolo As String) As List(Of PlayerQuotesItem)
+        Private Function GetPlayersQuotesData(Ruolo As String) As List(Of PlayerQuotesItem)
             If Ruolo <> "" Then
                 Return GetPlayersQuotesData(New List(Of String) From {Ruolo})
             Else
@@ -46,12 +55,12 @@ Namespace Torneo
             End If
         End Function
 
-        Private Shared Function GetPlayersQuotesData(ruoli As List(Of String)) As List(Of PlayerQuotesItem)
+        Private Function GetPlayersQuotesData(ruoli As List(Of String)) As List(Of PlayerQuotesItem)
 
             Dim mtxtdata As New List(Of PlayerQuotesItem)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbplayer " & If(ruoli.Count > 0, " WHERE Ruolo IN ('" & WebData.Functions.ConvertListStringToString(ruoli, "','") & "')", ""))
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbplayer " & If(ruoli.Count > 0, " WHERE Ruolo IN ('" & WebData.Functions.ConvertListStringToString(ruoli, "','") & "')", ""))
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -68,14 +77,14 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata
 
         End Function
 
-        Public Shared Sub UpdatePlayersQuotes(newmtxdata As List(Of PlayerQuotesItem))
+        Public Sub UpdatePlayersQuotes(newmtxdata As List(Of PlayerQuotesItem))
 
             Dim ckey As String
 
@@ -100,7 +109,7 @@ Namespace Torneo
                     ckey = key
                     Dim p As PlayerQuotesItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,nome,squadra,qini,qcur, outfogame) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
+                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
@@ -117,61 +126,66 @@ Namespace Torneo
                     End If
                 Next
 
-                Functions.ExecuteSql(sqlinsert)
-                Functions.ExecuteSql(sqlupdate)
-                Functions.ExecuteSql(sqldelete)
+                Functions.ExecuteSql(appSett, sqlinsert)
+                Functions.ExecuteSql(appSett, sqlupdate)
+                Functions.ExecuteSql(appSett, sqldelete)
 
                 'Cancello gli eventuali duplicati'
                 Dim sql As String = "DELETE FROM tbplayer WHERE ID NOT IN (SELECT MIN(ID) FROM tbplayer GROUP BY Nome);"
-                Functions.ExecuteSql(sql)
+                Functions.ExecuteSql(appSett, sql)
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Public Shared Function ApiGetPlayersData() As String
+        Public Function ApiGetPlayersData() As String
 
-            If PublicVariables.DataFromDatabase Then
+            If appSett.DataFromDatabase Then
                 Dim mtxdata As List(Of PlayerDataItem) = GetPlayersData()
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
             Else
-                Dim j As String = IO.File.ReadAllText(WebData.PlayersData.GetDataFileName())
+                Dim pdata As New PlayersData(appSett)
+                Dim j As String = IO.File.ReadAllText(pdata.GetDataFileName())
                 Dim mtxdata As List(Of PlayerDataItem) = WebData.Functions.DeserializeJson(Of List(Of PlayerDataItem))(j)
                 Return WebData.Functions.SerializzaOggetto(mtxdata, True)
             End If
 
         End Function
 
-        Private Shared Function GetPlayersData() As List(Of PlayerDataItem)
+        Public Function GetPlayersData() As List(Of PlayerDataItem)
 
             Dim mtxtdata As New List(Of PlayerDataItem)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbplayer_data")
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbplayer_data")
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim p As New PlayerDataItem
                         p.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
-                        p.Ruolo = Functions.ReadFieldStringData(row.Item("Ruolo").ToString())
-                        p.Nome = Functions.ReadFieldStringData(row.Item("Nome").ToString())
-                        p.Squadra = Functions.ReadFieldStringData(row.Item("Squadra").ToString())
+                        p.Ruolo = Functions.ReadFieldStringData(row.Item("ruolo").ToString())
+                        p.Nome = Functions.ReadFieldStringData(row.Item("nome").ToString())
+                        p.Squadra = Functions.ReadFieldStringData(row.Item("squadra").ToString())
                         p.Nazione = Functions.ReadFieldStringData(row.Item("nat").ToString())
-                        p.NatCode = Functions.ReadFieldStringData(row.Item("NatCode").ToString())
+                        p.NatCode = Functions.ReadFieldStringData(row.Item("natcode").ToString())
+                        p.Anni = Functions.ReadFieldIntegerData(row.Item("anni").ToString())
+                        p.Compleanno = Functions.ReadFieldStringData(row.Item("birthday").ToString())
+                        p.Altezza = Functions.ReadFieldStringData(row.Item("altezza").ToString())
+                        p.Peso = Functions.ReadFieldStringData(row.Item("peso").ToString())
                         mtxtdata.Add(p)
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata
 
         End Function
 
-        Public Shared Sub UpdatePlayersData(newmtxdata As List(Of PlayerDataItem))
+        Public Sub UpdatePlayersData(newmtxdata As List(Of PlayerDataItem))
             Try
 
                 Dim mtxdata As List(Of PlayerDataItem) = GetPlayersData()
@@ -192,11 +206,11 @@ Namespace Torneo
                 For Each key In newdata.Keys
                     Dim p As PlayerDataItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer_data (Ruolo,Nome,Squadra,nat,NatCode) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "')")
+                        sqlinsert.Add("INSERT INTO tbplayer_data (ruolo, nome, squadra, nat, natcode, anni, birthday, altezza, peso) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "'," & p.Anni & ",'" & p.Compleanno & "','" & p.Altezza & "','" & p.Peso & "')")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                            sqlupdate.Add("UPDATE tbplayer_data SET Ruolo='" & p.Ruolo & "',Squadra='" & p.Squadra & "',nat='" & p.Nazione & "',NatCode='" & p.NatCode & "' WHERE Nome='" & p.Nome & "'")
+                            sqlupdate.Add("UPDATE tbplayer_data SET ruolo='" & p.Ruolo & "',squadra='" & p.Squadra & "',nat='" & p.Nazione.Replace("'", "''") & "',natcode='" & p.NatCode & "',anni=" & p.Anni & ",birthday='" & p.Compleanno & "',altezza='" & p.Altezza & "',peso='" & p.Peso & "' WHERE nome='" & p.Nome & "'")
                         End If
                     End If
                 Next
@@ -209,16 +223,16 @@ Namespace Torneo
                     End If
                 Next
 
-                Functions.ExecuteSql(sqlinsert)
-                Functions.ExecuteSql(sqlupdate)
-                Functions.ExecuteSql(sqldelete)
+                Functions.ExecuteSql(appSett, sqlinsert)
+                Functions.ExecuteSql(appSett, sqlupdate)
+                Functions.ExecuteSql(appSett, sqldelete)
 
                 'Cancello gli eventuali duplicati'
                 Dim sql As String = "DELETE FROM tbplayer_data WHERE ID NOT IN (SELECT MIN(ID) FROM tbplayer_data GROUP BY Nome);"
-                Functions.ExecuteSql(sql)
+                Functions.ExecuteSql(appSett, sql)
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
@@ -253,17 +267,25 @@ Namespace Torneo
             Public Property Squadra As String = ""
             Public Property Nazione As String = "UNK"
             Public Property NatCode As String = "UNK"
+            Public Property Anni As Integer = 0
+            Public Property Compleanno As String = ""
+            Public Property Altezza As String = ""
+            Public Property Peso As String = ""
 
             Sub New()
 
             End Sub
 
-            Sub New(Ruolo As String, Nome As String, Squadra As String, Nazione As String, NatCode As String)
+            Sub New(Ruolo As String, Nome As String, Squadra As String, Nazione As String, NatCode As String, Anni As Integer, Compleanno As String, Altezza As String, Peso As String)
                 Me.Ruolo = Ruolo
                 Me.Nome = Nome
                 Me.Squadra = Squadra
                 Me.Nazione = Nazione
                 Me.NatCode = NatCode
+                Me.Anni = Anni
+                Me.Compleanno = Compleanno
+                Me.Altezza = Altezza
+                Me.Peso = Peso
             End Sub
         End Class
     End Class

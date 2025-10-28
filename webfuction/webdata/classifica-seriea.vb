@@ -2,29 +2,26 @@
 
     Public Class Classifica
 
-        Private Shared dirt As String = ""
-        Private Shared dird As String = ""
+        Dim appSett As Torneo.PublicVariables
 
-        Private Shared Sub SetFolder()
-            dirt = Functions.DataPath & "temp\"
-            dird = Functions.DataPath & "data\"
+        Sub New(appSett As Torneo.PublicVariables)
+            Me.appSett = appSett
         End Sub
 
-        Shared Function GetDataFileName() As String
-            SetFolder()
-            Return dird & "classifica-seriea.json"
+        Shared Function GetDataFileName(appSett As Torneo.PublicVariables) As String
+            Return appSett.TorneoWebDataPath & "data\classifica-seriea.json"
         End Function
 
-        Public Shared Function GetClassifica(ReturnData As Boolean) As String
+        Public Function GetClassifica(ReturnData As Boolean) As String
 
-            Dim filed As String = GetDataFileName()
-            Dim filet As String = dirt & "classifica-seriea.txt"
+            Dim filed As String = GetDataFileName(appSett)
+            Dim filet As String = appSett.TorneoWebDataPath & "temp\classifica-seriea.txt"
 
             Dim clasa As New List(Of ClassificaItem)
 
             Try
 
-                Dim html As String = Functions.GetPage("http://www.gazzetta.it/calcio/serie-a/classifica/")
+                Dim html As String = Functions.GetPage(appSett, "http://www.gazzetta.it/calcio/serie-a/classifica/")
 
                 If html <> "" Then
 
@@ -125,13 +122,13 @@
                 End If
 
                 If ReturnData Then
-                    Return "</br><span style=color:red;font-size:bold;'>Ranking (" & Functions.Year & "):</span></br>" & WebData.Functions.SerializzaOggetto(clasa, False).Replace(System.Environment.NewLine, "</br>") & "</br>"
+                    Return "</br><span style=color:red;font-size:bold;'>Ranking (" & appSett.Year & "):</span></br>" & WebData.Functions.SerializzaOggetto(clasa, False).Replace(System.Environment.NewLine, "</br>") & "</br>"
                 Else
-                    Return ("</br><span style=color:red;font-size:bold;'>Ranking (" & Functions.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
+                    Return ("</br><span style=color:red;font-size:bold;'>Ranking (" & appSett.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 Return ex.Message
             End Try
 

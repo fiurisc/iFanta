@@ -3,16 +3,23 @@
 Namespace Torneo
     Public Class ClassificaData
 
-        Public Shared fname1 As String = PublicVariables.DataPath & "export\classifica.json"
-        Public Shared fname2 As String = PublicVariables.DataPath & "export\classifica-top.json"
+        Dim appSett As New PublicVariables
+        Dim fname1 As String = ""
+        Dim fname2 As String = ""
 
-        Public Shared Function ApiGetLastDay() As String
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+            fname1 = appSett.TorneoPath & "export\classifica.json"
+            fname2 = appSett.TorneoPath & "export\classifica-top.json"
+        End Sub
+
+        Public Function ApiGetLastDay() As String
 
             Dim cday As String = "1"
 
             Try
-                If PublicVariables.DataFromDatabase Then
-                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT MAX(gio) AS currgio FROM tbformazioni")
+                If appSett.DataFromDatabase Then
+                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT MAX(gio) AS currgio FROM tbformazioni")
                     If ds.Tables.Count > 0 Then
                         cday = ds.Tables(0).Rows(0).Item("currgio").ToString()
                     End If
@@ -22,17 +29,17 @@ Namespace Torneo
                     cday = dicdata.Keys.Last()
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return cday
 
         End Function
 
-        Public Shared Function ApiGetClassifica(day As String, top As Boolean) As String
+        Public Function ApiGetClassifica(day As String, top As Boolean) As String
 
             Try
-                If PublicVariables.DataFromDatabase Then
+                If appSett.DataFromDatabase Then
                     Return WebData.Functions.SerializzaOggetto(GetClassificaGiornata(CInt(day), top), True)
                 Else
                     Dim j As String = IO.File.ReadAllText(If(top, fname2, fname1))
@@ -42,14 +49,14 @@ Namespace Torneo
                     End If
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return ""
 
         End Function
 
-        Shared Function GetClassificaGiornata(ByVal Giornata As Integer, ByVal Top As Boolean) As List(Of Classifica)
+        Private Function GetClassificaGiornata(ByVal Giornata As Integer, ByVal Top As Boolean) As List(Of Classifica)
 
             Dim curr As New List(Of Classifica)
 
@@ -74,14 +81,14 @@ Namespace Torneo
                 CalcoloFantaMister(curr)
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return curr
 
         End Function
 
-        Private Shared Sub CalcoloPreviewPostion(curr As List(Of Classifica), prev As List(Of Classifica))
+        Private Sub CalcoloPreviewPostion(curr As List(Of Classifica), prev As List(Of Classifica))
             For i As Integer = 0 To curr.Count - 1
                 For k As Integer = 0 To prev.Count - 1
                     If prev(k).IdTeam = curr(i).IdTeam Then
@@ -92,7 +99,7 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Sub CalcoloPuntiPersi(curr As List(Of Classifica), topf As List(Of Classifica))
+        Private Sub CalcoloPuntiPersi(curr As List(Of Classifica), topf As List(Of Classifica))
             For i As Integer = 0 To curr.Count - 1
                 For k As Integer = 0 To topf.Count - 1
                     If topf(k).IdTeam = curr(i).IdTeam Then
@@ -166,7 +173,7 @@ Namespace Torneo
             Next
         End Sub
 
-        Private Shared Function GetClassificaData(ByVal Giornata As Integer, ByVal Top As Boolean, ByVal CalculateMinMax As Boolean) As List(Of Classifica)
+        Private Function GetClassificaData(ByVal Giornata As Integer, ByVal Top As Boolean, ByVal CalculateMinMax As Boolean) As List(Of Classifica)
 
             Dim clasa As New List(Of Classifica)
             Dim str As New System.Text.StringBuilder
@@ -180,13 +187,13 @@ Namespace Torneo
 
             If Top Then tb = "" & tb & "top" : tbptmax = tbptmax & "top"
 
-            If PublicVariables.Settings.ConteggiaGoalFattiPerVittoria AndAlso PublicVariables.Settings.ConteggiaGoalSubitiPerVittoria Then
+            If appSett.Settings.ConteggiaGoalFattiPerVittoria AndAlso appSett.Settings.ConteggiaGoalSubitiPerVittoria Then
                 colptmax = "maxpt4"
                 stot = "sum(f.pt)+2*sum(f.gf)-sum(f.gs)"
-            ElseIf PublicVariables.Settings.ConteggiaGoalSubitiPerVittoria Then
+            ElseIf appSett.Settings.ConteggiaGoalSubitiPerVittoria Then
                 colptmax = "maxpt2"
                 stot = "sum(f.pt)-sum(f.gs)"
-            ElseIf PublicVariables.Settings.ConteggiaGoalFattiPerVittoria Then
+            ElseIf appSett.Settings.ConteggiaGoalFattiPerVittoria Then
                 colptmax = "maxpt3"
                 stot = "sum(f.pt)+sum(f.gf)"
             End If
@@ -202,7 +209,7 @@ Namespace Torneo
             str.AppendLine("LEFT JOIN teamq ON teamq.idteam=tb.idteam")
             str.AppendLine("ORDER by tb.tot DESC")
 
-            Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet(str.ToString)
+            Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet(appSett, str.ToString)
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
                 For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                     Dim citem As New Classifica

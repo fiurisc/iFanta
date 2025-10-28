@@ -4,14 +4,21 @@ Namespace WebData
 
     Public Class PlayersData
 
-        Shared Function GetDataFileName() As String
-            Return Functions.DataPath & "data\players-data.json"
+        Dim appSett As Torneo.PublicVariables
+
+        Sub New(appSett As Torneo.PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function GetDataFileName() As String
+            Return appSett.TorneoWebDataPath & "data\players-data.json"
         End Function
 
-        Shared Function GetPlayersData(ReturnData As Boolean) As String
+        Public Function GetPlayersData(ReturnData As Boolean) As String
 
-            Dim dirTemp As String = Functions.DataPath & "temp\"
-            Dim dirData As String = Functions.DataPath & "data\"
+
+            Dim dirTemp As String = appSett.TorneoWebDataPath & "temp\"
+            Dim dirData As String = appSett.TorneoWebDataPath & "data\"
             Dim fileJson As String = GetDataFileName()
             Dim fileLog As String = dirData & Path.GetFileNameWithoutExtension(GetDataFileName) & ".log"
             Dim strdata As String = ""
@@ -21,9 +28,9 @@ Namespace WebData
 
             Try
 
-                Players.Data.LoadPlayers(False)
+                Players.Data.LoadPlayers(appSett, False)
 
-                Dim dicNatCode As Dictionary(Of String, String) = Functions.GetDicNatCodeList(Functions.DataPath & "\code.txt")
+                Dim dicNatCode As Dictionary(Of String, String) = Functions.GetDicNatCodeList(appSett.RootTorneiPath & "\code.txt")
                 Dim sqlink As New Dictionary(Of String, String)
                 Dim team As List(Of String) = GetTeamList()
                 Dim plist As New List(Of String)
@@ -37,7 +44,7 @@ Namespace WebData
 
                 For Each sq As String In sqlink.Keys
 
-                    Dim html As String = Functions.GetPage(sqlink(sq))
+                    Dim html As String = Functions.GetPage(appSett, sqlink(sq))
 
                     If IO.Directory.Exists(dirTemp) = False Then IO.Directory.CreateDirectory(dirTemp)
                     If IO.Directory.Exists(dirData) = False Then IO.Directory.CreateDirectory(dirData)
@@ -62,15 +69,29 @@ Namespace WebData
 
                                     If pdata.Length = 11 Then
 
+                                        Console.WriteLine(pdata(6) & "-" & pdata(4))
                                         Dim role As String = pdata(2).Replace("role:", "")
                                         Dim nat As String = ""
                                         Dim NatCode As String = Functions.GetNatCode(pdata(3).Replace("flag:", ""))
+                                        Dim birthdays As String = System.Text.RegularExpressions.Regex.Match(pdata(4), "\d{1,}-\d{1,}-\d{1,}").Value
+                                        Dim anni As Integer = 0
                                         Dim name1 As String = Functions.NormalizeText(pdata(6).Replace("name:", "").ToUpper() & " " & pdata(5).Replace("surname:", "").ToUpper()).Trim()
                                         Dim name2 As String = Functions.NormalizeText(pdata(9).Replace("fullname:", "").ToUpper()).Replace(".", ". ").Replace("  ", " ").Trim()
+                                        Dim peso As String = pdata(7).Replace("weight:", "")
+                                        Dim altezza As String = pdata(10).Replace("height:", "")
+
+                                        If birthdays <> "" Then
+                                            Dim birthday As Date = CDate(birthdays)
+                                            anni = Date.Now.Year - birthday.Year
+                                            If Date.Now.Date < birthday.AddYears(anni) Then
+                                                anni -= 1
+                                            End If
+                                        End If
 
                                         If NatCode = "SCT" Then NatCode = "GBR"
 
                                         If dicNatCode.ContainsKey(NatCode) Then nat = dicNatCode(NatCode) Else nat = ""
+                                        If nat.Length > 40 Then nat = nat.Substring(0, 40)
 
                                         If role = "Goalkeeper" Then
                                             role = "P"
@@ -97,8 +118,8 @@ Namespace WebData
                                             If playerm.Matched Then
                                                 Dim newname As String = playerm.GetName()
                                                 If dicname.Contains(newname) = False Then
-                                                    playersd.Add(New Torneo.Players.PlayerDataItem(role, newname, sq, nat, NatCode))
-                                                    strplayer.AppendLine(npla.ToString().PadRight(3, CChar("x")).Replace("x", "&nbsp;") & " - " & role & " - " & name1 & " -> " & playerm.MatchedPlayer.Role & " - " & newname & " - " & playerm.MatchedPlayer.Team & " - " & nat & " - " & NatCode)
+                                                    playersd.Add(New Torneo.Players.PlayerDataItem(role, newname, sq, nat, NatCode, anni, birthdays, altezza, peso))
+                                                    strplayer.AppendLine(npla.ToString().PadRight(3, CChar("x")).Replace("x", "&nbsp;") & " - " & role & " - " & name1 & " -> " & playerm.MatchedPlayer.Role & " - " & newname & " - " & playerm.MatchedPlayer.Team & " - " & nat & " - " & NatCode & " - " & birthdays)
                                                     dicname.Add(newname)
                                                 Else
                                                     strplayer.AppendLine(npla.ToString().PadRight(3, CChar("x")).Replace("x", "&nbsp;") & " - " & role & " - " & name1 & " -> " & playerm.MatchedPlayer.Role & " - " & newname & " - " & playerm.MatchedPlayer.Team & "&nbsp;&nbsp;<span style=color:red;font-size:bold;'>[Already exist]</span>")
@@ -118,30 +139,31 @@ Namespace WebData
                     End If
                 Next
 
-                If Torneo.PublicVariables.dataFromDatabase Then
-                    Torneo.Players.UpdatePlayersData(playersd)
+                If appSett.DataFromDatabase Then
+                    Dim pdata As New Torneo.Players(appSett)
+                    pdata.UpdatePlayersData(playersd)
                 End If
 
                 strdata = Functions.SerializzaOggetto(playersd, False)
 
                 IO.File.WriteAllText(fileJson, strdata)
 
-                If Functions.makefileplayer Then IO.File.WriteAllText(fileLog, Functions.GetDataPlayerMatchedData(wpl, True), System.Text.Encoding.UTF8)
+                If Functions.makefileplayer Then IO.File.WriteAllText(fileLog, Functions.GetDataPlayerMatchedData(appSett, wpl, True), System.Text.Encoding.UTF8)
 
                 If ReturnData Then
-                    Return "</br><span style=color:red;font-size:bold;'>Players data (" & Functions.Year & "):</span></br>" & strplayer.ToString.Replace(System.Environment.NewLine, "</br>") & "</br><span style='color:red;font-size:bold;'>Name resolution error:</span></br>" & strnameerr.ToString.Replace(System.Environment.NewLine, "</br>") & "</br><span style='color:red;font-size:bold;'>Details:</span></br>" & Functions.GetDataPlayerMatchedData(wpl, False).Replace(System.Environment.NewLine, "</br>")
+                    Return "</br><span style=color:red;font-size:bold;'>Players data (" & appSett.Year & "):</span></br>" & strplayer.ToString.Replace(System.Environment.NewLine, "</br>") & "</br><span style='color:red;font-size:bold;'>Name resolution error:</span></br>" & strnameerr.ToString.Replace(System.Environment.NewLine, "</br>") & "</br><span style='color:red;font-size:bold;'>Details:</span></br>" & Functions.GetDataPlayerMatchedData(appSett, wpl, False).Replace(System.Environment.NewLine, "</br>")
                 Else
-                    Return ("</br><span style=color:red;font-size:bold;'>Players data (" & Functions.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
+                    Return ("</br><span style=color:red;font-size:bold;'>Players data (" & appSett.Year & "):</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>")
                 End If
 
             Catch ex As Exception
-                Functions.WriteLog(Functions.eMessageType.Info, ex.Message)
+                Functions.WriteLog(appSett, Functions.eMessageType.Info, ex.Message)
                 Return ex.Message
             End Try
 
         End Function
 
-        Shared Function GetTeamList() As List(Of String)
+        Private Function GetTeamList() As List(Of String)
             Return Players.Data.players.Keys.ToList()
         End Function
 

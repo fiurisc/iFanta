@@ -5,7 +5,7 @@ Imports System.Text
 Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetGazzetta(ReturnData As Boolean) As String
+        Public Function GetGazzetta(ReturnData As Boolean) As String
 
             Dim site As String = "Gazzetta"
             Dim fileJson As String = GetDataFileName(site)
@@ -20,10 +20,11 @@ Namespace WebData
 
             Try
 
-                Players.Data.LoadPlayers(False)
-                MatchsData.LoadWebMatchs()
+                Players.Data.LoadPlayers(appSett, False)
+                Dim mdata As New MatchsData(appSett)
+                mdata.LoadWebMatchs()
 
-                Dim html As String = Functions.GetPage("http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
+                Dim html As String = Functions.GetPage(appSett, "http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
 
                 If html <> "" Then
 
@@ -38,11 +39,11 @@ Namespace WebData
                     Dim pstate As String = "Titolare"
                     Dim team As String = ""
 
-                    srLog.WriteLine("Year -> " & Functions.Year)
+                    srLog.WriteLine("Year -> " & appSett.Year)
                     srLog.WriteLine("Calendario match:")
                     srLog.WriteLine("---------------------------")
-                    For Each t As String In MatchsData.KeyMatchs.Keys
-                        srLog.WriteLine(MatchsData.KeyMatchs(t) & " -> " & t)
+                    For Each t As String In mdata.KeyMatchs.Keys
+                        srLog.WriteLine(mdata.KeyMatchs(t) & " -> " & t)
                     Next
                     srLog.WriteLine("")
                     srLog.WriteLine("linee file html => " & CStr(line.Length))
@@ -65,9 +66,9 @@ Namespace WebData
 
                                     srLog.WriteLine("match trovato -> " & match)
 
-                                    For Each key As String In MatchsData.KeyMatchs.Keys
+                                    For Each key As String In mdata.KeyMatchs.Keys
                                         If key = match Then
-                                            currgg = MatchsData.KeyMatchs(key)
+                                            currgg = mdata.KeyMatchs(key)
                                             plaryersData.Day = currgg
                                             srLog.WriteLine("giornata associata -> " & CStr(currgg))
                                             Exit For
@@ -150,14 +151,14 @@ Namespace WebData
 
                     If currgg <> -1 Then
                         Dim out As String = WriteData(plaryersData, fileData)
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(playersLog, filePlayers)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
 
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 rmsg = ex.Message
             End Try
 

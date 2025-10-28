@@ -1,10 +1,10 @@
 ﻿Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetFantacalcio(ReturnData As Boolean) As String
+        Public Function GetFantacalcio(ReturnData As Boolean) As String
 
-            Dim dirt As String = Functions.DataPath & "\temp"
-            Dim dird As String = Functions.DataPath & "\data\pforma"
+            Dim dirt As String = appSett.TorneoWebDataPath & "\temp"
+            Dim dird As String = appSett.TorneoWebDataPath & "\data\pforma"
             Dim site As String = "Fantacalcio"
             Dim fileJson As String = GetDataFileName(site)
             Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
@@ -20,20 +20,22 @@
             Try
 
                 sr.WriteLine("Loading web player and matchs")
-                Players.Data.LoadPlayers(False)
-                MatchsData.LoadWebMatchs()
+                Players.Data.LoadPlayers(appSett, False)
 
-                sr.WriteLine("Year -> " & Functions.Year)
+                Dim mdata As New MatchsData(appSett)
+                mdata.LoadWebMatchs()
+
+                sr.WriteLine("Year -> " & appSett.Year)
                 sr.WriteLine("Calendario match:")
                 sr.WriteLine("---------------------------")
-                For Each t As String In MatchsData.KeyMatchs.Keys
-                    sr.WriteLine(MatchsData.KeyMatchs(t) & " -> " & t)
+                For Each t As String In mdata.KeyMatchs.Keys
+                    sr.WriteLine(mdata.KeyMatchs(t) & " -> " & t)
                 Next
                 sr.WriteLine("")
 
                 'Determino i link delle varie partite'
                 sr.WriteLine("Get Html page")
-                Dim html As String = Functions.GetPage("https://www.fantacalcio.it/probabili-formazioni-serie-A")
+                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/probabili-formazioni-serie-A")
 
                 If html <> "" Then
 
@@ -104,13 +106,13 @@
                     If currgg <> -1 Then
                         wpd.Day = currgg
                         Dim out As String = WriteData(wpd, fileData)
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filePlayers)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 rmsg = ex.Message
             End Try
 

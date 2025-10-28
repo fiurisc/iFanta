@@ -2,19 +2,27 @@
 Namespace Torneo
     Public Class ProbablePlayers
 
-        Public Shared Function ApiGetProbableFormation(state As String) As String
+        Dim appSett As New PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function ApiGetProbableFormation(state As String) As String
             Dim dicData As Dictionary(Of String, Probable) = GetProbableFormation(state)
             Return WebData.Functions.SerializzaOggetto(dicData, True)
         End Function
 
-        Public Shared Function GetProbableFormation(state As String) As Dictionary(Of String, Probable)
+        Public Function GetProbableFormation(state As String) As Dictionary(Of String, Probable)
 
             Dim dicData As New Dictionary(Of String, Probable) From {{"Gazzetta", New Probable}, {"Fantacalcio", New Probable}, {"PianetaFantacalcio", New Probable}}
             Dim states() As String = state.Split(Convert.ToChar(","))
+            Dim probData As New WebData.ProbableFormations(appSett)
 
             For Each site As String In dicData.Keys.ToList()
 
-                Dim fname As String = WebData.ProbableFormations.GetDataFileName(site)
+
+                Dim fname As String = probData.GetDataFileName(site)
 
                 If IO.File.Exists(fname) Then
 

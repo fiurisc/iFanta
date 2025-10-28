@@ -2,7 +2,13 @@
 Namespace Torneo
     Public Class RoseData
 
-        Public Shared Sub ApiAddRosa(TeamId As String, json As String)
+        Dim appSett As New PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Sub ApiAddRosa(TeamId As String, json As String)
 
             If json = "" Then Throw New Exception("Json not valid")
 
@@ -21,28 +27,28 @@ Namespace Torneo
                         sqlp.AppendLine(tid & "," & p.RosaId & ",'" & p.Ruolo & "','" & p.Nome.ToUpper() & "'," & p.Costo & "," & p.Qini & "," & p.Riconfermato & ")")
                         sqlinsert.Add(sqlp.ToString())
                     Next
-                    Functions.ExecuteSql(sqlinsert)
+                    Functions.ExecuteSql(appSett, sqlinsert)
                 Next
             End If
 
         End Sub
 
-        Public Shared Sub ApiDeleteRose(TeamId As String)
-            Functions.ExecuteSql("DELETE FROM tbrose" & If(TeamId <> "-1", " WHERE idteam=" & TeamId, ""))
+        Public Sub ApiDeleteRose(TeamId As String)
+            Functions.ExecuteSql(appSett, "DELETE FROM tbrose" & If(TeamId <> "-1", " WHERE idteam=" & TeamId, ""))
         End Sub
 
-        Public Shared Function ApiGetTeamsTorneo() As String
+        Public Function ApiGetTeamsTorneo() As String
 
             Dim strdata As New System.Text.StringBuilder
 
             Try
 
-                If PublicVariables.DataFromDatabase Then
+                If appSett.DataFromDatabase Then
 
                     Dim teams As New Dictionary(Of String, Object)
 
                     Try
-                        Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbteam")
+                        Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbteam")
 
                         If ds.Tables.Count > 0 Then
                             For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -55,44 +61,64 @@ Namespace Torneo
                             Next
                         End If
                     Catch ex As Exception
-                        WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                        WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                     End Try
 
                     Return WebData.Functions.SerializzaOggetto(teams, True)
 
                 Else
-                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(PublicVariables.DataPath & "export\teams.json"))
+                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(appSett.TorneoPath & "export\teams.json"))
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return strdata.ToString()
 
         End Function
 
-        Public Shared Function ApiGetPlayersTorneo(teamId As String, role As String, OutOfGame As String) As String
+        Public Function ApiGetPlayersTorneo(teamId As String, role As String, OutOfGame As String) As String
 
             Dim json As String = ""
 
             Try
                 Dim dicp As New Dictionary(Of String, List(Of Player))
-                If PublicVariables.DataFromDatabase Then
+                If appSett.DataFromDatabase Then
                     dicp = GetPlayersFromDb(teamId, role, OutOfGame)
                 Else
                     dicp = GetPlayersFromTxt(teamId, role)
                 End If
                 Return WebData.Functions.SerializzaOggetto(dicp, True)
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return json
 
         End Function
 
-        Private Shared Function GetPlayersFromDb(TeamId As String, role As String, OutOfGame As String) As Dictionary(Of String, List(Of Player))
+        Public Function ApiGetPlayersTorneoForCompile(teamId As String) As String
+
+            Dim json As String = ""
+
+            Try
+                Dim dicp As New Dictionary(Of String, List(Of Player))
+                If appSett.DataFromDatabase Then
+                    dicp = GetPlayersFromDb(teamId, "", "")
+                Else
+                    dicp = GetPlayersFromTxt(teamId, "")
+                End If
+                Return WebData.Functions.SerializzaOggetto(dicp, True)
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+            Return json
+
+        End Function
+
+        Private Function GetPlayersFromDb(TeamId As String, role As String, OutOfGame As String) As Dictionary(Of String, List(Of Player))
 
             Dim list As New Dictionary(Of String, List(Of Player))
 
@@ -104,7 +130,7 @@ Namespace Torneo
                     strTeadId = "idteam is null"
                 End If
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM player WHERE " & strTeadId & If(role <> "-1" AndAlso role <> "", " AND ruolo = '" & role & "'", "") & If(OutOfGame = "0", " AND (outofgame is null OR outofgame <> 1)", "") & " ORDER BY idteam,idrosa")
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM player WHERE " & strTeadId & If(role <> "-1" AndAlso role <> "", " AND ruolo = '" & role & "'", "") & If(OutOfGame = "0", " AND (outofgame is null OR outofgame <> 1)", "") & " ORDER BY idteam,idrosa")
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -157,21 +183,22 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return list
 
         End Function
 
-        Private Shared Function GetPlayersFromTxt(TeamId As String, role As String) As Dictionary(Of String, List(Of Player))
+        Private Function GetPlayersFromTxt(TeamId As String, role As String) As Dictionary(Of String, List(Of Player))
 
             Dim list As New Dictionary(Of String, List(Of Player))
 
             Try
 
                 Dim quotes As New Dictionary(Of String, Integer)
-                Dim json As String = IO.File.ReadAllText(WebData.PlayersQuotes.GetDataFileName())
+                Dim pQuotes As New WebData.PlayersQuotes(appSett)
+                Dim json As String = IO.File.ReadAllText(pQuotes.GetDataFileName())
                 Dim mtxquotes As List(Of Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Players.PlayerQuotesItem))(json)
 
                 For Each p As Players.PlayerQuotesItem In mtxquotes
@@ -179,12 +206,12 @@ Namespace Torneo
                     If quotes.ContainsKey(key) = False Then quotes.Add(key, p.Qcur)
                 Next
 
-                json = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
+                json = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName(appSett))
 
                 Dim matchs As New Dictionary(Of String, MatchsData.Match)
                 Dim mtxmatchs As Dictionary(Of String, Dictionary(Of String, MatchsData.Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, MatchsData.Match)))(json)
 
-                Dim fname As String = If(TeamId <> "-2", PublicVariables.DataPath & "\export\rose.txt", PublicVariables.DataPath & "\export\svincolati.txt")
+                Dim fname As String = If(TeamId <> "-2", appSett.TorneoPath & "\export\rose.txt", appSett.TorneoPath & "\export\svincolati.txt")
                 Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
 
                 For Each line As String In lines
@@ -227,7 +254,7 @@ Namespace Torneo
                     End If
                 Next
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return list
@@ -368,7 +395,7 @@ Namespace Torneo
                 Public Property TeamA As String = ""
                 Public Property TeamB As String = ""
                 Public Property Time As String = Now.ToString("yyyy/MM/dd HH:mm:ss")
-
+                Public Property isAvailable As Integer = 0
             End Class
 
             Public Class StatisticData

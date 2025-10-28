@@ -4,11 +4,17 @@ Namespace Torneo
 
     Public Class FormazioniData
 
-        Public Shared Function ApiAddFormazioni(Day As String, TeamId As String, Top As Boolean, json As String) As String
+        Dim appSett As New PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function ApiAddFormazioni(Day As String, TeamId As String, Top As Boolean, json As String) As String
 
             If json = "" Then Throw New Exception("Json not valid")
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Inserimento formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Inserimento formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
 
             Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
             Dim mData As MetaData = WebData.Functions.DeserializeJson(Of MetaData)(json)
@@ -25,17 +31,17 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Cancellazione formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+        Public Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Cancellazione formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
             Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
-            Functions.ExecuteSql("DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
+            Functions.ExecuteSql(appSett, "DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
         End Sub
 
-        Public Shared Function ApiGetFormazione(Day As String, TeamId As String, Top As Boolean) As String
+        Public Function ApiGetFormazione(Day As String, TeamId As String, Top As Boolean) As String
 
             Dim json As String = ""
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiesta formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
 
             Try
                 Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Top)
@@ -45,34 +51,42 @@ Namespace Torneo
                     Return "{}"
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return json
 
         End Function
 
-        Public Shared Function ApiGetFormazioni(Day As String, TeamId As String, Top As Boolean) As String
+        Public Function ApiGetFormazioni(Day As String, TeamId As String, Top As Boolean) As String
 
             Dim json As String = ""
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiesta formazioni giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazioni giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
 
             Try
                 Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Top)
                 Dim dicForma As Dictionary(Of String, Formazione) = list.ToDictionary(Function(x) x.TeamId.ToString(), Function(x) x)
                 Return WebData.Functions.SerializzaOggetto(dicForma, True)
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return json
 
         End Function
 
-        Public Shared Sub SaveFormazioni(day As String, lst As List(Of Formazione), top As Boolean)
+        Public Sub BackupFormazione(day As String, data As MetaData)
+            Try
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Salvataggio formazioni: " & day & " top: " & top.ToString())
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
+
+        Public Sub SaveFormazioni(day As String, lst As List(Of Formazione), top As Boolean)
+
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio formazioni: " & day & " top: " & top.ToString())
 
             Dim tb As String = If(top, "tbformazionitop", "tbformazioni")
             For Each forma As Formazione In lst
@@ -104,15 +118,15 @@ Namespace Torneo
                     sqlp.AppendLine(p.GoalSubiti & "," & p.GoalFatti & "," & p.RigoriSbagliati & "," & p.RigoriParati & "," & p.Punti & ")")
                     sqlinsert.Add(sqlp.ToString())
                 Next
-                Functions.ExecuteSql(sqlinsert)
+                Functions.ExecuteSql(appSett, sqlinsert)
             Next
         End Sub
 
-        Public Shared Function GetFormazioni(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
+        Public Function GetFormazioni(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
 
             Dim list As List(Of Formazione)
 
-            If PublicVariables.DataFromDatabase Then
+            If appSett.DataFromDatabase Then
                 list = GetFormazioniFromDb(Day, TeamId, Top)
             Else
                 list = GetFormazioniFromTxt(Day, TeamId, Top)
@@ -147,13 +161,13 @@ Namespace Torneo
 
         End Function
 
-        Private Shared Function GetFormazioniFromDb(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
+        Private Function GetFormazioniFromDb(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
 
             Dim list As New Dictionary(Of Integer, Formazione)
 
             Try
                 Dim tb As String = If(Top, "formazioni_top", "formazioni")
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam = " & TeamId, "") & " ORDER BY idteam,idformazione")
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam = " & TeamId, "") & " ORDER BY idteam,idformazione")
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -188,30 +202,30 @@ Namespace Torneo
                             p.RigoriParati = Functions.ReadFieldIntegerData("rigp", row, 0)
                             p.Punti = Functions.ReadFieldIntegerData("pt", row, 0)
                             list(tid).Players.Add(p)
-                        ElseIf type = 10 AndAlso PublicVariables.Settings.Bonus.EnableBonusDefense Then
+                        ElseIf type = 10 AndAlso appSett.Settings.Bonus.EnableBonusDefense Then
                             list(tid).BonusDifesa = Functions.ReadFieldIntegerData("pt", row, 0)
-                        ElseIf type = 20 AndAlso PublicVariables.Settings.Bonus.EnableCenterField Then
+                        ElseIf type = 20 AndAlso appSett.Settings.Bonus.EnableCenterField Then
                             list(tid).BonusDifesa = Functions.ReadFieldIntegerData("pt", row, 0)
-                        ElseIf type = 30 AndAlso PublicVariables.Settings.Bonus.EnableBonusAttack Then
+                        ElseIf type = 30 AndAlso appSett.Settings.Bonus.EnableBonusAttack Then
                             list(tid).BonusDifesa = Functions.ReadFieldIntegerData("pt", row, 0)
-                        ElseIf type = 40 AndAlso PublicVariables.Settings.SubstitutionType <> TorneoSettings.eSubstitutionType.Normal Then
+                        ElseIf type = 40 AndAlso appSett.Settings.SubstitutionType <> TorneoSettings.eSubstitutionType.Normal Then
                             list(tid).CambioModulo = Functions.ReadFieldIntegerData("pt", row, 0)
                         End If
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
             Return list.Values.ToList()
         End Function
 
-        Private Shared Function GetFormazioniFromTxt(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
+        Private Function GetFormazioniFromTxt(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
 
             Dim list As New Dictionary(Of String, Formazione)
 
             Try
                 If Top = False Then
-                    Dim fname As String = PublicVariables.DataPath & "\export\formazioni.txt"
+                    Dim fname As String = appSett.TorneoPath & "\export\formazioni.txt"
                     Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
                     For Each line As String In lines
                         Dim values() As String = line.Split(Convert.ToChar("|"))
@@ -252,7 +266,7 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return list.Values.ToList()

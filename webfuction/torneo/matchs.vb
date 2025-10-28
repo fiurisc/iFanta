@@ -3,21 +3,27 @@
 Namespace Torneo
     Public Class MatchsData
 
-        Public Shared Function ApiGetMatchsCurrentDay() As String
+        Dim appSett As New PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function ApiGetMatchsCurrentDay() As String
 
             Dim cday As String = "38"
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Determino la giornata corrente dei matchs per l'anno: " & PublicVariables.Year)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Determino la giornata corrente dei matchs per l'anno: " & appSett.Year)
 
             Try
-                If PublicVariables.DataFromDatabase Then
-                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM current_championship_day")
+                If appSett.DataFromDatabase Then
+                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM current_championship_day")
                     If ds.Tables.Count > 0 Then
                         cday = ds.Tables(0).Rows(0).Item("gio").ToString()
                     End If
                 Else
 
-                    Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
+                    Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName(appSett))
                     Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(ApiGetMatchsData("-1"))
                     Dim found As Boolean = False
 
@@ -37,18 +43,18 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return cday
 
         End Function
 
-        Public Shared Function ApiGetMatchsData(Day As String) As String
+        Public Function ApiGetMatchsData(Day As String) As String
 
-            WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Richiedo la lista dei matchs per la giornata: " & Day & " dell'anno: " & PublicVariables.Year)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiedo la lista dei matchs per la giornata: " & Day & " dell'anno: " & appSett.Year)
 
-            If PublicVariables.DataFromDatabase Then
+            If appSett.DataFromDatabase Then
 
                 Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Match))
                 Dim mtxdata As List(Of Match) = GetMatchsData(Day)
@@ -68,7 +74,7 @@ Namespace Torneo
 
             Else
 
-                Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName())
+                Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName(appSett))
                 Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(j)
 
                 If Day <> "-1" Then
@@ -84,9 +90,9 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Function ApiGetMatchsDataPlayers(startDay As String, endDay As String) As String
+        Public Function ApiGetMatchsDataPlayers(startDay As String, endDay As String) As String
 
-            If PublicVariables.DataFromDatabase Then
+            If appSett.DataFromDatabase Then
 
                 Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer)))
                 Dim mtxdata As List(Of MatchPlayer) = GetMatchDataPlayers(startDay, endDay)
@@ -108,7 +114,7 @@ Namespace Torneo
 
             Else
 
-                Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchPlayersFileName())
+                Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchPlayersFileName(appSett))
                 Dim dicdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))(j)
 
                 Dim chiaviDaRimuovere = dicdata.Keys.Where(Function(k) k < startDay OrElse k > endDay).ToList()
@@ -122,7 +128,7 @@ Namespace Torneo
 
         End Function
 
-        Public Shared Sub UpdateMatchData(newdata As Dictionary(Of String, Dictionary(Of String, Match)))
+        Public Sub UpdateMatchData(newdata As Dictionary(Of String, Dictionary(Of String, Match)))
             Try
 
                 Dim mtxdata As List(Of Match) = GetMatchsData(newdata.Keys.ToList())
@@ -166,25 +172,25 @@ Namespace Torneo
                     Next
                 Next
 
-                Functions.ExecuteSql(sqlinsert)
-                Functions.ExecuteSql(sqlupdate)
-                Functions.ExecuteSql(sqldelete)
+                Functions.ExecuteSql(appSett, sqlinsert)
+                Functions.ExecuteSql(appSett, sqlupdate)
+                Functions.ExecuteSql(appSett, sqldelete)
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Public Shared Function GetMatchsData(day As String) As List(Of Match)
+        Public Function GetMatchsData(day As String) As List(Of Match)
             Return GetMatchsData(New List(Of String) From {day})
         End Function
 
-        Private Shared Function GetMatchsData(days As List(Of String)) As List(Of Match)
+        Private Function GetMatchsData(days As List(Of String)) As List(Of Match)
 
             Dim mtxtdata As New List(Of Match)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbmatch " & If(days.Count > 0 AndAlso days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbmatch " & If(days.Count > 0 AndAlso days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -202,14 +208,14 @@ Namespace Torneo
                     Next
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata
 
         End Function
 
-        Public Shared Sub UpdateMatchDataPlayers(newdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))
+        Public Sub UpdateMatchDataPlayers(newdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))
             Try
 
                 Dim mtxtdata As List(Of MatchPlayer) = GetMatchDataPlayers(newdata.Keys.ToList().Select(Function(x) CInt(x)).Min.ToString(), newdata.Keys.ToList().Select(Function(x) CInt(x)).Max.ToString())
@@ -254,22 +260,22 @@ Namespace Torneo
                     Next
                 Next
 
-                Functions.ExecuteSql(sqlinsert)
-                Functions.ExecuteSql(sqlupdate)
-                Functions.ExecuteSql(sqldelete)
+                Functions.ExecuteSql(appSett, sqlinsert)
+                Functions.ExecuteSql(appSett, sqlupdate)
+                Functions.ExecuteSql(appSett, sqldelete)
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Private Shared Function GetMatchDataPlayers(startDay As String, endDay As String) As List(Of MatchPlayer)
+        Private Function GetMatchDataPlayers(startDay As String, endDay As String) As List(Of MatchPlayer)
 
             Dim mtxtdata As New List(Of MatchPlayer)
 
             Try
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet("SELECT * FROM tbtabellini WHERE gio >=" & startDay & " AND gio<=" & endDay)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbtabellini WHERE gio >=" & startDay & " AND gio<=" & endDay)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -297,7 +303,7 @@ Namespace Torneo
 
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return mtxtdata

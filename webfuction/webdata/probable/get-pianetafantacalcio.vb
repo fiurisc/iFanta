@@ -2,10 +2,10 @@
 Namespace WebData
     Partial Class ProbableFormations
 
-        Shared Function GetPianetaFantacalcio(ReturnData As Boolean) As String
+        Public Function GetPianetaFantacalcio(ReturnData As Boolean) As String
 
-            Dim dirt As String = Functions.DataPath & "\temp"
-            Dim dird As String = Functions.DataPath & "\data\pforma"
+            Dim dirt As String = appSett.TorneoWebDataPath & "\temp"
+            Dim dird As String = appSett.TorneoWebDataPath & "\data\pforma"
             Dim site As String = "PianetaFantacalcio"
             Dim fileJson As String = GetDataFileName(site)
             Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
@@ -17,10 +17,9 @@ Namespace WebData
 
             Try
 
-                Players.Data.LoadPlayers(False)
-                MatchsData.LoadWebMatchs()
+                Players.Data.LoadPlayers(appSett, False)
 
-                Dim html As String = Functions.GetPage("https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp")
+                Dim html As String = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp")
 
                 If html <> "" Then
 
@@ -121,7 +120,7 @@ Namespace WebData
                     If currgg <> -1 Then
                         wpd.Day = currgg
                         Dim out As String = WriteData(wpd, fileData)
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filePlayers)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)
                         Return out.Replace(System.Environment.NewLine, "</br>")
                     Else
                         Return ""
@@ -131,7 +130,7 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 Return ex.Message
             End Try
 

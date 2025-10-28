@@ -3,22 +3,34 @@ Namespace Torneo
 
     Public Class CompilaData
 
-        Private Shared fstatus As String = PublicVariables.DataPath & "compila.json"
+        Dim appSett As New PublicVariables
+        Dim gen As General
+        Dim forma As FormazioniData
 
-        Public Shared Function ApiCompila(giornata As String) As String
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+            gen = New General(appSett)
+            forma = New FormazioniData(appSett)
+        End Sub
+
+        Private Function GetStatusFileName() As String
+            Return appSett.TorneoPath & "compila.json"
+        End Function
+
+        Public Function ApiCompila(giornata As String) As String
 
             Try
 
-                Dim fname As String = PublicVariables.DataPath & "webdata\temp\WD" & giornata.PadLeft(2, CChar("0")) & ".txt"
-                Dim fdata As String = PublicVariables.DataPath & "webdata\temp\DD" & giornata.PadLeft(2, CChar("0")) & ".txt"
+                Dim fname As String = appSett.TorneoWebDataPath & "temp\WD" & giornata.PadLeft(2, CChar("0")) & ".txt"
+                Dim fdata As String = appSett.TorneoWebDataPath & "temp\DD" & giornata.PadLeft(2, CChar("0")) & ".txt"
                 Dim max As Integer = 7
 
-                WebData.Players.Data.LoadPlayers(True)
+                WebData.Players.Data.LoadPlayers(appSett, True)
 
-                Torneo.General.ReadSettings()
+                gen.ReadSettings()
 
                 'eseguo il backup del database'
-                Functions.BackupDatabase(False)
+                Functions.BackupDatabase(appSett, False)
 
                 'Scarico il file'
                 UpdateStatus("Download file from...", 1, max)
@@ -35,73 +47,76 @@ Namespace Torneo
                 'Compilazione dati'
                 UpdateStatus("Compilazione formazioni...", 4, max)
                 Dim lst1 As New List(Of FormazioniData.Formazione)
-                For i As Integer = 0 To PublicVariables.Settings.NumberOfTeams - 1
+                For i As Integer = 0 To appSett.Settings.NumberOfTeams - 1
                     lst1.Add(CompileDataForma(giornata, i))
                 Next
 
                 UpdateStatus("Salvataggio formazioni...", 5, max)
-                FormazioniData.ApiDeleteFormazioni(giornata, "-1", False)
-                FormazioniData.SaveFormazioni(giornata, lst1, False)
+                forma.ApiDeleteFormazioni(giornata, "-1", False)
+                forma.SaveFormazioni(giornata, lst1, False)
 
                 'Compilazione dati top player'
                 UpdateStatus("Compilazione top formazioni...", 6, max)
                 Dim lst2 As List(Of FormazioniData.Formazione) = CompileTopFormazioni(giornata)
                 UpdateStatus("Salvataggio top formazioni...", 7, max)
-                FormazioniData.ApiDeleteFormazioni(giornata, "-1", True)
-                FormazioniData.SaveFormazioni(giornata, lst2, True)
+                forma.ApiDeleteFormazioni(giornata, "-1", True)
+                forma.SaveFormazioni(giornata, lst2, True)
 
                 ResetStatus()
 
                 Return "{""Compilazione"": ""eseguita""}"
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 Return "{'Compilazione': '" & ex.Message & "'}"
             End Try
 
 
         End Function
 
-        Public Shared Function Compila() As String
-            Return ApiCompila(MatchsData.ApiGetMatchsCurrentDay())
+        Public Function Compila() As String
+            Dim match As New MatchsData(appSett)
+            Return ApiCompila(match.ApiGetMatchsCurrentDay())
         End Function
 
-        Public Shared Function ApiGetStatus() As String
+        Public Function ApiGetStatus() As String
             Try
-                If IO.File.Exists(fstatus) Then
-                    Return IO.File.ReadAllText(fstatus)
+                Dim fname As String = GetStatusFileName()
+                If IO.File.Exists(fname) Then
+                    Return IO.File.ReadAllText(fname)
                 Else
                     Return WebData.Functions.SerializzaOggetto(New CompileStatus(), True)
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
             Return WebData.Functions.SerializzaOggetto(New CompileStatus(), True)
         End Function
 
-        Private Shared Sub ResetStatus()
+        Private Sub ResetStatus()
             Try
-                If IO.File.Exists(fstatus) Then IO.File.Delete(fstatus)
+                Dim fname As String = GetStatusFileName()
+                If IO.File.Exists(fname) Then IO.File.Delete(fname)
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Private Shared Sub UpdateStatus(text As String, value As Integer, max As Integer)
+        Private Sub UpdateStatus(text As String, value As Integer, max As Integer)
             Try
                 Dim stato As New CompileStatus(text, value.ToString(), max.ToString())
-                System.IO.File.WriteAllText(fstatus, WebData.Functions.SerializzaOggetto(stato, True))
+                System.IO.File.WriteAllText(GetStatusFileName(), WebData.Functions.SerializzaOggetto(stato, True))
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
 
-        Private Shared Sub DownloadFile(ByVal Giornata As String, ByVal FileName As String)
-            Dim html As String = WebData.Functions.GetPage("https://www.pianetafanta.it/Voti-Ufficiali-Excel.asp?giornataScelta=" & Giornata & "&searchBonus=")
+        Private Sub DownloadFile(ByVal Giornata As String, ByVal FileName As String)
+            Dim html As String = WebData.Functions.GetPage(appSett, "https://www.pianetafanta.it/Voti-Ufficiali-Excel.asp?giornataScelta=" & Giornata & "&searchBonus=")
             If html <> "" Then IO.File.WriteAllText(FileName, html, System.Text.Encoding.GetEncoding("ISO-8859-1"))
         End Sub
 
-        Private Shared Function ExtractData(ByVal SourceFileName As String, ByVal DestFileName As String) As Integer
+        Private Function ExtractData(ByVal SourceFileName As String, ByVal DestFileName As String) As Integer
 
             Dim ngio As Integer = 0
 
@@ -151,6 +166,9 @@ Namespace Torneo
                                 If ruolo = "P" OrElse ruolo = "D" OrElse ruolo = "C" OrElse ruolo = "A" Then
 
                                     name = WebData.Functions.NormalizeText(name)
+                                    If name.Contains("ROMAGNOLI") Then
+                                        name = name
+                                    End If
 
                                     Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
 
@@ -163,15 +181,15 @@ Namespace Torneo
                                         fname = "#" & fname
                                     End If
 
-                                    For k As Integer = 0 To PublicVariables.Settings.Points.SiteReferenceForPoints.Count - 1
-                                        datplayer.Add(PublicVariables.Settings.Points.SiteReferenceForPoints(k), New PtPlayer)
+                                    For k As Integer = 0 To appSett.Settings.Points.SiteReferenceForPoints.Count - 1
+                                        datplayer.Add(appSett.Settings.Points.SiteReferenceForPoints(k), New PtPlayer)
                                     Next
 
                                     Dim vtf As Integer = 0
                                     Dim ptf As Integer = 0
                                     Dim nvt As Integer = 0
 
-                                    If PublicVariables.Settings.Points.SiteReferenceForPoints.Contains("gazzetta") Then
+                                    If appSett.Settings.Points.SiteReferenceForPoints.Contains("gazzetta") Then
                                         datplayer("gazzetta").vt = cell(6).Replace(".", ",")
                                         datplayer("gazzetta").pt = cell(32).Replace(".", ",")
                                         datplayer("gazzetta").gf = cell(7)
@@ -179,7 +197,7 @@ Namespace Torneo
                                         datplayer("gazzetta").aut = cell(9)
                                         datplayer("gazzetta").ass = cell(10)
                                     End If
-                                    If PublicVariables.Settings.Points.SiteReferenceForPoints.Contains("corriere") Then
+                                    If appSett.Settings.Points.SiteReferenceForPoints.Contains("corriere") Then
                                         datplayer("corriere").vt = cell(11).Replace(".", ",")
                                         datplayer("corriere").pt = cell(33).Replace(".", ",")
                                         datplayer("corriere").gf = cell(12)
@@ -187,7 +205,7 @@ Namespace Torneo
                                         datplayer("corriere").aut = cell(14)
                                         datplayer("corriere").ass = cell(15)
                                     End If
-                                    If PublicVariables.Settings.Points.SiteReferenceForPoints.Contains("tuttosport") Then
+                                    If appSett.Settings.Points.SiteReferenceForPoints.Contains("tuttosport") Then
                                         datplayer("tuttosport").vt = cell(16).Replace(".", ",")
                                         datplayer("tuttosport").pt = cell(34).Replace(".", ",")
                                         datplayer("tuttosport").gf = cell(17)
@@ -244,16 +262,16 @@ Namespace Torneo
                                         ptf = vtf
 
                                         If esp <> "" AndAlso esp <> "0" Then
-                                            ptf = ptf + PublicVariables.Settings.Points.Expulsion
+                                            ptf = ptf + appSett.Settings.Points.Expulsion
                                         ElseIf amm <> "" AndAlso amm <> "0" Then
-                                            ptf = ptf + PublicVariables.Settings.Points.Admonition
+                                            ptf = ptf + appSett.Settings.Points.Admonition
                                         End If
-                                        If datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).ass <> "" Then ptf = ptf + CInt(datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).ass) * PublicVariables.Settings.Points.Assist(ruolo)
-                                        If datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).aut <> "" Then ptf = ptf + CInt(datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).aut) * PublicVariables.Settings.Points.OwnGoal(ruolo)
-                                        If rigs <> "" Then ptf = ptf + CInt(rigs) * PublicVariables.Settings.Points.MissedPenalty(ruolo)
+                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass) * appSett.Settings.Points.Assist(ruolo)
+                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut) * appSett.Settings.Points.OwnGoal(ruolo)
+                                        If rigs <> "" Then ptf = ptf + CInt(rigs) * appSett.Settings.Points.MissedPenalty(ruolo)
                                         If rigp <> "" Then ptf = ptf + CInt(rigp) * 30
-                                        If datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).gf <> "" Then ptf = ptf + CInt(datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).gf) * PublicVariables.Settings.Points.GoalScored(ruolo)
-                                        If datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).gs <> "" Then ptf = ptf + CInt(datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).gs) * PublicVariables.Settings.Points.GoalConceded
+                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf) * appSett.Settings.Points.GoalScored(ruolo)
+                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs) * appSett.Settings.Points.GoalConceded
 
                                     Else
                                         vtf = -200
@@ -263,7 +281,7 @@ Namespace Torneo
                                     Dim key As String = ruolo & "|" & fname & "|" & squadra
 
                                     If kplay.Contains(key) = False Then
-                                        sw.WriteLine(ruolo & "|" & name & "|" & fname & "|" & squadra & "|" & datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).gf & "|" & datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).gs & "|" & amm & "|" & esp & "|" & datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).ass & "|" & rigt & "|" & rigs & "|" & rigp & "|" & datplayer(PublicVariables.Settings.Points.SiteReferenceForBonus).aut & "|" & vtf & "|" & ptf)
+                                        sw.WriteLine(ruolo & "|" & name & "|" & fname & "|" & squadra & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs & "|" & amm & "|" & esp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass & "|" & rigt & "|" & rigs & "|" & rigp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut & "|" & vtf & "|" & ptf)
                                         kplay.Add(key)
                                     End If
 
@@ -280,20 +298,20 @@ Namespace Torneo
                     sw.WriteLine("#------------------------------------------")
 
                 Catch ex As Exception
-                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 End Try
 
                 sw.Dispose()
 
             Else
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Dati non trovati")
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Dati non trovati")
             End If
 
             Return ngio
 
         End Function
 
-        Shared Sub InsertData(ByVal Giornata As String, ByVal FileName As String)
+        Private Sub InsertData(ByVal Giornata As String, ByVal FileName As String)
 
             If IO.File.Exists(FileName) Then
 
@@ -302,7 +320,7 @@ Namespace Torneo
                     Dim decsep As String = System.Globalization.CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator
 
                     'Elimino i dati precedenti'
-                    Functions.ExecuteSql("DELETE FROM tbdati WHERE gio=" & Giornata & ";")
+                    Functions.ExecuteSql(appSett, "DELETE FROM tbdati WHERE gio=" & Giornata & ";")
 
                     Dim str As New System.Text.StringBuilder
                     Dim sins As String = "INSERT INTO tbdati (gio,ruolo,nome,squadra,gf,gs,amm,esp,ass,rigt,rigs,rigp,autogol,voto,pt) VALUES "
@@ -316,27 +334,27 @@ Namespace Torneo
                                 For k As Integer = 3 To s.Length - 1
                                     If s(k) = "" Then s(k) = "0"
                                 Next
-                                Functions.ExecuteSql(sins & "(" & Giornata & ",'" & s(0) & "','" & s(2) & "','" & s(3) & "'," & s(4) & "," & s(5) & "," & s(6) & "," & s(7) & "," & s(8) & "," & s(9) & "," & s(10) & "," & s(11) & "," & s(12) & "," & s(13) & "," & s(14) & ")")
+                                Functions.ExecuteSql(appSett, sins & "(" & Giornata & ",'" & s(0) & "','" & s(2) & "','" & s(3) & "'," & s(4) & "," & s(5) & "," & s(6) & "," & s(7) & "," & s(8) & "," & s(9) & "," & s(10) & "," & s(11) & "," & s(12) & "," & s(13) & "," & s(14) & ")")
                             End If
                         End If
                     Next
 
                 Catch ex As Exception
-                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
                 End Try
             Else
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Not found " & FileName)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Not found " & FileName)
             End If
 
         End Sub
 
-        Private Shared Function CompileDataForma(ByVal Giornata As String, ByVal TeamId As Integer) As FormazioniData.Formazione
+        Private Function CompileDataForma(ByVal Giornata As String, ByVal TeamId As Integer) As FormazioniData.Formazione
 
             Dim f As New FormazioniData.Formazione()
 
             Try
 
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Compilazione formazione  teamid: " & TeamId & " giornata: " & Giornata)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Compilazione formazione  teamid: " & TeamId & " giornata: " & Giornata)
 
                 f.Giornata = CInt(Giornata)
                 f.TeamId = TeamId
@@ -348,7 +366,7 @@ Namespace Torneo
                 str.Append("WHERE f.gio=" & Giornata & " AND idteam=" & TeamId & " AND type<10 ")
                 str.Append("ORDER BY f.type,f.idformazione;")
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(str.ToString)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, str.ToString)
 
                 If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
 
@@ -374,20 +392,20 @@ Namespace Torneo
                         p.Ruolo = Functions.ReadFieldStringData(data.Item("ruolo"), "?")
                         p.Nome = Functions.ReadFieldStringData(data.Item("nome"))
                         p.Squadra = Functions.ReadFieldStringData(data.Item("squadra"))
+                        p.Ammonito = Functions.ReadFieldIntegerData(data.Item("amm"))
+                        p.Espulso = Functions.ReadFieldIntegerData(data.Item("esp"))
+                        p.Assists = Functions.ReadFieldIntegerData(data.Item("ass"))
+                        p.AutoGoal = Functions.ReadFieldIntegerData(data.Item("autogol"))
+                        p.GoalSubiti = Functions.ReadFieldIntegerData(data.Item("gs"))
+                        p.GoalFatti = Functions.ReadFieldIntegerData(data.Item("gf"))
+                        p.RigoriSbagliati = Functions.ReadFieldIntegerData(data.Item("rigs"))
+                        p.RigoriParati = Functions.ReadFieldIntegerData(data.Item("rigp"))
+                        p.Voto = Functions.ReadFieldIntegerData(data.Item("voto"), -200)
+                        p.Punti = Functions.ReadFieldIntegerData(data.Item("pt"), -200)
 
                         'Dati giornata'
-                        If idforma.Contains(keyp) = False AndAlso ((p.FormaId < 12 AndAlso p.Type = 1) OrElse (p.FormaId >= 12 AndAlso p.FormaId <= 11 + PublicVariables.Settings.NumberOfReserve AndAlso p.Type = 2)) Then
+                        If idforma.Contains(keyp) = False AndAlso ((p.FormaId < 12 AndAlso p.Type = 1) OrElse (p.FormaId >= 12 AndAlso p.FormaId <= 11 + appSett.Settings.NumberOfReserve AndAlso p.Type = 2)) Then
 
-                            p.Ammonito = Functions.ReadFieldIntegerData(data.Item("amm"))
-                            p.Espulso = Functions.ReadFieldIntegerData(data.Item("esp"))
-                            p.Assists = Functions.ReadFieldIntegerData(data.Item("ass"))
-                            p.AutoGoal = Functions.ReadFieldIntegerData(data.Item("autogol"))
-                            p.GoalSubiti = Functions.ReadFieldIntegerData(data.Item("gs"))
-                            p.GoalFatti = Functions.ReadFieldIntegerData(data.Item("gf"))
-                            p.RigoriSbagliati = Functions.ReadFieldIntegerData(data.Item("rigs"))
-                            p.RigoriParati = Functions.ReadFieldIntegerData(data.Item("rigp"))
-                            p.Voto = Functions.ReadFieldIntegerData(data.Item("voto"), -200)
-                            p.Punti = Functions.ReadFieldIntegerData(data.Item("pt"), -200)
 
                             If p.Type <> 0 Then
                                 If p.Type = 1 Then
@@ -433,7 +451,7 @@ Namespace Torneo
                     Dim nsm As Integer = 0
 
                     If svp > 0 OrElse svd > 0 OrElse svc > 0 OrElse sva > 0 Then
-                        If PublicVariables.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.ChangeModule Then
+                        If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.ChangeModule Then
 
                             'Determino il modulo attuale'
                             Dim nm() As Integer = {0, 0, 0}
@@ -492,7 +510,7 @@ Namespace Torneo
                                                 End If
                                             End If
                                     End Select
-                                    If numsos >= PublicVariables.Settings.NumberOfSubstitution Then Exit For
+                                    If numsos >= appSett.Settings.NumberOfSubstitution Then Exit For
                                 End If
                             Next
 
@@ -556,29 +574,29 @@ Namespace Torneo
                                             End If
                                             npa -= 1
                                     End Select
-                                    If numsos >= PublicVariables.Settings.NumberOfSubstitution Then Exit For
+                                    If numsos >= appSett.Settings.NumberOfSubstitution Then Exit For
                                 End If
                                 If npp = 0 AndAlso svp > 0 Then
-                                    If PublicVariables.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
                                     svp = 0
                                 End If
                                 If npd = 0 AndAlso svd > 0 Then
-                                    If PublicVariables.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
                                     nsm += svd : svd = 0
                                 End If
                                 If npc = 0 AndAlso svc > 0 Then
-                                    If PublicVariables.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
                                     nsm += svc : svc = 0
                                 End If
                                 If npa = 0 AndAlso sva > 0 Then
-                                    If PublicVariables.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
                                     nsm += sva : sva = 0
                                 End If
 
                             Next
                         End If
 
-                        If PublicVariables.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.NormalAndChangeModule Then
+                        If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.NormalAndChangeModule Then
 
                             If nsm > 0 Then
 
@@ -625,7 +643,7 @@ Namespace Torneo
                                             nsm -= 1
                                         End If
                                     End If
-                                    If numsos >= PublicVariables.Settings.NumberOfSubstitution OrElse nsm = 0 Then Exit For
+                                    If numsos >= appSett.Settings.NumberOfSubstitution OrElse nsm = 0 Then Exit For
                                 Next
 
                                 nm(0) = 0
@@ -664,35 +682,35 @@ Namespace Torneo
                         If f.Players(i).Type > 0 AndAlso f.Players(i).InCampo = 1 AndAlso f.Players(i).Voto > -100 Then
                             Select Case f.Players(i).Ruolo
                                 Case "D"
-                                    If PublicVariables.Settings.Bonus.EnableBonusDefense Then ndgoodd = ndgoodd + GetGoodForBonus(f.Players(i))
+                                    If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd = ndgoodd + GetGoodForBonus(f.Players(i))
                                     ndt += 1
                                 Case "C"
-                                    If PublicVariables.Settings.Bonus.EnableCenterField Then ndgoodc = ndgoodc + GetGoodForBonus(f.Players(i))
+                                    If appSett.Settings.Bonus.EnableCenterField Then ndgoodc = ndgoodc + GetGoodForBonus(f.Players(i))
                                     nct += 1
                                 Case "A"
-                                    If PublicVariables.Settings.Bonus.EnableCenterField Then ndgooda = ndgooda + GetGoodForBonus(f.Players(i))
+                                    If appSett.Settings.Bonus.EnableCenterField Then ndgooda = ndgooda + GetGoodForBonus(f.Players(i))
                                     nat += 1
                             End Select
                         End If
                     Next
 
-                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Difensori con voto >=6: " & ndgoodd & "/" & ndt)
+                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Difensori con voto >=6: " & ndgoodd & "/" & ndt)
 
-                    If PublicVariables.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = ndt Then
+                    If appSett.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = ndt Then
                         f.BonusDifesa = BonusDefense(ndgoodd)
                     Else
                         f.BonusDifesa = 0
                     End If
 
-                    WebData.Functions.WriteLog(WebData.Functions.eMessageType.Info, "Bonus defense: " & f.BonusDifesa)
+                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Bonus defense: " & f.BonusDifesa)
 
-                    If PublicVariables.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nct Then
+                    If appSett.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nct Then
                         f.BonusCentrocampo = BonusCenterField(ndgoodc)
                     Else
                         f.BonusCentrocampo = 0
                     End If
 
-                    If PublicVariables.Settings.Bonus.EnableBonusAttack AndAlso ndgooda = nat Then
+                    If appSett.Settings.Bonus.EnableBonusAttack AndAlso ndgooda = nat Then
                         f.BonusAttacco = BonusAttack(ndgooda)
                     Else
                         f.BonusAttacco = 0
@@ -700,16 +718,16 @@ Namespace Torneo
 
                 End If
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return f
 
         End Function
 
-        Private Shared Function CompileTopFormazioni(giornata As String) As List(Of FormazioniData.Formazione)
+        Private Function CompileTopFormazioni(giornata As String) As List(Of FormazioniData.Formazione)
 
-            Dim lst As List(Of FormazioniData.Formazione) = FormazioniData.GetFormazioni(giornata, "-1", False)
+            Dim lst As List(Of FormazioniData.Formazione) = forma.GetFormazioni(giornata, "-1", False)
 
             Try
 
@@ -747,18 +765,18 @@ Namespace Torneo
                         lst(k).Players(i).Type = 0
                         lst(k).Players(i).InCampo = 0
                         If lst(k).Players(i).Type >= 0 AndAlso lst(k).Players(i).Punti > -100 Then
-                            If CompilaData.CheckMudule(lst(k).Players(i).Ruolo, np, nd, nc, na) Then
+                            If CheckMudule(lst(k).Players(i).Ruolo, np, nd, nc, na) Then
                                 Select Case lst(k).Players(i).Ruolo
                                     Case "P"
                                         np += 1
                                     Case "D"
-                                        If PublicVariables.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(lst(k).Players(i))
+                                        If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(lst(k).Players(i))
                                         nd += 1
                                     Case "C"
-                                        If PublicVariables.Settings.Bonus.EnableCenterField Then ndgoodc += GetGoodForBonus(lst(k).Players(i))
+                                        If appSett.Settings.Bonus.EnableCenterField Then ndgoodc += GetGoodForBonus(lst(k).Players(i))
                                         nc += 1
                                     Case "A"
-                                        If PublicVariables.Settings.Bonus.EnableCenterField Then ndgooda += GetGoodForBonus(lst(k).Players(i))
+                                        If appSett.Settings.Bonus.EnableCenterField Then ndgooda += GetGoodForBonus(lst(k).Players(i))
                                         na += 1
                                 End Select
                                 lst(k).Players(i).Type = 1
@@ -777,19 +795,19 @@ Namespace Torneo
                         End If
                     Next
 
-                    If PublicVariables.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = nd Then
+                    If appSett.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = nd Then
                         lst(k).BonusDifesa = BonusDefense(ndgoodd)
                     Else
                         lst(k).BonusDifesa = 0
                     End If
 
-                    If PublicVariables.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nc Then
+                    If appSett.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nc Then
                         lst(k).BonusCentrocampo = BonusCenterField(ndgoodc)
                     Else
                         lst(k).BonusCentrocampo = 0
                     End If
 
-                    If PublicVariables.Settings.Bonus.EnableBonusAttack AndAlso ndgooda = na Then
+                    If appSett.Settings.Bonus.EnableBonusAttack AndAlso ndgooda = na Then
                         lst(k).BonusAttacco = BonusAttack(ndgooda)
                     Else
                         lst(k).BonusAttacco = 0
@@ -797,42 +815,42 @@ Namespace Torneo
                 Next
 
             Catch ex As Exception
-                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
             Return lst
 
         End Function
-        Private Shared Function BonusDefense(nplayer As Integer) As Integer
+        Private Function BonusDefense(nplayer As Integer) As Integer
             Dim bonus As Integer = 0
             Select Case nplayer
-                Case 3 : bonus = PublicVariables.Settings.Bonus.BonusDefense("3")
-                Case 4 : bonus = PublicVariables.Settings.Bonus.BonusDefense("4")
-                Case Is > 4 : bonus = PublicVariables.Settings.Bonus.BonusDefense("5")
+                Case 3 : bonus = appSett.Settings.Bonus.BonusDefense("3")
+                Case 4 : bonus = appSett.Settings.Bonus.BonusDefense("4")
+                Case Is > 4 : bonus = appSett.Settings.Bonus.BonusDefense("5")
             End Select
             Return bonus
         End Function
 
-        Private Shared Function BonusCenterField(nplayer As Integer) As Integer
+        Private Function BonusCenterField(nplayer As Integer) As Integer
             Dim bonus As Integer = 0
             Select Case nplayer
-                Case 3 : bonus = PublicVariables.Settings.Bonus.BonusCenterField("3")
-                Case 4 : bonus = PublicVariables.Settings.Bonus.BonusCenterField("4")
-                Case Is > 4 : bonus = PublicVariables.Settings.Bonus.BonusCenterField("5")
+                Case 3 : bonus = appSett.Settings.Bonus.BonusCenterField("3")
+                Case 4 : bonus = appSett.Settings.Bonus.BonusCenterField("4")
+                Case Is > 4 : bonus = appSett.Settings.Bonus.BonusCenterField("5")
             End Select
             Return bonus
         End Function
 
-        Private Shared Function BonusAttack(nplayer As Integer) As Integer
+        Private Function BonusAttack(nplayer As Integer) As Integer
             Dim bonus As Integer = 0
             Select Case nplayer
-                Case 2 : bonus = PublicVariables.Settings.Bonus.BonusAttack("2")
-                Case Is > 2 : bonus = PublicVariables.Settings.Bonus.BonusAttack("3")
+                Case 2 : bonus = appSett.Settings.Bonus.BonusAttack("2")
+                Case Is > 2 : bonus = appSett.Settings.Bonus.BonusAttack("3")
             End Select
             Return bonus
         End Function
 
-        Public Shared Function CheckMudule(ByVal Ruolo As String, ByVal CurrP As Integer, ByVal CurrD As Integer, ByVal CurrC As Integer, ByVal CurrA As Integer) As Boolean
+        Public Function CheckMudule(ByVal Ruolo As String, ByVal CurrP As Integer, ByVal CurrD As Integer, ByVal CurrC As Integer, ByVal CurrA As Integer) As Boolean
 
             Dim ris As Boolean = False
 
@@ -867,11 +885,11 @@ Namespace Torneo
 
         End Function
 
-        Shared Function GetGoodForBonus(ByVal p As FormazioniData.PlayerFormazione) As Integer
-            If PublicVariables.Settings.Bonus.EnableBonusDefense Then
+        Private Function GetGoodForBonus(ByVal p As FormazioniData.PlayerFormazione) As Integer
+            If appSett.Settings.Bonus.EnableBonusDefense Then
                 Dim val As Integer = p.Punti
-                If PublicVariables.Settings.Bonus.BonudAttackSource = "vote" Then val = p.Voto
-                If val >= PublicVariables.Settings.Bonus.BonusAttackOverEqual * 10 Then
+                If appSett.Settings.Bonus.BonudAttackSource = "vote" Then val = p.Voto
+                If val >= appSett.Settings.Bonus.BonusAttackOverEqual * 10 Then
                     Return 1
                 Else
                     Return 0
@@ -881,7 +899,7 @@ Namespace Torneo
             End If
         End Function
 
-        Private Shared Function AddBonus(pt As String, bonus As Integer) As String
+        Private Function AddBonus(pt As String, bonus As Integer) As String
             Return CStr(CDbl(pt) - bonus)
         End Function
 

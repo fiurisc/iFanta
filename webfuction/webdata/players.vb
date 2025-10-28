@@ -13,9 +13,10 @@ Namespace WebData
                 players.Clear()
             End Sub
 
-            Public Shared Sub LoadPlayers(forceRelod As Boolean)
+            Public Shared Sub LoadPlayers(appSett As Torneo.PublicVariables, forceRelod As Boolean)
 
-                Dim fdata As String = PlayersQuotes.GetDataFileName()
+                Dim pquotes As New PlayersQuotes(appSett)
+                Dim fdata As String = pquotes.GetDataFileName()
 
                 If forceRelod Then players.Clear()
 
