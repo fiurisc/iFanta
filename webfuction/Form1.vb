@@ -103,12 +103,16 @@ Public Class Form1
     End Sub
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
-        Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa.json")
-        Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
-        Dim rosa As New Torneo.RoseData(appSett)
-        rosa.ApiAddRosa("0", htmlstr)
-        IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", json)
-        json = ""
+
+        Dim match As New Torneo.MatchsData(appSett)
+        match.ApiGetMatchDetails("1", "1")
+
+        'Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa.json")
+        'Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
+        'Dim rosa As New Torneo.RoseData(appSett)
+        'rosa.ApiAddRosa("0", htmlstr)
+        'IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", json)
+        'Json = ""
         'Dim lastid As Integer = DataTorneo.GetRecordIdFromUpdate(My.Application.Info.DirectoryPath, "2025", "tbdati", 300000)
         'DataTorneo.UpdateMatchData(My.Application.Info.DirectoryPath, "2025")
     End Sub

@@ -1,4 +1,5 @@
 ﻿Imports System.Text.RegularExpressions
+Imports webfuction.WebData.Players
 
 
 Namespace WebData
@@ -17,9 +18,10 @@ Namespace WebData
         Private Shared thrmatch As New List(Of Threading.Thread)
         Private Shared diclinkdaymatch As New SortedDictionary(Of String, Dictionary(Of String, String))
 
+        'giornata/matchid/match'
         Private Shared matchs As New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.Match))
-        'giornata/matchid/squadra'
-        Private Shared matchsplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+        'giornata/matchid/squadra/nome'
+        Private Shared matchsplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
         'giornata/matchid/minute/events'
         Private Shared matchsevent As New Dictionary(Of String, Dictionary(Of String, SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))))
 
@@ -178,8 +180,8 @@ Namespace WebData
 
                     If appSett.DataFromDatabase AndAlso matchsplayers.Count > 0 Then
                         Dim mdata As New Torneo.MatchsData(appSett)
-                        mdata.UpdateMatchDataPlayers(matchsplayers)
-                        'mdata.UpdateMatchDataEvents(matchsevent)
+                        mdata.UpdateMatchsDataPlayers(matchsplayers)
+                        mdata.UpdateMatchsDataEvents(matchsevent)
                     End If
 
                     IO.File.WriteAllText(filedetd, Functions.SerializzaOggetto(dicalldata, False))
@@ -291,7 +293,7 @@ Namespace WebData
                 'Determino la giornata di riferimento'
                 Dim d As String = Threading.Thread.CurrentThread.Name
 
-                If matchsplayers.ContainsKey(d) = False Then matchsplayers.Add(d, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+                If matchsplayers.ContainsKey(d) = False Then matchsplayers.Add(d, New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
                 If matchsevent.ContainsKey(d) = False Then matchsevent.Add(d, New Dictionary(Of String, SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))))
 
                 For Each m As String In diclinkdaymatch(d).Keys
@@ -312,9 +314,10 @@ Namespace WebData
 
             Try
 
+                If matchsplayers(day).ContainsKey(MatchId) = False Then matchsplayers(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
                 If matchsevent(day).ContainsKey(MatchId) = False Then matchsevent(day).Add(MatchId, New SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent)))
 
-                Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)
+                Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)(MatchId)
                 Dim matche As SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent)) = matchsevent(day)(MatchId)
 
                 Dim html As String = Functions.GetPage(appSett, Link & "/riepilogo")
@@ -347,7 +350,7 @@ Namespace WebData
                                     name = name
                                 End If
                                 name = Players.Data.ResolveName(Ruolo, name, team, False).GetName()
-                                AddPlayer(matchp, CInt(day), team, Ruolo, name)
+                                AddPlayer(matchp, CInt(day), CInt(MatchId), team, Ruolo, name)
                                 matchp(team)(name).Minuti = 90
                                 matchp(team)(name).Titolare = 1
                             End If
@@ -383,40 +386,40 @@ Namespace WebData
 
 
                                 If line(z).Trim.Contains("Ammonizione") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).Ammonizione += 1
                                     matche(min).Add(New Torneo.MatchsData.MatchEvent("Ammonizione", team, n1))
                                 End If
                                 If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).Espulsione += 1
                                     matche(min).Add(New Torneo.MatchsData.MatchEvent("Espulsione", team, n1))
                                 End If
                                 If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).GoalSubiti += 1
                                 End If
                                 If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).RigoriSbagliati += 1
                                     matche(min).Add(New Torneo.MatchsData.MatchEvent("Rigore sbagliato", team, n1))
                                 End If
                                 If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).GoalFatti += 1
                                     matche(min).Add(New Torneo.MatchsData.MatchEvent("Goal", team, n1))
                                     If p.Count > 1 Then
-                                        AddPlayer(matchp, CInt(day), team, r2, n2)
+                                        AddPlayer(matchp, CInt(day), CInt(MatchId), team, r2, n2)
                                         matchp(team)(n2).Assists += 1
                                         matche(min).Add(New Torneo.MatchsData.MatchEvent("Assist", team, n1))
                                     End If
                                 End If
                                 If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
-                                    AddPlayer(matchp, CInt(day), team, r1, n1)
+                                    AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).Subentrato = 1
                                     matchp(team)(n1).Minuti = min
                                     matche(min).Add(New Torneo.MatchsData.MatchEvent("Subentrato", team, n1))
-                                    AddPlayer(matchp, CInt(day), team, r2, n2)
+                                    AddPlayer(matchp, CInt(day), CInt(MatchId), team, r2, n2)
                                     matchp(team)(n2).Sostituito = 1
                                     matchp(team)(n2).Minuti = min
                                     matche(min).Add(New Torneo.MatchsData.MatchEvent("sostituito", team, n2))
@@ -447,11 +450,12 @@ Namespace WebData
 
         End Sub
 
-        Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)), giornata As Integer, team As String, ruolo As String, name As String)
+        Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)), giornata As Integer, matchid As Integer, team As String, ruolo As String, name As String)
             If match.ContainsKey(team) = False Then match.Add(team, New Dictionary(Of String, Torneo.MatchsData.MatchPlayer))
             If match(team).ContainsKey(name) = False Then
                 match(team).Add(name, New Torneo.MatchsData.MatchPlayer())
                 match(team)(name).Giornata = giornata
+                match(team)(name).MatchId = matchid
                 match(team)(name).Ruolo = ruolo
                 match(team)(name).Nome = name
                 match(team)(name).Squadra = team
