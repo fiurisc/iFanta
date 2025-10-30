@@ -43,6 +43,10 @@ Namespace WebData
             Return appsett.TorneoWebDataPath & "data\matchs\matchs-players-data-" & day & ".json"
         End Function
 
+        Shared Function GetMatchEventsDayFileName(appsett As Torneo.PublicVariables, day As String) As String
+            Return appsett.TorneoWebDataPath & "data\matchs\matchs-events-data-" & day & ".json"
+        End Function
+
         Shared Function GetMatchEventFileName(appsett As Torneo.PublicVariables) As String
             Return appsett.TorneoWebDataPath & "data\matchs\matchs-events-data.json"
         End Function
@@ -301,6 +305,7 @@ Namespace WebData
                 Next
 
                 IO.File.WriteAllText(GetMatchPlayersDayFileName(appSett, d), WebData.Functions.SerializzaOggetto(matchsplayers(d), False))
+                'IO.File.WriteAllText(GetMatchEventsDayFileName(appSett, d), WebData.Functions.SerializzaOggetto(matchsevent(d), False))
 
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -375,7 +380,7 @@ Namespace WebData
                                 p.Add(Players.Data.ResolveName("", n, team, False))
                             End If
 
-                            If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title=""(Subentrato|Ammonizione|Gol segnato|Gol subito|Autorete|Espulsione|Rigore sbagliato)""></figure>").Success Then
+                            If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title=""(Subentrato|Ammonizione|Gol segnato|Gol subito|Autorete|Espulsione|Rigore segnato|Rigore sbagliato)""></figure>").Success Then
 
                                 Dim n1 As String = p(0).GetName()
                                 Dim r1 As String = p(0).GetRole()
@@ -388,12 +393,12 @@ Namespace WebData
                                 If line(z).Trim.Contains("Ammonizione") AndAlso p.Count > 0 Then
                                     AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).Ammonizione += 1
-                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Ammonizione", team, n1))
+                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Ammonizione", min, team, n1))
                                 End If
                                 If line(z).Trim.Contains("Espulsione") AndAlso p.Count > 0 Then
                                     AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).Espulsione += 1
-                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Espulsione", team, n1))
+                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Espulsione", min, team, n1))
                                 End If
                                 If line(z).Trim.Contains("Gol subito") AndAlso p.Count > 0 Then
                                     AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
@@ -402,27 +407,27 @@ Namespace WebData
                                 If line(z).Trim.Contains("Rigore sbagliato") AndAlso p.Count > 0 Then
                                     AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).RigoriSbagliati += 1
-                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Rigore sbagliato", team, n1))
+                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Rigore sbagliato", min, team, n1))
                                 End If
-                                If line(z).Trim.Contains("Gol segnato") AndAlso p.Count > 0 Then
+                                If (line(z).Trim.Contains("Gol segnato") OrElse line(z).Trim.Contains("Rigore segnato")) AndAlso p.Count > 0 Then
                                     AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).GoalFatti += 1
-                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Goal", team, n1))
+                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Goal", min, team, n1))
                                     If p.Count > 1 Then
                                         AddPlayer(matchp, CInt(day), CInt(MatchId), team, r2, n2)
                                         matchp(team)(n2).Assists += 1
-                                        matche(min).Add(New Torneo.MatchsData.MatchEvent("Assist", team, n1))
+                                        matche(min).Add(New Torneo.MatchsData.MatchEvent("Assist", min, team, n2))
                                     End If
                                 End If
                                 If line(z).Trim.Contains("Subentrato") AndAlso p.Count > 1 Then
                                     AddPlayer(matchp, CInt(day), CInt(MatchId), team, r1, n1)
                                     matchp(team)(n1).Subentrato = 1
                                     matchp(team)(n1).Minuti = min
-                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Subentrato", team, n1))
+                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("Subentrato", min, team, n1))
                                     AddPlayer(matchp, CInt(day), CInt(MatchId), team, r2, n2)
                                     matchp(team)(n2).Sostituito = 1
                                     matchp(team)(n2).Minuti = min
-                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("sostituito", team, n2))
+                                    matche(min).Add(New Torneo.MatchsData.MatchEvent("sostituito", min, team, n2))
                                 End If
                             End If
                         End If
