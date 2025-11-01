@@ -1,4 +1,8 @@
-﻿Imports System.Text.RegularExpressions
+﻿Imports System.Data
+Imports System.Text.RegularExpressions
+Imports System.Windows.Forms.LinkLabel
+Imports Newtonsoft.Json.Linq
+Imports webfuction.Torneo.MatchsData
 Imports webfuction.WebData.Players
 
 
@@ -23,9 +27,9 @@ Namespace WebData
         'giornata/matchid/squadra/nome'
         Private Shared matchsplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
         'giornata/matchid/minute/events'
-        Private Shared matchsevent As New Dictionary(Of String, Dictionary(Of String, SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))))
+        Private Shared matchsevent As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))))
 
-        Public Property KeyMatchs As New Dictionary(Of String, Integer)
+        Public Property KeyMatchs As New Dictionary(Of String, MatchRound)
 
         Public Sub ResetCacheData()
             KeyMatchs.Clear()
@@ -65,7 +69,7 @@ Namespace WebData
                     For Each d As String In dicdata.Keys
                         For Each mid As String In dicdata(d).Keys
                             Dim key As String = dicdata(d)(mid).TeamA & "-" & dicdata(d)(mid).TeamB
-                            If KeyMatchs.ContainsKey(key) = False Then KeyMatchs.Add(key, CInt(d))
+                            If KeyMatchs.ContainsKey(key) = False Then KeyMatchs.Add(key, New MatchRound(CInt(d), CInt(mid), dicdata(d)(mid).TeamA, dicdata(d)(mid).TeamB))
                         Next
                     Next
                 End If
@@ -86,9 +90,11 @@ Namespace WebData
             matchsevent.Clear()
 
             'Leggo il calendario delle partite con i risultati'
-            strresp.AppendLine(GetCalendarMatchs(ReturnData))
+            'strresp.AppendLine(GetCalendarMatchs(ReturnData))
 
             'Leggo i tabelli delle partite'
+            Call LoadWebMatchs()
+            Call GetMatchsPlayersDataNew()
             Call GetMatchsPlayersData()
 
             Return strresp.ToString()
@@ -139,6 +145,64 @@ Namespace WebData
             End If
 
         End Function
+
+        Private Sub GetMatchsPlayersDataNew()
+            Try
+
+                Dim filedetd As String = GetMatchPlayersFileName(appSett)
+
+                'Carico i dati dell'ultima lettura'
+                Dim lastday As Integer = GetLastMatchsDayLoaded()
+
+                GetMatchLiveScoreLinks()
+
+                If diclinkdaymatch.Count > 0 Then
+
+                    'Creo la lista di thread da eseguire'
+                    thrmatch.Clear()
+                    For Each d As String In diclinkdaymatch.Keys
+                        'Ricarico i dati se nella precedente acquisizione non e' sono stati prelevati i tabellini della giornata
+                        'oppure se la giornata non e' piu' vecchia di di due giornate oppure se non tutti i match della giornata
+                        'stati disputati'
+                        If CInt(d) > lastday - 2 OrElse diclinkdaymatch(d).Count < 10 Then
+                            Dim t As New Threading.Thread(Sub(x) GetMatchLiveScoreByDay(d))
+                            t.Name = CStr(d)
+                            thrmatch.Add(t)
+                        End If
+                    Next
+
+                    'Lancio i vari Thread'
+                    For i As Integer = 0 To thrmatch.Count - 1
+                        thrmatch(i).Priority = Threading.ThreadPriority.Normal
+                        thrmatch(i).Start()
+                        thrmatch(i).Join()
+                        System.Threading.Thread.Sleep(100)
+                    Next
+
+                    Dim dicalldata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+
+                    For i As Integer = 1 To 38
+                        Dim fday As String = GetMatchPlayersDayFileName(appSett, i.ToString())
+                        If IO.File.Exists(fday) Then
+                            Dim dicdata As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))(IO.File.ReadAllText(fday))
+                            dicalldata.Add(CStr(i), dicdata)
+                        End If
+                    Next
+
+                    If appSett.DataFromDatabase AndAlso matchsplayers.Count > 0 Then
+                        Dim mdata As New Torneo.MatchsData(appSett)
+                        mdata.UpdateMatchsDataPlayers(matchsplayers)
+                        mdata.UpdateMatchsDataEvents(matchsevent)
+                    End If
+
+                    IO.File.WriteAllText(filedetd, Functions.SerializzaOggetto(dicalldata, False))
+
+                End If
+
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
 
         Private Sub GetMatchsPlayersData()
 
@@ -298,14 +362,14 @@ Namespace WebData
                 Dim d As String = Threading.Thread.CurrentThread.Name
 
                 If matchsplayers.ContainsKey(d) = False Then matchsplayers.Add(d, New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
-                If matchsevent.ContainsKey(d) = False Then matchsevent.Add(d, New Dictionary(Of String, SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))))
+                If matchsevent.ContainsKey(d) = False Then matchsevent.Add(d, New Dictionary(Of String, Dictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))))
 
                 For Each m As String In diclinkdaymatch(d).Keys
                     Call GetMatchsPlayersDataByDayMatchId(d, m, diclinkdaymatch(d)(m))
                 Next
 
                 IO.File.WriteAllText(GetMatchPlayersDayFileName(appSett, d), WebData.Functions.SerializzaOggetto(matchsplayers(d), False))
-                'IO.File.WriteAllText(GetMatchEventsDayFileName(appSett, d), WebData.Functions.SerializzaOggetto(matchsevent(d), False))
+                IO.File.WriteAllText(GetMatchEventsDayFileName(appSett, d), WebData.Functions.SerializzaOggetto(matchsevent(d), False))
 
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -320,10 +384,10 @@ Namespace WebData
             Try
 
                 If matchsplayers(day).ContainsKey(MatchId) = False Then matchsplayers(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
-                If matchsevent(day).ContainsKey(MatchId) = False Then matchsevent(day).Add(MatchId, New SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent)))
+                If matchsevent(day).ContainsKey(MatchId) = False Then matchsevent(day).Add(MatchId, New Dictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent)))
 
                 Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)(MatchId)
-                Dim matche As SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent)) = matchsevent(day)(MatchId)
+                Dim matche As Dictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent)) = matchsevent(day)(MatchId)
 
                 Dim html As String = Functions.GetPage(appSett, Link & "/riepilogo")
 
@@ -455,6 +519,198 @@ Namespace WebData
 
         End Sub
 
+        Private Sub GetMatchLiveScoreLinks()
+
+            Dim filet As String = dirt & "match-livescore-calendar.json"
+            Dim enc As String = "utf-8"
+
+            Try
+                Dim json As String = Functions.GetPage(appSett, "https://prod-cdn-public-api.livescore.com/v1/api/app/competition/77/details/1/?locale=it")
+                If json <> "" Then
+
+                    IO.File.WriteAllText(filet, json, System.Text.Encoding.GetEncoding(enc))
+
+                    Dim lines() As String = Functions.FormatJson(json).Split(Convert.ToChar(13))
+                    Dim eid As String = ""
+                    Dim teamA As String = ""
+
+                    For i As Integer = 0 To lines.Length - 1
+
+                        Dim line As String = lines(i)
+
+                        If line <> "" Then
+
+                            If line.Contains("Eid") Then
+                                eid = GetJsonPropertyValue(line)
+                            ElseIf line.Contains("""T1"": [") Then
+                                teamA = GetJsonPropertyValue(lines(i + 2)).ToUpper().Replace("CALCIO", "").Trim()
+                            ElseIf line.Contains("""T2"": [") Then
+                                If teamA <> "" Then
+                                    Dim teamB As String = GetJsonPropertyValue(lines(i + 2)).ToUpper().Replace("CALCIO", "").Trim()
+                                    Dim key As String = Functions.CheckTeamName(teamA) & "-" & Functions.CheckTeamName(teamB)
+                                    If KeyMatchs.ContainsKey(key) Then
+                                        Dim m As MatchRound = KeyMatchs(key)
+                                        If diclinkdaymatch.ContainsKey(m.Giornata.ToString()) = False Then diclinkdaymatch.Add(m.Giornata.ToString(), New Dictionary(Of String, String))
+                                        If diclinkdaymatch.ContainsKey(m.MatchId.ToString()) = False Then diclinkdaymatch(m.Giornata.ToString()).Add(m.MatchId.ToString(), "https://www.livescore.com/_next/data/it/calcio/italia/serie-a/" & teamA.ToLower() & "-vs-" & teamB.ToLower() & "/" & eid & ".json?")
+                                    End If
+                                End If
+                                teamA = ""
+                            End If
+                        End If
+                    Next
+
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
+
+        Private Sub GetMatchLiveScoreByDay(giornata As String)
+            Try
+                If matchsplayers.ContainsKey(giornata) = False Then matchsplayers.Add(giornata, New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
+                If matchsevent.ContainsKey(giornata) = False Then matchsevent.Add(giornata, New Dictionary(Of String, Dictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))))
+
+                For Each m As String In diclinkdaymatch(giornata).Keys
+                    Call GetMatchLiveScoreByMatchId(giornata, m)
+                Next
+
+                IO.File.WriteAllText(GetMatchPlayersDayFileName(appSett, giornata), WebData.Functions.SerializzaOggetto(matchsplayers(giornata), False))
+                'IO.File.WriteAllText(GetMatchEventsDayFileName(appSett, giornata), WebData.Functions.SerializzaOggetto(matchsevent(d), False))
+
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
+
+        Private Sub GetMatchLiveScoreByMatchId(giornata As String, MatchId As String)
+
+            Dim filet1 As String = dirt & "match-livescore-day-" & giornata & "-matchid-" & MatchId & "_summery.json"
+            Dim filet2 As String = dirt & "match-livescore-day-" & giornata & "-matchid-" & MatchId & "_lineup.json"
+            Dim enc As String = "utf-8"
+            Dim locMatchPlayer As New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))
+            Dim locMatchsevent As New SortedDictionary(Of Integer, List(Of Torneo.MatchsData.MatchEvent))
+
+
+            Try
+                If diclinkdaymatch.ContainsKey(giornata) AndAlso diclinkdaymatch(giornata).ContainsKey(MatchId) Then
+
+                    Dim json As String = Functions.GetPage(appSett, diclinkdaymatch(giornata)(MatchId))
+
+                    If json <> "" Then
+
+                        Dim code As String = System.Text.RegularExpressions.Regex.Match(json, "(?<=buildid\=)[\w\-]{1,}").Value()
+
+                        If code <> "" Then
+
+                            Dim link1 As String = diclinkdaymatch(giornata)(MatchId).Replace("/it/", "/" & code & "/it/")
+                            Dim link2 As String = link1.Replace(".json?", "/lineups.json?")
+
+                            json = Functions.GetPage(appSett, link2, enc)
+
+                            If json <> "" Then
+
+                                json = Functions.FormatJson(json)
+                                IO.File.WriteAllText(filet2, json, System.Text.Encoding.GetEncoding(enc))
+
+                                Dim lines() As String = json.Replace(vbCrLf, vbCr).Replace(vbLf, "").Split(Convert.ToChar(13))
+                                Dim eid As String = ""
+                                Dim team As String = ""
+                                Dim teamA As String = ""
+                                Dim teamB As String = ""
+                                Dim type As String = ""
+                                Dim name As String = ""
+                                Dim nbrspace As Integer = 0
+
+                                For i As Integer = 0 To lines.Length - 1
+
+                                    If lines(i) <> "" Then
+
+                                        Dim line As String = lines(i)
+
+                                        If line.Contains("team1") Then
+                                            teamA = Functions.CheckTeamName(GetJsonPropertyValue(line.ToUpper().Replace("CALCIO", "").Trim))
+                                        ElseIf line.Contains("team2") Then
+                                            teamB = Functions.CheckTeamName(GetJsonPropertyValue(line.ToUpper().Replace("CALCIO", "").Trim))
+                                        ElseIf line.Contains("homeStarters") Then
+                                            team = teamA
+                                            nbrspace = line.Length - line.Trim().Length
+                                            type = "Titolari"
+                                        ElseIf line.Contains("awayStarters") Then
+                                            team = teamB
+                                            nbrspace = line.Length - line.Trim().Length
+                                            type = "Titolari"
+                                        ElseIf line.Contains("homeSubs") Then
+                                            team = teamA
+                                            nbrspace = line.Length - line.Trim().Length
+                                            type = "Panchina"
+                                        ElseIf line.Contains("awaySubs") Then
+                                            team = teamB
+                                            nbrspace = line.Length - line.Trim().Length
+                                            type = "Panchina"
+                                        ElseIf line.Contains("shortName") Then
+                                            If type <> "" Then
+                                                name = GetJsonPropertyValue(line.ToUpper())
+                                                Dim pm As PlayerMatch = Players.Data.ResolveName("", name, team, False)
+                                                name = pm.GetName
+                                                Dim ruolo As String = pm.GetRole()
+                                                If locMatchPlayer.ContainsKey(team) = False Then locMatchPlayer.Add(team, New Dictionary(Of String, MatchPlayer))
+                                                If locMatchPlayer(team).ContainsKey(name) = False Then locMatchPlayer(team).Add(name, New MatchPlayer)
+                                                Dim m As MatchPlayer = locMatchPlayer(team)(name)
+                                                m.Giornata = CInt(giornata)
+                                                m.MatchId = CInt(MatchId)
+                                                m.Ruolo = ruolo
+                                                m.Nome = name
+                                                If type = "Titolari" Then
+                                                    m.Titolare = 1
+                                                Else
+                                                    m.Titolare = 0
+                                                End If
+                                            End If
+                                        ElseIf line.Contains("""sub"": {") AndAlso type = "Titolari" Then
+                                            Dim m As MatchPlayer = locMatchPlayer(team)(name)
+                                            m.Sostituito = 1
+                                            If type = "Titolari" Then
+                                                m.Titolare = 1
+                                            Else
+                                                m.Titolare = 0
+                                            End If
+                                            m.Minuti = CInt(GetJsonPropertyValue(lines(i + 9)))
+                                        ElseIf line.Contains("},") OrElse line.Contains("],") Then
+                                            Dim g As Integer = line.Length - line.Trim().Length
+                                            If nbrspace = line.Length - line.Trim().Length Then
+                                                type = ""
+                                            End If
+                                        End If
+
+                                        If line.Contains("shortName") Then
+                                            name = GetJsonPropertyValue(line)
+                                        End If
+                                        If line.Contains("position") Then
+
+                                        End If
+                                    End If
+                                Next
+                            End If
+
+                            json = Functions.GetPage(appSett, link1)
+
+                            If json <> "" Then
+                                json = Functions.FormatJson(json)
+                                IO.File.WriteAllText(filet1, json, System.Text.Encoding.GetEncoding(enc))
+                            End If
+
+                        End If
+                    End If
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
+
+        Private Function GetJsonPropertyValue(Value As String) As String
+            Return System.Text.RegularExpressions.Regex.Match(Value, "(?<=:).*").Value().Replace(",", "").Replace(Convert.ToChar(34), "").Trim()
+        End Function
+
         Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)), giornata As Integer, matchid As Integer, team As String, ruolo As String, name As String)
             If match.ContainsKey(team) = False Then match.Add(team, New Dictionary(Of String, Torneo.MatchsData.MatchPlayer))
             If match(team).ContainsKey(name) = False Then
@@ -469,5 +725,20 @@ Namespace WebData
             End If
         End Sub
 
+
+        Public Class MatchRound
+            Public Property Giornata As Integer = 0
+            Public Property MatchId As Integer = 0
+            Public Property TeamA As String = ""
+            Public Property TeamB As String = ""
+
+            Public Sub New(Giornata As Integer, MatchId As Integer, TeamA As String, TeamB As String)
+                Me.Giornata = Giornata
+                Me.MatchId = MatchId
+                Me.TeamA = TeamA
+                Me.TeamB = TeamB
+            End Sub
+
+        End Class
     End Class
 End Namespace

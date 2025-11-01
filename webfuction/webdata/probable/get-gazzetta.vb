@@ -41,7 +41,7 @@ Namespace WebData
                     srLog.WriteLine("Calendario match:")
                     srLog.WriteLine("---------------------------")
                     For Each t As String In mdataw.KeyMatchs.Keys
-                        srLog.WriteLine(mdataw.KeyMatchs(t) & " -> " & t)
+                        srLog.WriteLine(mdataw.KeyMatchs(t).Giornata & " -> " & t)
                     Next
                     srLog.WriteLine("")
                     srLog.WriteLine("linee file html => " & CStr(line.Length))
@@ -66,7 +66,7 @@ Namespace WebData
 
                                     For Each key As String In mdataw.KeyMatchs.Keys
                                         If key = match Then
-                                            currgg = mdataw.KeyMatchs(key)
+                                            currgg = mdataw.KeyMatchs(key).Giornata
                                             plaryersData.Day = currgg
                                             srLog.WriteLine("giornata associata -> " & CStr(currgg))
                                             Exit For

@@ -325,7 +325,7 @@ Namespace Torneo
             End Try
         End Sub
 
-        Public Sub UpdateMatchsDataEvents(newdata As Dictionary(Of String, Dictionary(Of String, SortedDictionary(Of Integer, List(Of MatchEvent)))))
+        Public Sub UpdateMatchsDataEvents(newdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of Integer, List(Of MatchEvent)))))
             Try
 
                 For Each g As String In newdata.Keys
@@ -532,6 +532,14 @@ Namespace Torneo
             Public Property AutoGoal As Integer = 0
             Public Property RigoriParati As Integer = 0
             Public Property RigoriSbagliati As Integer = 0
+
+            Sub New()
+
+            End Sub
+
+            Sub New(Giornata As Integer, MatchId As Integer)
+
+            End Sub
         End Class
 
         Public Class MatchEvent

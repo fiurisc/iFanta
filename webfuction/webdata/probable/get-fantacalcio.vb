@@ -26,7 +26,7 @@
                 sr.WriteLine("Calendario match:")
                 sr.WriteLine("---------------------------")
                 For Each t As String In mdataw.KeyMatchs.Keys
-                    sr.WriteLine(mdataw.KeyMatchs(t) & " -> " & t)
+                    sr.WriteLine(mdataw.KeyMatchs(t).Giornata & " -> " & t)
                 Next
                 sr.WriteLine("")
 
