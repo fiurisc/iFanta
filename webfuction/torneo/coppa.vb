@@ -157,16 +157,29 @@ Namespace Torneo
                 End If
 
                 If partita.GoalAnd1 > 0 Then
-                    clasa(partita.TeamGironeId1).GoalFatti = clasa(partita.TeamGironeId1).GoalFatti + partita.GoalAnd1
+                    clasa(partita.TeamGironeId1).GoalFatti += partita.GoalAnd1
                 End If
                 If partita.GoalRit1 > 0 Then
-                    clasa(partita.TeamGironeId1).GoalFatti = clasa(partita.TeamGironeId1).GoalFatti + partita.GoalRit1
+                    clasa(partita.TeamGironeId1).GoalFatti += partita.GoalRit1
                 End If
                 If partita.GoalAnd2 > 0 Then
-                    clasa(partita.TeamGironeId2).GoalFatti = clasa(partita.TeamGironeId2).GoalFatti + partita.GoalAnd2
+                    clasa(partita.TeamGironeId1).GoalSubiti += partita.GoalAnd2
                 End If
                 If partita.GoalRit2 > 0 Then
-                    clasa(partita.TeamGironeId2).GoalFatti = clasa(partita.TeamGironeId2).GoalFatti + partita.GoalRit2
+                    clasa(partita.TeamGironeId2).GoalSubiti += partita.GoalRit2
+                End If
+
+                If partita.GoalAnd2 > 0 Then
+                    clasa(partita.TeamGironeId2).GoalFatti += partita.GoalAnd2
+                End If
+                If partita.GoalRit2 > 0 Then
+                    clasa(partita.TeamGironeId2).GoalFatti += partita.GoalRit2
+                End If
+                If partita.GoalAnd1 > 0 Then
+                    clasa(partita.TeamGironeId2).GoalSubiti += partita.GoalAnd1
+                End If
+                If partita.GoalRit1 > 0 Then
+                    clasa(partita.TeamGironeId2).GoalSubiti += partita.GoalRit1
                 End If
             Next
 

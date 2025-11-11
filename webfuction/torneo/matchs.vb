@@ -95,7 +95,7 @@ Namespace Torneo
 
             If appSett.DataFromDatabase Then
 
-                Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer)))
+                Dim dicdata As New Dictionary(Of String, Dictionary(Of String, MatchPlayer))
                 Dim mtxdata As List(Of MatchPlayer) = GetMatchsDataPlayers(startDay, endDay)
 
                 For Each m As MatchPlayer In mtxdata
@@ -103,12 +103,15 @@ Namespace Torneo
                     Dim g As String = m.Giornata.ToString()
                     Dim s As String = m.Squadra.ToString()
                     Dim n As String = m.Nome.ToString()
+                    Dim key As String = n & "-" & s
 
-                    If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New Dictionary(Of String, Dictionary(Of String, MatchPlayer)))
-                    If dicdata(g).ContainsKey(s) = False Then dicdata(g).Add(s, New Dictionary(Of String, MatchPlayer))
-                    If dicdata(g)(s).ContainsKey(n) = False Then
-                        dicdata(g)(s).Add(n, m)
+                    If startDay = endDay Then g = "0"
+
+                    If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New Dictionary(Of String, MatchPlayer))
+                    If dicdata(g).ContainsKey(key) = False Then
+                        dicdata(g).Add(key, m)
                     End If
+
                 Next
 
                 Return WebData.Functions.SerializzaOggetto(dicdata, True)
@@ -325,7 +328,7 @@ Namespace Torneo
             End Try
         End Sub
 
-        Public Sub UpdateMatchsDataEvents(newdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of Integer, List(Of MatchEvent)))))
+        Public Sub UpdateMatchsDataEvents(newdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, List(Of MatchEvent)))))
             Try
 
                 For Each g As String In newdata.Keys
@@ -338,7 +341,7 @@ Namespace Torneo
                         Dim sqlupdate As New List(Of String)
 
                         For Each data As MatchEvent In mtxtdata
-                            Dim key As String = data.MatchId & "/" & data.Minuto & "/" & data.EventType & "/" & data.Nome & "/" & data.Squadra
+                            Dim key As String = data.MatchId & "/" & data.Minuto & "/" & data.EventType & "/" & data.Nome1 & "/" & data.Squadra
                             If olddata.ContainsKey(key) = False Then
                                 olddata.Add(key, data)
                             End If
@@ -346,9 +349,9 @@ Namespace Torneo
 
                         For Each min In newdata(g)(idm).Keys
                             For Each mev As MatchEvent In newdata(g)(idm)(min)
-                                Dim key As String = idm & "/" & mev.Minuto & "/" & mev.EventType & "/" & mev.Nome & "/" & mev.Squadra
+                                Dim key As String = idm & "/" & mev.Minuto & "/" & mev.EventType & "/" & mev.Nome1 & "/" & mev.Squadra
                                 If olddata.ContainsKey(key) = False Then
-                                    sqlinsert.Add("INSERT INTO tbcronaca (mday,matchid,minutes,eventtype,team,player) values (" & g & "," & idm & "," & min & ",'" & mev.EventType & "','" & mev.Squadra & "','" & mev.Nome & "')")
+                                    sqlinsert.Add("INSERT INTO tbcronaca (mday,matchid,minutes,eventtype,team,player1,player2) values (" & g & "," & idm & "," & min & ",'" & mev.EventType & "','" & mev.Squadra & "','" & mev.Nome1 & "','" & mev.Nome2 & "')")
                                 Else
                                     olddata(key).RecordId = -1
                                 End If
@@ -369,49 +372,6 @@ Namespace Torneo
 
                     Next
                 Next
-                'Dim mtxtdata As List(Of MatchEvent) = GetMatchDataEvents(newdata.Keys.ToList().Select(Function(x) CInt(x)).Min.ToString(), newdata.Keys.ToList().Select(Function(x) CInt(x)).Max.ToString())
-                'Dim olddata As New Dictionary(Of String, Dictionary(Of String, MatchEvent))
-
-                'For Each data As MatchEvent In mtxtdata
-                '    Dim g As String = data.Giornata.ToString()
-                '    Dim key As String = data.MatchId & "/" & data.Minuto & "/" & data.EventType & "/" & data.Nome & "/" & data.Squadra
-                '    If olddata.ContainsKey(g) = False Then olddata.Add(g, New Dictionary(Of String, MatchEvent))
-                '    If olddata(g).ContainsKey(key) = False Then
-                '        olddata(g).Add(key, data)
-                '    End If
-                'Next
-
-                'Dim sqlinsert As New List(Of String)
-                'Dim sqlupdate As New List(Of String)
-
-                'For Each g In newdata.Keys
-                '    For Each idm In newdata(g).Keys
-                '        For Each min In newdata(g)(idm).Keys
-                '            For Each mev As MatchEvent In newdata(g)(idm)(min)
-                '                Dim key As String = idm & "/" & mev.Minuto & "/" & mev.EventType & "/" & mev.Nome & "/" & mev.Squadra
-                '                If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
-                '                    sqlinsert.Add("INSERT INTO tbcronaca (mday,matchid,minutes,eventtype,team,player) values (" & g & "," & idm & "," & min & ",'" & mev.EventType & "','" & mev.Squadra & "','" & mev.Nome & "')")
-                '                Else
-                '                    olddata(g)(key).RecordId = -1
-                '                End If
-                '            Next
-                '        Next
-                '    Next
-                'Next
-
-                'Dim sqldelete As New List(Of String)
-
-                'For Each g In olddata.Keys
-                '    For Each k In olddata(g).Keys
-                '        If olddata(g)(k).RecordId <> -1 Then
-                '            sqldelete.Add("DELETE FROM tbcronaca WHERE id=" & olddata(g)(k).RecordId)
-                '        End If
-                '    Next
-                'Next
-
-                'Functions.ExecuteSql(appSett, sqlinsert)
-                'Functions.ExecuteSql(appSett, sqlupdate)
-                'Functions.ExecuteSql(appSett, sqldelete)
 
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -482,7 +442,8 @@ Namespace Torneo
                         m.Minuto = Functions.ReadFieldIntegerData(row.Item("minutes"), 0)
                         m.EventType = Functions.ReadFieldStringData(row.Item("eventtype").ToString())
                         m.Squadra = Functions.ReadFieldStringData(row.Item("team").ToString())
-                        m.Nome = Functions.ReadFieldStringData(row.Item("player").ToString())
+                        m.Nome1 = Functions.ReadFieldStringData(row.Item("player1").ToString())
+                        m.Nome2 = Functions.ReadFieldStringData(row.Item("player2").ToString())
                         mtxtdata.Add(m)
                     Next
 
@@ -549,17 +510,19 @@ Namespace Torneo
             Public Property Minuto As Integer = 0
             Public Property EventType As String = ""
             Public Property Squadra As String = ""
-            Public Property Nome As String = ""
+            Public Property Nome1 As String = ""
+            Public Property Nome2 As String = ""
 
             Sub New()
 
             End Sub
 
-            Sub New(EventType As String, Minuto As Integer, Squadra As String, Nome As String)
+            Sub New(EventType As String, Minuto As Integer, Squadra As String, Nome1 As String, Nome2 As String)
                 Me.EventType = EventType
                 Me.Minuto = Minuto
                 Me.Squadra = Squadra
-                Me.Nome = Nome
+                Me.Nome1 = Nome1
+                Me.Nome2 = Nome2
             End Sub
 
         End Class

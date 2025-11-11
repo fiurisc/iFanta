@@ -308,16 +308,23 @@ Namespace WebData
         End Function
 
         Public Shared Function CheckTeamName(ByVal Squadra As String) As String
-            Squadra = Squadra.ToUpper.Replace("CHIEVOVERONA", "CHIEVO").Trim
-            Squadra = Squadra.ToUpper.Replace("CHIEVO-VERONA", "CHIEVO").Trim
-            Squadra = Squadra.ToUpper.Replace("CHIEVO VERONA", "CHIEVO").Trim
-            Squadra = Squadra.ToUpper.Replace("HELLASVERONA", "VERONA").Trim
-            Squadra = Squadra.ToUpper.Replace("HELLAS-VERONA", "VERONA").Trim
-            Squadra = Squadra.ToUpper.Replace("HELLAS VERONA", "VERONA").Trim
-            Squadra = Squadra.ToUpper.Replace("HELLAS", "VERONA").Trim
+            Squadra = Squadra.ToUpper.Replace("CHIEVOVERONA", "CHIEVO")
+            Squadra = Squadra.ToUpper.Replace("CHIEVO-VERONA", "CHIEVO")
+            Squadra = Squadra.ToUpper.Replace("CHIEVO VERONA", "CHIEVO")
+            Squadra = Squadra.ToUpper.Replace("HELLASVERONA", "VERONA")
+            Squadra = Squadra.ToUpper.Replace("HELLAS-VERONA", "VERONA")
+            Squadra = Squadra.ToUpper.Replace("HELLAS VERONA", "VERONA")
+            Squadra = Squadra.ToUpper.Replace("HELLAS", "VERONA")
+            Squadra = Squadra.ToUpper.Replace("SSC ", "")
+            Squadra = Squadra.ToUpper.Replace(" SSC", "")
+            Squadra = Squadra.ToUpper.Replace(" CALCIO", "")
+            Squadra = Squadra.ToUpper.Replace("CALCIO ", "")
+            Squadra = Squadra.ToUpper.Replace("FC ", "")
+            Squadra = Squadra.ToUpper.Replace(" FC", "")
             If Squadra = "GEN" Then Squadra = "GENOA"
             If Squadra = "CAG" Then Squadra = "CAGLIARI"
-            If Squadra.ToUpper = "JUVE" Then Squadra = "JUVENTUS"
+            If Squadra.ToUpper() = "JUVE" Then Squadra = "JUVENTUS"
+            Squadra = Squadra.Trim()
             Return Squadra
         End Function
 
