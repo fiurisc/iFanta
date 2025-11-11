@@ -155,7 +155,7 @@ Public Class Form1
 
         'IO.File.WriteAllText(AppContext.BaseDirectory & "test.txt", strout.ToString())
         Dim comp As New Torneo.CompilaData(appSett)
-        comp.ApiCompila("7")
+        comp.ApiCompila("11")
 
         For i As Integer = 1 To 6
             'Torneo.CompilaData.ApiCompila(CStr(i))

@@ -113,6 +113,13 @@ Namespace Torneo
                     sqlinsert.Add(sqlp.ToString())
                 End If
 
+                If forma.CambioModulo > 0 Then
+                    Dim sqlp As New System.Text.StringBuilder
+                    sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
+                    sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",40,1)")
+                    sqlinsert.Add(sqlp.ToString())
+                End If
+
                 For Each p As PlayerFormazione In forma.Players
                     Dim sqlp As New System.Text.StringBuilder
                     sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
