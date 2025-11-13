@@ -183,6 +183,8 @@ Namespace Torneo
                         p.StatisticAll.Minuti = Functions.ReadFieldIntegerData("mm_tot", row, 0)
                         p.StatisticLast.Gs = Functions.ReadFieldIntegerData("gs_last", row, 0)
                         p.StatisticLast.Gf = Functions.ReadFieldIntegerData("gf_last", row, 0)
+                        p.StatisticLast.AvgVt = Functions.ReadFieldIntegerData("avg_vt_last", row, 0)
+                        p.StatisticLast.AvgPt = Functions.ReadFieldIntegerData("avg_pt_last", row, 0)
                         p.StatisticLast.pGiocate = Functions.ReadFieldIntegerData("pgio_last", row, 0)
                         p.StatisticLast.Titolare = Functions.ReadFieldIntegerData("tit_last", row, 0)
                         p.StatisticLast.Sostituito = Functions.ReadFieldIntegerData("sos_last", row, 0)
