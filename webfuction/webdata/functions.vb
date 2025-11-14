@@ -15,19 +15,16 @@ Namespace WebData
             Execution = 3
         End Enum
 
-        'Public Shared Property Year As String = ""
-        'Public Shared Property LogsPath As String = ""
-        'Public Shared Property DataPath As String = ""
         Public Shared lastClean As Date = Date.Now
-
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
 
-        'Public Shared Function InitPath(rootDataPath As String, rootdatabasePath As String) As String
-        '    LogsPath = rootDataPath & "logs\"
-        '    DataPath = rootDataPath & Year & "\webdata\"
-        '    Torneo.Functions.InitPath(rootDataPath, rootdatabasePath, Year)
-        '    Return DataPath
-        'End Function
+        Public Shared Function GetJsonPropertyName(Value As String) As String
+            Return System.Text.RegularExpressions.Regex.Match(Value, ".*(?=:)").Value().Replace(Convert.ToChar(34), "").Trim()
+        End Function
+
+        Public Shared Function GetJsonPropertyValue(Value As String) As String
+            Return System.Text.RegularExpressions.Regex.Match(Value, "(?<=:).*").Value().Replace(",", "").Replace(Convert.ToChar(34), "").Trim()
+        End Function
 
         Public Shared Sub WriteLog(appSett As Torneo.PublicVariables, ByVal MessageType As eMessageType, ByVal Message As String)
 

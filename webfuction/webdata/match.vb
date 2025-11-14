@@ -538,12 +538,12 @@ Namespace WebData
                         If line <> "" Then
 
                             If line.Contains("Eid") Then
-                                eid = GetJsonPropertyValue(line)
+                                eid = Functions.GetJsonPropertyValue(line)
                             ElseIf line.Contains("""T1"": [") Then
-                                teamA = Functions.CheckTeamName(GetJsonPropertyValue(lines(i + 2)).ToUpper().Trim())
+                                teamA = Functions.CheckTeamName(Functions.GetJsonPropertyValue(lines(i + 2)).ToUpper().Trim())
                             ElseIf line.Contains("""T2"": [") Then
                                 If teamA <> "" Then
-                                    Dim teamB As String = Functions.CheckTeamName(GetJsonPropertyValue(lines(i + 2)).ToUpper().Trim())
+                                    Dim teamB As String = Functions.CheckTeamName(Functions.GetJsonPropertyValue(lines(i + 2)).ToUpper().Trim())
                                     Dim key As String = teamA & "-" & teamB
                                     If KeyMatchs.ContainsKey(key) Then
                                         Dim m As MatchRound = KeyMatchs(key)
@@ -655,8 +655,8 @@ Namespace WebData
 
                         Dim line As String = lines(i)
 
-                        Dim pname As String = GetJsonPropertyName(line)
-                        Dim pvalue As String = GetJsonPropertyValue(line)
+                        Dim pname As String = Functions.GetJsonPropertyName(line)
+                        Dim pvalue As String = Functions.GetJsonPropertyValue(line)
 
                         If line.EndsWith("{") OrElse line.EndsWith("[") Then
                             paths.Add(pname)
@@ -751,8 +751,8 @@ Namespace WebData
 
                         Dim line As String = lines(i)
 
-                        Dim pname As String = GetJsonPropertyName(line)
-                        Dim pvalue As String = GetJsonPropertyValue(line)
+                        Dim pname As String = Functions.GetJsonPropertyName(line)
+                        Dim pvalue As String = Functions.GetJsonPropertyValue(line)
 
                         If line.EndsWith("{") OrElse line.EndsWith("[") Then
                             paths.Add(pname)
@@ -863,14 +863,6 @@ Namespace WebData
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
-
-        Private Function GetJsonPropertyName(Value As String) As String
-            Return System.Text.RegularExpressions.Regex.Match(Value, ".*(?=:)").Value().Replace(Convert.ToChar(34), "").Trim()
-        End Function
-
-        Private Function GetJsonPropertyValue(Value As String) As String
-            Return System.Text.RegularExpressions.Regex.Match(Value, "(?<=:).*").Value().Replace(",", "").Replace(Convert.ToChar(34), "").Trim()
-        End Function
 
         Private Shared Sub AddPlayer(match As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)), giornata As Integer, matchid As Integer, team As String, ruolo As String, name As String)
             If match.ContainsKey(team) = False Then match.Add(team, New Dictionary(Of String, Torneo.MatchsData.MatchPlayer))

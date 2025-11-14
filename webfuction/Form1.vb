@@ -77,7 +77,13 @@ Public Class Form1
     End Sub
 
     Private Sub Button7_Click(sender As Object, e As EventArgs) Handles Button7.Click
-        'WebData.ProbableFormations.GetSky(False)
+        Dim prob As New WebData.ProbableFormations(appSett)
+        prob.GetProbableFormation("sky", False)
+    End Sub
+
+    Private Sub Button15_Click(sender As Object, e As EventArgs) Handles Button15.Click
+        Dim prob As New WebData.ProbableFormations(appSett)
+        prob.GetProbableFormation("fantapazz", False)
     End Sub
 
     Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
@@ -201,4 +207,5 @@ Public Class Form1
         Dim pdata As New Torneo.ClassificaData(appSett)
         pdata.ApiGetClassifica("9", True)
     End Sub
+
 End Class

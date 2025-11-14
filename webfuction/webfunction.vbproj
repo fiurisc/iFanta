@@ -200,6 +200,7 @@
     <Compile Include="webdata\players.vb" />
     <Compile Include="webdata\probable\get-corriere-ds.vb" />
     <Compile Include="webdata\probable\get-fantacalcio.vb" />
+    <Compile Include="webdata\probable\get-fantapazz.vb" />
     <Compile Include="webdata\probable\get-gazzetta.vb" />
     <Compile Include="webdata\probable\get-pianetafantacalcio.vb" />
     <Compile Include="webdata\probable\get-sky.vb" />

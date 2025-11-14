@@ -20,7 +20,6 @@ Namespace WebData
 
             Try
 
-                Players.Data.LoadPlayers(appSett, False)
 
                 Dim html As String = Functions.GetPage(appSett, "http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
 

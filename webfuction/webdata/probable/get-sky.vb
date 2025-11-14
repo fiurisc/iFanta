@@ -1,145 +1,119 @@
-﻿'Imports System.Web.Script.Serialization
+﻿Imports System.Web.Script.Serialization
 
-'Namespace WebData
-'    Partial Class ProbableFormations
+Namespace WebData
+    Partial Class ProbableFormations
 
-'        Shared Function GetSky(ReturnData As Boolean) As String
+        Public Function GetSky(ReturnData As Boolean) As String
 
-'            Dim dirt As String = Functions.DataPath & "\temp"
-'            Dim dird As String = Functions.DataPath & "\data\pforma"
-'            Dim filet As String = dirt & "\pform-sky.txt"
-'            Dim filed As String = dird & "\pform-sky.txt"
-'            Dim filep As String = dird & "\pform-sky-player.txt"
-'            Dim site As String = "Sky"
-'            Dim enc As String = "utf-8"
-'            Dim currgg As Integer = -1
+            Dim site As String = "Sky"
+            Dim fileJson As String = GetDataFileName(site)
+            Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
+            Dim fileData As String = dirData & site.ToLower() & ".json"
+            Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
+            Dim fileLog As String = dirData & site.ToLower() & ".log"
+            Dim srLog As New IO.StreamWriter(fileLog)
+            Dim rmsg As String = ""
+            Dim currgg As Integer = -1
+            Dim enc As String = "UTF-8"
 
-'            Try
+            Try
 
-'                Players.Data.LoadPlayers(False)
-'                MatchsData.LoadWebMatchs()
+                Players.Data.LoadPlayers(appSett, False)
 
-'                Dim html As String = Functions.GetPage("https://sport.sky.it/calcio/serie-a/probabili-formazioni")
+                Dim html As String = Functions.GetPage(appSett, "https://sport.sky.it/calcio/serie-a/probabili-formazioni", "UTF-8")
 
-'                If html <> "" Then
+                If html <> "" Then
 
-'                    IO.File.WriteAllText(filet, html, System.Text.Encoding.GetEncoding(enc))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding(enc))
 
-'                    Dim lines() As String = IO.File.ReadAllLines(filet, System.Text.Encoding.GetEncoding(enc))
-'                    Dim wpd As New Torneo.ProbablePlayers.Probable
-'                    Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
-'                    Dim sq As New List(Of String)
-'                    Dim sqid As Integer = 0
-'                    Dim pstate As String = "Titolare"
-'                    Dim team As String = ""
-'                    Dim name As String = ""
-'                    Dim sez As String = "header"
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding(enc))
+                    Dim plaryersData As New Torneo.ProbablePlayers.Probable
+                    Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)
+                    Dim team As String = ""
+                    Dim name As String = ""
+                    Dim sez As String = "header"
+                    Dim sq As New List(Of String)
+                    Dim sqid As Integer = 0
 
-'                    For i As Integer = 0 To lines.Length - 1
+                    srLog.WriteLine("Year -> " & appSett.Year)
+                    srLog.WriteLine("Calendario match:")
+                    srLog.WriteLine("---------------------------")
+                    For Each t As String In mdataw.KeyMatchs.Keys
+                        srLog.WriteLine(mdataw.KeyMatchs(t).Giornata & " -> " & t)
+                    Next
+                    srLog.WriteLine("")
+                    srLog.WriteLine("linee file html => " & CStr(lines.Length))
 
-'                        Dim line As String = lines(i)
+                    Dim paths As New List(Of String)
+                    Dim cpath As String = ""
 
-'                        If line <> "" Then
+                    For i As Integer = 0 To lines.Length - 1
 
-'                            If line.Contains("competition-predicted-lineups") Then
-'                                Dim json As String = System.Text.RegularExpressions.Regex.Match(line, "\{""create.*}(?=' query)").Value()
-'                                Dim sublines() As String = Functions.FormatJson(json).Split(Convert.ToChar(System.Environment.NewLine))
+                        Dim line As String = lines(i)
 
-'                                For k As Integer = 0 To sublines.Length
-'                                    If sublines(k).Contains("startingLineup") Then
-'                                        pstate = "Titolare"
-'                                    End If
-'                                    If sublines(k).Contains("seoName") Then
-'                                        team = System.Text.RegularExpressions.Regex.Match(line, "(?<=\s"").*(?="")").Value()
-'                                    ElseIf sublines(k).Contains("seoName") Then
-'                                        team = System.Text.RegularExpressions.Regex.Match(line, "(?<=\s"").*(?="")").Value()
-'                                    End If
-'                                Next
-'                                Dim dict As Object = New JavaScriptSerializer().Deserialize(Of Object)(json)
-'                                sq.Clear()
-'                                Dim s() As String = line.Split(New String() {"</div>"}, StringSplitOptions.None)
-'                                s = s
-'                            ElseIf line.Contains("<div class=""content"">") Then
-'                                sez = "player"
-'                            ElseIf line.Contains("<div class=""team-1 left"">") Then
-'                                sqid = 0
-'                            ElseIf line.Contains("<div class=""team-2 right"">") Then
-'                                sqid = 1
-'                            ElseIf line.Contains("<ul class=""playerslist"">") Then
-'                                pstate = "Titolare"
-'                            ElseIf line.Contains("<dt>Panchina:</dt>") Then
-'                                pstate = "Panchina"
-'                            ElseIf line.Contains("<dt>Squalificati:</dt>") Then
-'                                pstate = "Squalificati"
-'                            ElseIf line.Contains("<dt>Indisponibili:</dt>") Then
-'                                pstate = "Indisponibile"
-'                            ElseIf line.Contains("<dt>Allenatore:</dt>") Then
-'                                pstate = ""
-'                            ElseIf line.Contains("<div class=""lineup"">") Then
+                        If line <> "" Then
 
-'                            End If
+                            If line.Contains("competition-predicted-lineups") Then
+                                Dim json As String = System.Text.RegularExpressions.Regex.Match(line, "\{""create.*}(?=' query)").Value().Replace(vbCrLf, vbCr).Replace(vbLf, "")
+                                Dim sublines() As String = Functions.FormatJson(json).Split(Convert.ToChar(13))
 
-'                            If line.Contains("<span class=""name"">") Then
+                                For k As Integer = 0 To sublines.Length - 1
 
-'                                Dim val As String = System.Text.RegularExpressions.Regex.Match(line, "(?<=>).*(?=\<)").Value.ToUpper
+                                    Dim linej As String = sublines(k)
+                                    Dim pname As String = Functions.GetJsonPropertyName(linej)
+                                    Dim pvalue As String = Functions.GetJsonPropertyValue(linej)
 
-'                                Select Case sez
-'                                    Case "header"
-'                                        'Aggiungo la Squadra alla lista di quelle che disputano il match'
-'                                        sq.Add(Functions.CheckTeamName(val.ToUpper))
-'                                        'Cerco di determinare la giornata di riferiemnto'
-'                                        If sq.Count = 2 AndAlso currgg = -1 Then
+                                    If linej.EndsWith("{") OrElse linej.EndsWith("[") Then
+                                        paths.Add(pname)
+                                        cpath = Torneo.Functions.ConvertListStringToString(paths, "/")
+                                    ElseIf (linej.EndsWith("],") OrElse linej.EndsWith("},") OrElse linej.EndsWith("}") OrElse linej.EndsWith("]")) Then
+                                        If paths.Count > 0 Then paths.RemoveAt(paths.Count - 1)
+                                    Else
+                                        If pname = "seoName" Then
+                                            team = Functions.CheckTeamName(pvalue.ToUpper())
+                                        End If
+                                        If pname = "fullname" AndAlso cpath.Contains("substitutes") Then
+                                            Dim plist() As String = pvalue.ToUpper().Split(Convert.ToChar(" "))
+                                            For Each p As String In plist
+                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", p, team, False)
+                                                name = pm.GetName()
+                                                Call AddInfo(name, team, site, "Panchina", "", 0, plaryersData.Players)
+                                            Next
+                                        ElseIf pname = "fullname" AndAlso cpath.Contains("startingLineup") Then
+                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", pvalue.ToUpper(), team, False)
+                                            name = pm.GetName()
+                                            Call AddInfo(name, team, site, "Titolare", "", 0, plaryersData.Players)
+                                        ElseIf pname = "round" Then
+                                            currgg = Convert.ToInt32(pvalue)
+                                        End If
 
-'                                            Dim match As String = sq(0) & "-" & sq(1)
+                                    End If
+                                Next
+                            End If
+                        End If
+                    Next
 
-'                                            For Each key As String In MatchsData.KeyMatchs.Keys
-'                                                If key = match Then
-'                                                    currgg = MatchsData.KeyMatchs(key)
-'                                                    Exit For
-'                                                End If
-'                                            Next
-'                                        End If
-'                                    Case "player"
-'                                        team = sq(sqid)
-'                                        name = val.Replace("-", " ").Trim
-'                                        If name <> "" Then
-'                                            name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-'                                            Call AddInfo(name, team, site, pstate, "", -1, wpd.Players)
-'                                        End If
-'                                End Select
+                    If currgg <> -1 Then
+                        Dim out As String = WriteData(plaryersData, fileData)
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
+                        rmsg = out.Replace(System.Environment.NewLine, "</br>")
+                    End If
 
-'                            ElseIf line.Contains("</dt><dd>") AndAlso pstate <> "" Then
+                End If
 
-'                                Dim s() As String = System.Text.RegularExpressions.Regex.Match(line, "(?<=\<dd\>).*(?=\<\/dd\>)").Value.Split(CChar(","))
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+                rmsg = ex.Message
+            End Try
 
-'                                For k As Integer = 0 To s.Length - 1
-'                                    name = s(k).Replace("-", " ").Trim
-'                                    If name <> "" Then
-'                                        name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-'                                        Call AddInfo(name, team, site, pstate, "", -1, wpd.Players)
-'                                    End If
-'                                Next
-'                            End If
-'                        End If
-'                    Next
+            srLog.Close()
 
-'                    If currgg <> -1 Then
-'                        wpd.Day = currgg
-'                        Dim out As String = WriteData(wpd, filed)
-'                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(wpl, filep)
-'                        Return out.Replace(System.Environment.NewLine, "</br>")
-'                    Else
-'                        Return ""
-'                    End If
-'                Else
-'                    Return ""
-'                End If
+            If ReturnData Then
+                Return "</br><span style=color:red;font-size:bold;'>Probabili formazioni gazzetta:</span></br>" & rmsg.Replace(System.Environment.NewLine, "</br>") & "</br>"
+            Else
+                Return "</br><span style=color:red;font-size:bold;'>Probabili formazioni gazzetta:</span><span style=color:blue;font-size:bold;'>Compleated!!</span></br>"
+            End If
 
-'            Catch ex As Exception
-'                WebData.Functions.WriteLog(WebData.Functions.eMessageType.Errors, ex.Message)
-'                Return ex.Message
-'            End Try
-
-'        End Function
-'    End Class
-'End Namespace
+        End Function
+    End Class
+End Namespace
