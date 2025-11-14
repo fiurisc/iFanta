@@ -63,7 +63,14 @@ Namespace WebData
                             ElseIf lines(i).Contains("<span class='calciatore'>") Then
                                 start = True
                                 pstate = "Titolare"
-                                Dim line As String = lines(i)
+                                Dim ms As System.Text.RegularExpressions.MatchCollection = System.Text.RegularExpressions.Regex.Matches(lines(i), "(?<=ul\>)(.*?)(?=\<\/ul)")
+                                For l As Integer = 0 To ms.Count - 1
+                                    Dim sublines() As String = ms(l).Value.Replace("</li>", "|").Split(Convert.ToChar("|"))
+                                    For Each sline As String In sublines
+
+                                    Next
+
+                                Next
                             ElseIf lines(i).Contains("<div class=""squalificati""><div class=""titolo"">") OrElse lines(i).Contains("<div class=""indisponibili""><div class=""titolo"">") Then
                                 If lines(i).Contains("<div class=""squalificati""><div class=""titolo"">") Then
                                     pstate = "Squalificato"

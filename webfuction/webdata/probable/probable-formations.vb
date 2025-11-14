@@ -1,7 +1,4 @@
 ﻿
-
-Imports webfuction.WebData.Players
-
 Namespace WebData
     Public Class ProbableFormations
 
@@ -38,7 +35,7 @@ Namespace WebData
 
             mdataw.ResetCacheData()
             mdataw.LoadWebMatchs()
-            Data.LoadPlayers(appSett, False)
+            Players.Data.LoadPlayers(appSett, False)
 
             If site = "gazzetta" OrElse site = "" Then str.Append(GetGazzetta(show))
             If site = "fantacalcio" OrElse site = "" Then str.Append(GetFantacalcio(show))
