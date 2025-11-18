@@ -56,6 +56,20 @@ Namespace Torneo
 
         End Function
 
+        Public Function ApiGetStoricoClassifica() As String
+
+            Try
+                If appSett.DataFromDatabase Then
+                    Return WebData.Functions.SerializzaOggetto(GetStoricoData(), True)
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+            Return ""
+
+        End Function
+
         Private Function GetClassificaGiornata(ByVal Giornata As Integer, ByVal Top As Boolean) As List(Of Classifica)
 
             Dim curr As New List(Of Classifica)
@@ -256,6 +270,60 @@ Namespace Torneo
 
         End Function
 
+        Public Function GetStoricoData() As Dictionary(Of String, StoricoDati)
+
+            Dim clasa As New Dictionary(Of String, StoricoDati)
+            Dim str As New System.Text.StringBuilder
+
+            str.AppendLine("SELECT t.gio,t.idteam as idteam,tt.nome,tt.allenatore,sum(t.pt) as pt,sum(t.ptmax) as ptmax,sum(t.amm) as amm,sum(t.esp) as esp,sum(t.ass) as ass,sum(t.gs) as gs,sum(t.gf) as gf FROM (")
+            str.AppendLine("SELECT f.gio,f.idteam,sum(f.pt) as pt,'0' as ptmax,sum(f.amm) as amm,sum(f.esp) as esp,sum(f.ass) as ass,sum(f.gs) as gs,sum(f.gf) as gf")
+            str.AppendLine("FROM tbformazioni as f")
+            str.AppendLine("WHERE (incampo=1 OR type=10) and f.pt>-100")
+            str.AppendLine("GROUP BY f.idteam,f.gio ORDER BY f.gio,f.idteam")
+            str.AppendLine("UNION")
+            str.AppendLine("SELECT f.gio,f.idteam,'0' as pt,sum(f.pt) as ptmaxt,'0' as amm,'0' as esp,'0' as ass,'0' as gs,'0' as gf")
+            str.AppendLine("FROM tbformazionitop as f")
+            str.AppendLine("WHERE (incampo=1 OR type=10) and f.pt>-100")
+            str.AppendLine("GROUP BY f.idteam,f.gio) AS t LEFT JOIN tbteam as tt  ON t.idteam=tt.idteam")
+            str.AppendLine("GROUP BY f.idteam,tt.nome,tt.allenatore,f.gio ORDER BY f.gio,f.idteam")
+
+            Dim ds As DataSet = Functions.ExecuteSqlReturnDataSet(appSett, str.ToString)
+            If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
+                For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+
+                    Dim gio As String = ds.Tables(0).Rows(i).Item("gio").ToString()
+                    Dim idteam As String = ds.Tables(0).Rows(i).Item("idteam").ToString()
+
+                    If clasa.ContainsKey(idteam) = False Then
+                        clasa.Add(idteam, New StoricoDati)
+                    End If
+
+                    If clasa(idteam).Giornate.ContainsKey(gio) = False Then clasa(idteam).Giornate.Add(gio, New StoricoDatiItem)
+
+                    clasa(idteam).Nome = ds.Tables(0).Rows(i).Item("Nome").ToString()
+                    clasa(idteam).Allenatore = ds.Tables(0).Rows(i).Item("allenatore").ToString()
+
+                    Dim citem As New StoricoDatiItem
+                    citem.Pt = CInt(ds.Tables(0).Rows(i).Item("pt")) / 10
+                    citem.PuntiPersi = CInt(ds.Tables(0).Rows(i).Item("ptmax")) / 10 - citem.Pt
+                    citem.PercentualePuntiPersi = CInt(citem.PuntiPersi * 1000 / citem.Pt) / 10
+                    citem.Ammonizioni = CInt(ds.Tables(0).Rows(i).Item("amm"))
+                    citem.Espulsioni = CInt(ds.Tables(0).Rows(i).Item("esp"))
+                    citem.Assist = CInt(ds.Tables(0).Rows(i).Item("ass"))
+                    citem.GoalSubiti = CInt(ds.Tables(0).Rows(i).Item("gs"))
+                    citem.GoalFatti = CInt(ds.Tables(0).Rows(i).Item("gf"))
+
+                    clasa(idteam).Giornate(gio) = citem
+
+                Next
+            End If
+
+            ds.Dispose()
+
+            Return clasa
+
+        End Function
+
         Public Class Classifica
 
             Sub New()
@@ -288,6 +356,31 @@ Namespace Torneo
             Public Property PtBonus() As Double = 0
             Public Property DiffQ() As Integer = 0
             Public Property FantaMister() As Integer = 0
+
+        End Class
+
+        Public Class StoricoDati
+            Public Property IdTeam() As Integer = 0
+            Public Property Nome() As String = ""
+            Public Property Allenatore() As String = ""
+            Public Property Giornate As New Dictionary(Of String, StoricoDatiItem)
+        End Class
+
+        Public Class StoricoDatiItem
+
+            Sub New()
+
+            End Sub
+
+            Public Property Postion() As Integer = 0
+            Public Property Pt() As Double = 0
+            Public Property Ammonizioni() As Integer = 0
+            Public Property Espulsioni() As Integer = 0
+            Public Property Assist() As Integer = 0
+            Public Property GoalSubiti() As Integer = 0
+            Public Property GoalFatti() As Integer = 0
+            Public Property PuntiPersi() As Double = 0
+            Public Property PercentualePuntiPersi() As Double = 0
 
         End Class
 
