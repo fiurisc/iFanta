@@ -19,11 +19,11 @@ Namespace WebData
 
                 Players.Data.LoadPlayers(appSett, False)
 
-                Dim html As String = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp")
+                Dim html As String = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp", "UTF-8")
 
                 If html <> "" Then
 
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding("iso-8859-1"))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
                     Dim start As Boolean = False
                     Dim sq As New List(Of String)
@@ -31,7 +31,7 @@ Namespace WebData
                     Dim pstate As String = "Titolare"
                     Dim team As String = ""
 
-                    Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("iso-8859-1"))
+                    Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
                     Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
 

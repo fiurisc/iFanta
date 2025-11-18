@@ -1,4 +1,6 @@
 ﻿
+Imports System.Net.NetworkInformation
+
 Namespace WebData
     Partial Class ProbableFormations
 
@@ -19,11 +21,11 @@ Namespace WebData
 
                 Players.Data.LoadPlayers(appSett, False)
 
-                Dim html As String = Functions.GetPage(appSett, "https://www.fantapazz.com/calcio/fantacalcio/serie-a/probabili-formazioni")
+                Dim html As String = Functions.GetPage(appSett, "https://www.fantapazz.com/calcio/fantacalcio/serie-a/probabili-formazioni", "utf-8")
 
                 If html <> "" Then
 
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding("UTF-8"))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
                     Dim start As Boolean = False
                     Dim sq As New List(Of String)
@@ -31,7 +33,7 @@ Namespace WebData
                     Dim pstate As String = "Titolare"
                     Dim team As String = ""
 
-                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("UTF-8"))
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
                     Dim plaryersData As New Torneo.ProbablePlayers.Probable
                     Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)
 
@@ -67,7 +69,9 @@ Namespace WebData
                                 For l As Integer = 0 To ms.Count - 1
                                     Dim sublines() As String = ms(l).Value.Replace("</li>", "|").Split(Convert.ToChar("|"))
                                     For Each sline As String In sublines
-
+                                        Dim pname As String = System.Text.RegularExpressions.Regex.Match(sline, "(?<='calciatore'\>)(.*?)(?=\<\/span)").Value
+                                        pname = Players.Data.ResolveName("", pname, team, playersLog, False).GetName()
+                                        Call AddInfo(pname, team, site, If(l = 0, "Titolare", "Panchina"), "", -1, plaryersData.Players)
                                     Next
 
                                 Next

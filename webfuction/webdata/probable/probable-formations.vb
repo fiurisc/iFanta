@@ -166,7 +166,7 @@ Namespace WebData
                     Data.Players(p).Info = Data.Players(p).Info.Trim(","c)
                 Next
                 json = WebData.Functions.SerializzaOggetto(Data, False)
-                IO.File.WriteAllText(fileDestiNazione, json)
+                IO.File.WriteAllText(fileDestiNazione, json, System.Text.Encoding.Default)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try

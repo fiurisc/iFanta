@@ -12,7 +12,6 @@
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
 
-            Dim enc As String = "iso-8859-1"
             Dim currgg As Integer = -1
             Dim sr As New IO.StreamWriter(fileLog)
             Dim rmsg As String = ""
@@ -32,14 +31,14 @@
 
                 'Determino i link delle varie partite'
                 sr.WriteLine("Get Html page")
-                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/probabili-formazioni-serie-A")
+                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/probabili-formazioni-serie-A", "UTF-8")
 
                 If html <> "" Then
 
                     sr.WriteLine("Reading html page")
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding(enc))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
-                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding(enc))
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
                     Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                     Dim pstate As String = "Titolare"

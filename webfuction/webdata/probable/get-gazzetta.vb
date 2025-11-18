@@ -25,9 +25,9 @@ Namespace WebData
 
                 If html <> "" Then
 
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding("UTF-8"))
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
-                    Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("UTF-8"))
+                    Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
                     Dim start As Boolean = False
                     Dim plaryersData As New Torneo.ProbablePlayers.Probable
                     Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)

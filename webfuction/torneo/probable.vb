@@ -15,7 +15,7 @@ Namespace Torneo
 
         Public Function GetProbableFormation(state As String) As Dictionary(Of String, Probable)
 
-            Dim dicData As New Dictionary(Of String, Probable) From {{"Gazzetta", New Probable}, {"Fantacalcio", New Probable}, {"PianetaFantacalcio", New Probable}}
+            Dim dicData As New Dictionary(Of String, Probable) From {{"Gazzetta", New Probable}, {"Fantacalcio", New Probable}, {"PianetaFantacalcio", New Probable}, {"Sky", New Probable}, {"FantaPazz", New Probable}}
             Dim states() As String = state.Split(Convert.ToChar(","))
             Dim probData As New WebData.ProbableFormations(appSett)
 

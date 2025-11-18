@@ -125,7 +125,7 @@ Public Class Form1
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
 
-        ''SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
+        SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
         'Dim dicData As Dictionary(Of String, Probable) = Torneo.ProbablePlayers.GetProbableFormation("")
         'Dim dicName As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Integer)))
 
@@ -205,7 +205,7 @@ Public Class Form1
 
     Private Sub Button14_Click(sender As Object, e As EventArgs) Handles Button14.Click
         Dim pdata As New Torneo.ClassificaData(appSett)
-        pdata.ApiGetClassifica("9", True)
+        pdata.ApiGetStoricoClassifica()
     End Sub
 
 End Class
