@@ -71,20 +71,20 @@ Namespace WebData
                                     Else
                                         If pname = "seoName" Then
                                             team = Functions.CheckTeamName(pvalue.ToUpper())
-                                        End If
-                                        If pname = "fullname" AndAlso cpath.Contains("substitutes") Then
+                                        ElseIf pname = "fullname" AndAlso cpath.Contains("substitutes") Then
                                             Dim plist() As String = pvalue.ToUpper().Split(Convert.ToChar(" "))
                                             For Each p As String In plist
-                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", p, team, False)
+                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", p, team, playersLog, False)
                                                 name = pm.GetName()
                                                 Call AddInfo(name, team, site, "Panchina", "", 0, plaryersData.Players)
                                             Next
                                         ElseIf pname = "fullname" AndAlso cpath.Contains("startingLineup") Then
-                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", pvalue.ToUpper(), team, False)
+                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", pvalue.ToUpper(), team, playersLog, False)
                                             name = pm.GetName()
                                             Call AddInfo(name, team, site, "Titolare", "", 0, plaryersData.Players)
                                         ElseIf pname = "round" Then
                                             currgg = Convert.ToInt32(pvalue)
+                                            plaryersData.Day = currgg
                                         End If
 
                                     End If
