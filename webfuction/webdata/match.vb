@@ -344,7 +344,11 @@ Namespace WebData
         Private Function GetLastMatchsDayLoaded() As Integer
             For i As Integer = 1 To 38
                 If IO.File.Exists(GetMatchPlayersDayFileName(appSett, i.ToString())) = False Then
-                    Return i - 1
+                    If i > 1 Then
+                        Return i - 1
+                    Else
+                        Return 1
+                    End If
                 End If
             Next
             Return 38
