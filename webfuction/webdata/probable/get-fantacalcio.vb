@@ -3,8 +3,8 @@
 
         Public Function GetFantacalcio(ReturnData As Boolean) As String
 
-            Dim dirt As String = appSett.TorneoWebDataPath & "\temp"
-            Dim dird As String = appSett.TorneoWebDataPath & "\data\pforma"
+            Dim dirt As String = appSett.WebDataPath & "\temp"
+            Dim dird As String = appSett.WebDataPath & "\data\pforma"
             Dim site As String = "Fantacalcio"
             Dim fileJson As String = GetDataFileName(site)
             Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"

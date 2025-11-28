@@ -9,8 +9,8 @@ Namespace WebData
 
         Sub New(appSett As Torneo.PublicVariables)
             Me.appSett = appSett
-            dirt = appSett.TorneoWebDataPath & "temp\"
-            dird = appSett.TorneoWebDataPath & "data\matchs\"
+            dirt = appSett.WebDataPath & "temp\"
+            dird = appSett.WebDataPath & "data\matchs\"
         End Sub
 
         Private Shared thrmatch As New List(Of Threading.Thread)
@@ -30,23 +30,23 @@ Namespace WebData
         End Sub
 
         Shared Function GetMatchFileName(appsett As Torneo.PublicVariables) As String
-            Return appsett.TorneoWebDataPath & "data\matchs\matchs-data.json"
+            Return appsett.WebDataPath & "data\matchs\matchs-data.json"
         End Function
 
         Shared Function GetMatchPlayersFileName(appsett As Torneo.PublicVariables) As String
-            Return appsett.TorneoWebDataPath & "data\matchs\matchs-players-data.json"
+            Return appsett.WebDataPath & "data\matchs\matchs-players-data.json"
         End Function
 
         Shared Function GetMatchPlayersDayFileName(appsett As Torneo.PublicVariables, day As String) As String
-            Return appsett.TorneoWebDataPath & "data\matchs\matchs-players-data-" & day & ".json"
+            Return appsett.WebDataPath & "data\matchs\matchs-players-data-" & day & ".json"
         End Function
 
         Shared Function GetMatchEventsDayFileName(appsett As Torneo.PublicVariables, day As String) As String
-            Return appsett.TorneoWebDataPath & "data\matchs\matchs-events-data-" & day & ".json"
+            Return appsett.WebDataPath & "data\matchs\matchs-events-data-" & day & ".json"
         End Function
 
         Shared Function GetMatchEventFileName(appsett As Torneo.PublicVariables) As String
-            Return appsett.TorneoWebDataPath & "data\matchs\matchs-events-data.json"
+            Return appsett.WebDataPath & "data\matchs\matchs-events-data.json"
         End Function
 
         Public Sub LoadWebMatchs()

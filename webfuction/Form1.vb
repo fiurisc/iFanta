@@ -7,7 +7,7 @@ Imports webfuction.Torneo.ProbablePlayers
 
 Public Class Form1
 
-    Dim year As String = "2025"
+    Dim year As String = ""
     Dim appSett As New Torneo.PublicVariables
 
     Public Class ArubaSmtpTest
@@ -41,13 +41,15 @@ Public Class Form1
         Dim dirs As String = My.Application.Info.DirectoryPath
         Dim str As New System.Text.StringBuilder
 
-        appSett.InitPath(My.Application.Info.DirectoryPath & "\tornei\", My.Application.Info.DirectoryPath & "\tornei\", year)
+        appSett.InitPath(My.Application.Info.DirectoryPath & "\", My.Application.Info.DirectoryPath & "\tornei\", year)
         appSett.DataFromDatabase = True
 
     End Sub
 
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Dim pquotes As New WebData.PlayersQuotes(appSett)
+        Dim gen As New Torneo.General(appSett)
+        Dim years As List(Of Torneo.General.YearTorneo) = gen.ApiGetYearsList()
         pquotes.GetPlayersQuotes(False)
     End Sub
 

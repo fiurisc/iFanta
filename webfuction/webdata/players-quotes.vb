@@ -13,13 +13,13 @@ Namespace WebData
         End Sub
 
         Public Function GetDataFileName() As String
-            Return appSett.TorneoWebDataPath & "data\players-quotes.json"
+            Return appSett.WebDataPath & "data\players-quotes.json"
         End Function
 
         Public Function GetPlayersQuotes(ReturnData As Boolean) As String
 
-            Dim dirTemp As String = appSett.TorneoWebDataPath & "temp\"
-            Dim dirData As String = appSett.TorneoWebDataPath & "data\"
+            Dim dirTemp As String = appSett.WebDataPath & "temp\"
+            Dim dirData As String = appSett.WebDataPath & "data\"
             Dim fileJson As String = GetDataFileName()
             Dim fileTemp As String = dirTemp & Path.GetFileNameWithoutExtension(GetDataFileName()) & ".html.txt"
             Dim fileLog As String = dirData & Path.GetFileNameWithoutExtension(GetDataFileName) & ".log"
@@ -96,8 +96,8 @@ Namespace WebData
 
         Public Function GetPlayersQuoteFantacalcio2(ReturnData As Boolean) As String
 
-            Dim dirt As String = appSett.TorneoWebDataPath & "\temp"
-            Dim dird As String = appSett.TorneoWebDataPath & "\data"
+            Dim dirt As String = appSett.WebDataPath & "\temp"
+            Dim dird As String = appSett.WebDataPath & "\data"
             Dim filet1 As String = dirt & "\players-quote.zip"
             Dim filet2 As String = dirt & "\players-quote.zip"
             Dim filed As String = dird & "\players-quote.txt"

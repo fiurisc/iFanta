@@ -11,7 +11,7 @@ Namespace WebData
         End Sub
 
         Public Function GetDataFileName(giornata As Integer) As String
-            Return appSett.TorneoWebDataPath & "data\classifica-seriea-" & giornata & ".json"
+            Return appSett.WebDataPath & "data\classifica-seriea-" & giornata & ".json"
         End Function
 
         Public Function GetClassifica(ReturnData As Boolean) As String
@@ -41,7 +41,7 @@ Namespace WebData
         Public Function GetClassificaGiornata(giornata As Integer) As Boolean
 
             Dim filed As String = GetDataFileName(giornata)
-            Dim filet As String = appSett.TorneoWebDataPath & "temp\classifica-seriea-" & giornata & ".txt"
+            Dim filet As String = appSett.WebDataPath & "temp\classifica-seriea-" & giornata & ".txt"
             Dim dataFound As Boolean = False
             Dim clasa As New List(Of Torneo.ClassificaSerieA.ClassificaItem)
 
@@ -154,7 +154,7 @@ Namespace WebData
         'Public Function GetClassifica1(ReturnData As Boolean) As String
 
         '    Dim filed As String = GetDataFileName(appSett)
-        '    Dim filet As String = appSett.TorneoWebDataPath & "temp\classifica-seriea.txt"
+        '    Dim filet As String = appSett.WebDataPath & "temp\classifica-seriea.txt"
 
         '    Dim clasa As New List(Of ClassificaItem)
 

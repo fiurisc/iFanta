@@ -12,8 +12,8 @@ Namespace WebData
             Me.appSett = appSett
             mdatat = New Torneo.MatchsData(appSett)
             mdataw = New MatchsData(appSett)
-            dirTemp = appSett.TorneoWebDataPath & "temp\"
-            dirData = appSett.TorneoWebDataPath & "data\pforma\"
+            dirTemp = appSett.WebDataPath & "temp\"
+            dirData = appSett.WebDataPath & "data\pforma\"
         End Sub
 
 
@@ -49,7 +49,7 @@ Namespace WebData
         End Function
 
         Function GetDataFileName(site As String) As String
-            Return appSett.TorneoWebDataPath & "data\pforma\" & site.ToLower() & ".json"
+            Return appSett.WebDataPath & "data\pforma\" & site.ToLower() & ".json"
         End Function
 
         Shared Sub AddInfo(Name As String, Team As String, Site As String, State As String, Info As String, Percentage As Integer, wpList As Dictionary(Of String, Torneo.ProbablePlayers.Probable.Player))

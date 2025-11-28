@@ -11,14 +11,14 @@ Namespace WebData
         End Sub
 
         Public Function GetDataFileName() As String
-            Return appSett.TorneoWebDataPath & "data\players-data.json"
+            Return appSett.WebDataPath & "data\players-data.json"
         End Function
 
         Public Function GetPlayersData(ReturnData As Boolean) As String
 
 
-            Dim dirTemp As String = appSett.TorneoWebDataPath & "temp\"
-            Dim dirData As String = appSett.TorneoWebDataPath & "data\"
+            Dim dirTemp As String = appSett.WebDataPath & "temp\"
+            Dim dirData As String = appSett.WebDataPath & "data\"
             Dim fileJson As String = GetDataFileName()
             Dim fileLog As String = dirData & Path.GetFileNameWithoutExtension(GetDataFileName) & ".log"
             Dim strdata As String = ""

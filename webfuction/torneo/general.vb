@@ -11,16 +11,6 @@ Namespace Torneo
             Me.appSett = appSett
         End Sub
 
-        Public Function GetApplication(role As String) As List(Of WebApplication)
-
-            Dim apps As New List(Of WebApplication)
-
-            apps.Add(New WebApplication("edit-formazioni.png", "Compila formazione", "Compila la formazione da inviare", "compila.html", ""))
-
-            Return apps
-
-        End Function
-
         Public Function GetAccountByUsername(Username As String) As Account
 
             Dim acc As New Account
@@ -68,15 +58,76 @@ Namespace Torneo
 
         Public Function ApiGetYearAct() As String
 
-            Dim years As List(Of YearTorneo) = ApiGetYearsList()
+            Dim d() As String = IO.Directory.GetDirectories(appSett.RootWebDataPath)
 
-            For Each y As YearTorneo In years
-                If y.Active Then
-                    Return y.Year
+            For i As Integer = 0 To d.Length - 1
+                Dim year As String = IO.Path.GetDirectoryName(d(i))
+                Dim fname As String = d(i) & "/active.txt"
+                If IO.File.Exists(fname) Then
+                    Return IO.Path.GetDirectoryName(d(i))
                 End If
             Next
 
             Return ""
+
+        End Function
+
+        Public Function ApiGetTorneiList() As List(Of String)
+
+            Dim tornei As New List(Of String)
+
+            If IO.Directory.Exists(appSett.RootTorneiPath) Then
+
+                Dim d() As String = IO.Directory.GetDirectories(appSett.RootTorneiPath)
+
+                For i As Integer = 0 To d.Length - 1
+                    tornei.Add(IO.Path.GetDirectoryName(d(i)))
+                Next
+
+            End If
+
+            Return tornei
+
+        End Function
+
+        Public Function ApiGetTorneoYearsList(Torneo As String) As List(Of YearTorneo)
+
+            Dim years As New List(Of YearTorneo)
+            Dim dtorneo As String = appSett.RootTorneiPath & Torneo
+
+            If IO.Directory.Exists(dtorneo) Then
+
+                Dim d() As String = IO.Directory.GetDirectories(dtorneo)
+
+                For i As Integer = 0 To d.Length - 1
+
+                    Dim fname As String = d(i) & "/settings.txt"
+
+                    If IO.File.Exists(fname) Then
+
+                        Dim line() As String = IO.File.ReadAllLines(fname)
+                        Dim year As String = ""
+
+                        For k As Integer = 0 To line.Length - 1
+
+                            Dim para As String = Regex.Match(line(k), ".+(?=\= ')").Value.Trim
+                            Dim value As String = Regex.Match(line(k), "(?<= ').+(?=')").Value
+
+                            If para = "Year" Then
+                                year = value
+                            End If
+
+                        Next
+
+                        years.Add(New YearTorneo(year))
+
+                    End If
+
+                Next
+
+            End If
+
+            Return years
 
         End Function
 
@@ -94,7 +145,6 @@ Namespace Torneo
                 If IO.File.Exists(fname) Then
 
                     Dim line() As String = IO.File.ReadAllLines(fname)
-                    Dim act As Boolean = False
                     Dim year As String = ""
 
                     For k As Integer = 0 To line.Length - 1
@@ -106,12 +156,9 @@ Namespace Torneo
                             year = value
                         End If
 
-                        If line(k).Contains("Active = 'True'") Then
-                            act = True
-                        End If
                     Next
 
-                    years.Add(New YearTorneo(year, act))
+                    years.Add(New YearTorneo(year))
 
                 End If
 
@@ -121,9 +168,8 @@ Namespace Torneo
 
         End Function
 
-        Public Function ApiGetSettings(year As String) As String
-            Dim sett As TorneoSettings = GetSettings(year)
-            Return WebData.Functions.SerializzaOggetto(sett, True)
+        Public Function ApiGetSettings() As String
+            Return WebData.Functions.SerializzaOggetto(appSett, True)
         End Function
 
         Public Sub ReadSettings()
@@ -500,15 +546,13 @@ Namespace Torneo
 
         Public Class YearTorneo
             Public Property Year As String = ""
-            Public Property Active As Boolean = False
 
             Sub New()
 
             End Sub
 
-            Sub New(Year As String, Active As Boolean)
+            Sub New(Year As String)
                 Me.Year = Year
-                Me.Active = Active
             End Sub
         End Class
 

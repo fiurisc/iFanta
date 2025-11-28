@@ -21,8 +21,8 @@ Namespace Torneo
 
             Try
 
-                Dim fname As String = appSett.TorneoWebDataPath & "temp\WD" & giornata.PadLeft(2, CChar("0")) & ".txt"
-                Dim fdata As String = appSett.TorneoWebDataPath & "temp\DD" & giornata.PadLeft(2, CChar("0")) & ".txt"
+                Dim fname As String = appSett.WebDataPath & "temp\WD" & giornata.PadLeft(2, CChar("0")) & ".txt"
+                Dim fdata As String = appSett.WebDataPath & "temp\DD" & giornata.PadLeft(2, CChar("0")) & ".txt"
                 Dim max As Integer = 7
 
                 WebData.Players.Data.LoadPlayers(appSett, True)
