@@ -132,9 +132,9 @@ Namespace Torneo
 
         Public Shared Function GetDbConnectionString(appSett As PublicVariables, DbUser As Boolean) As String
             If DbUser Then
-                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & appSett.DatabaseTorneo.FileName & ";"
-            Else
                 Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & appSett.DatabaseUser.FileName & ";"
+            Else
+                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & appSett.DatabaseTorneo.FileName & ";"
             End If
         End Function
 

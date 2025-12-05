@@ -138,10 +138,8 @@ Namespace WebData
                     End If
                 Next
 
-                If appSett.DataFromDatabase Then
-                    Dim pdata As New Torneo.Players(appSett)
-                    pdata.UpdatePlayersData(playersd)
-                End If
+                Dim uppdata As New Torneo.Players(appSett)
+                uppdata.UpdatePlayersData(playersd)
 
                 strdata = Functions.SerializzaOggetto(playersd, False)
 

@@ -120,10 +120,8 @@ Namespace WebData
                     System.Threading.Thread.Sleep(100)
                 Next
 
-                If appSett.DataFromDatabase Then
-                    Dim mdata As New Torneo.MatchsData(appSett)
-                    mdata.UpdateMatchData(matchs)
-                End If
+                Dim mdata As New Torneo.MatchsData(appSett)
+                mdata.UpdateMatchData(matchs)
 
                 IO.File.WriteAllText(filed, Functions.SerializzaOggetto(matchs, False))
 
@@ -183,11 +181,9 @@ Namespace WebData
                         End If
                     Next
 
-                    If appSett.DataFromDatabase AndAlso matchsplayers.Count > 0 Then
-                        Dim mdata As New Torneo.MatchsData(appSett)
-                        mdata.UpdateMatchsDataPlayers(matchsplayers)
-                        mdata.UpdateMatchsDataEvents(matchsevent)
-                    End If
+                    Dim mdata As New Torneo.MatchsData(appSett)
+                    mdata.UpdateMatchsDataPlayers(matchsplayers)
+                    mdata.UpdateMatchsDataEvents(matchsevent)
 
                     IO.File.WriteAllText(filedetd, Functions.SerializzaOggetto(dicalldata, False))
 
@@ -240,11 +236,9 @@ Namespace WebData
                         End If
                     Next
 
-                    If appSett.DataFromDatabase AndAlso matchsplayers.Count > 0 Then
-                        Dim mdata As New Torneo.MatchsData(appSett)
-                        mdata.UpdateMatchsDataPlayers(matchsplayers)
-                        mdata.UpdateMatchsDataEvents(matchsevent)
-                    End If
+                    Dim mdata As New Torneo.MatchsData(appSett)
+                    mdata.UpdateMatchsDataPlayers(matchsplayers)
+                    mdata.UpdateMatchsDataEvents(matchsevent)
 
                     IO.File.WriteAllText(filedetd, Functions.SerializzaOggetto(dicalldata, False))
 

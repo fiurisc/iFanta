@@ -1,9 +1,5 @@
 ﻿
 
-Imports System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder
-Imports System.Runtime.InteropServices.ComTypes
-Imports webfuction.Torneo.MatchsData
-
 Namespace Torneo
     Public Class ClassificaSerieA
 

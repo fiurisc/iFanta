@@ -1,5 +1,6 @@
-﻿Imports System.Text.RegularExpressions
+﻿Imports System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder
 Imports System.IO
+Imports System.Text.RegularExpressions
 
 Namespace Torneo
 
@@ -29,7 +30,8 @@ Namespace Torneo
                         acc.Password = Functions.ReadFieldStringData("password", row, "")
                         acc.Role = Functions.ReadFieldStringData("role", row, "")
                         acc.Mail = Functions.ReadFieldStringData("mail", row, "")
-                        acc.TeamId = Functions.ReadFieldStringData("teamid", row, "0")
+                        GetTorneiByAccount(acc)
+                        Exit For
                     Next
                 End If
             Catch ex As Exception
@@ -39,6 +41,29 @@ Namespace Torneo
             Return acc
 
         End Function
+
+        Private Sub GetTorneiByAccount(acc As Account)
+            Try
+
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Get tornei associati all'account: " & acc.Id)
+
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT st.torneoid,to.nome,st.anno as anno,st.teamid FROM stagioni AS st LEFT JOIN tornei AS [to] ON to.id=st.torneoid WHERE userid=" & acc.Id & ";", True)
+
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim row As System.Data.DataRow = ds.Tables(0).Rows(i)
+                        Dim torneoNome As String = Functions.ReadFieldStringData("nome", row, "")
+                        Dim anno As Integer = Functions.ReadFieldIntegerData("anno", row, -1)
+                        Dim teamid As Integer = Functions.ReadFieldIntegerData("teamid", row, -1)
+                        If acc.Tornei.ContainsKey(torneoNome) = False Then acc.Tornei.Add(torneoNome, New Dictionary(Of Integer, Integer))
+                        If acc.Tornei(torneoNome).ContainsKey(anno) = False Then acc.Tornei(torneoNome).Add(anno, teamid)
+                    Next
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+        End Sub
 
         Public Sub SendPassword(Username As String)
 
@@ -52,8 +77,8 @@ Namespace Torneo
             End If
         End Sub
 
-        Public Function GetSettingsFileName(Year As String) As String
-            Return appSett.RootTorneiPath & Year & "/settings.txt"
+        Public Function GetSettingsFileName() As String
+            Return appSett.TorneoPath & "/settings.txt"
         End Function
 
         Public Function ApiGetYearAct() As String
@@ -72,23 +97,23 @@ Namespace Torneo
 
         End Function
 
-        Public Function ApiGetTorneiList() As List(Of String)
+        'Public Function ApiGetTorneiList() As List(Of String)
 
-            Dim tornei As New List(Of String)
+        '    Dim tornei As New List(Of String)
 
-            If IO.Directory.Exists(appSett.RootTorneiPath) Then
+        '    If IO.Directory.Exists(appSett.RootTorneiPath) Then
 
-                Dim d() As String = IO.Directory.GetDirectories(appSett.RootTorneiPath)
+        '        Dim d() As String = IO.Directory.GetDirectories(appSett.RootTorneiPath)
 
-                For i As Integer = 0 To d.Length - 1
-                    tornei.Add(IO.Path.GetDirectoryName(d(i)))
-                Next
+        '        For i As Integer = 0 To d.Length - 1
+        '            tornei.Add(IO.Path.GetDirectoryName(d(i)))
+        '        Next
 
-            End If
+        '    End If
 
-            Return tornei
+        '    Return tornei
 
-        End Function
+        'End Function
 
         Public Function ApiGetTorneoYearsList(Torneo As String) As List(Of YearTorneo)
 
@@ -169,20 +194,24 @@ Namespace Torneo
         End Function
 
         Public Function ApiGetSettings() As String
-            Return WebData.Functions.SerializzaOggetto(appSett, True)
+            appSett.Settings.Year = appSett.Year
+            appSett.Settings.Nome = appSett.Nome
+            Return WebData.Functions.SerializzaOggetto(appSett.Settings, True)
         End Function
 
         Public Sub ReadSettings()
             If appSett.SettingsLoaded Then Exit Sub
-            appSett.Settings = GetSettings(appSett.Year)
+            appSett.Settings = GetSettings()
+            appSett.Settings.Year = appSett.Year
+            appSett.Settings.Nome = appSett.Nome
             appSett.SettingsLoaded = True
         End Sub
 
-        Private Function GetSettings(year As String) As TorneoSettings
+        Private Function GetSettings() As TorneoSettings
 
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Lettura delle impostazioni per il torneo: " & year)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Lettura delle impostazioni per il torneo: " & appSett.Year)
 
-            Dim fname As String = GetSettingsFileName(year)
+            Dim fname As String = GetSettingsFileName()
             Dim sett As New TorneoSettings
 
             sett.Bonus.BonusDefense.Clear()
@@ -213,8 +242,6 @@ Namespace Torneo
                         If para <> "" AndAlso value <> "" Then
                             Try
                                 Select Case para
-                                    Case "Active" : sett.Active = CBool(value)
-                                    Case "Year" : sett.Year = value
                                     Case "Number teams" : sett.NumberOfTeams = CInt(value)
                                     Case "Number days" : sett.NumberOfDays = CInt(value)
                                     Case "Enable trace reconfirmations" : sett.EnableTraceReconfirmations = CBool(value)
@@ -333,17 +360,15 @@ Namespace Torneo
         End Function
 
         ''' <summary>Consente di salvare le impostazioni su disco</summary>
-        Sub SaveSettings(Year As String)
+        Sub SaveSettings()
 
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio impostazioni per il torneo: " & Year)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio impostazioni per il torneo: " & appSett.Year)
 
-            Dim fname As String = GetSettingsFileName(appSett.Year)
+            Dim fname As String = GetSettingsFileName()
 
             Try
                 Dim str As New System.Text.StringBuilder
                 str.AppendLine("[Lega]")
-                str.AppendLine("Active = '" & appSett.Settings.Active & "'")
-                str.AppendLine("Year = '" & appSett.Settings.Year & "'")
                 str.AppendLine("Number teams = '" & appSett.Settings.NumberOfTeams & "'")
                 str.AppendLine("Number days = '" & appSett.Settings.NumberOfDays & "'")
                 str.AppendLine("Enable trace reconfirmations = '" & appSett.Settings.EnableTraceReconfirmations & "'")
@@ -561,7 +586,7 @@ Namespace Torneo
             Public Id As Integer = -1
             Public Username As String = ""
             Public Password As String = ""
-            Public TeamId As String = "-1"
+            Public Tornei As New Dictionary(Of String, Dictionary(Of Integer, Integer))
             Public Role As String = "user"
             Public Mail As String = ""
             Public Token As String = ""
@@ -570,17 +595,15 @@ Namespace Torneo
 
             End Sub
 
-            Public Sub New(Username As String, Password As String, TeamId As String, Mail As String)
+            Public Sub New(Username As String, Password As String, Mail As String)
                 Me.Username = Username
                 Me.Password = Password
-                Me.TeamId = TeamId
                 Me.Mail = Mail
             End Sub
 
-            Public Sub New(Username As String, Password As String, TeamId As String, Mail As String, role As String)
+            Public Sub New(Username As String, Password As String, TorneoId As Integer, Mail As String, role As String)
                 Me.Username = Username
                 Me.Password = Password
-                Me.TeamId = TeamId
                 Me.Mail = Mail
                 Me.Role = role
             End Sub

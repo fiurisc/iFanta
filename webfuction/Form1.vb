@@ -41,8 +41,7 @@ Public Class Form1
         Dim dirs As String = My.Application.Info.DirectoryPath
         Dim str As New System.Text.StringBuilder
 
-        appSett.InitPath(My.Application.Info.DirectoryPath & "\", My.Application.Info.DirectoryPath & "\tornei\", year)
-        appSett.DataFromDatabase = True
+        appSett.InitPath(My.Application.Info.DirectoryPath & "\", My.Application.Info.DirectoryPath & "\tornei\", "Parenti", year)
 
     End Sub
 

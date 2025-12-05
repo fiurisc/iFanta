@@ -18,15 +18,9 @@ Namespace Torneo
             Dim cday As String = "1"
 
             Try
-                If appSett.DataFromDatabase Then
-                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT MAX(gio) AS currgio FROM tbformazioni")
-                    If ds.Tables.Count > 0 Then
-                        cday = ds.Tables(0).Rows(0).Item("currgio").ToString()
-                    End If
-                Else
-                    Dim j As String = IO.File.ReadAllText(fname1)
-                    Dim dicdata As Dictionary(Of String, List(Of Classifica)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of Classifica)))(j)
-                    cday = dicdata.Keys.Last()
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT MAX(gio) AS currgio FROM tbformazioni")
+                If ds.Tables.Count > 0 Then
+                    cday = ds.Tables(0).Rows(0).Item("currgio").ToString()
                 End If
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -39,15 +33,7 @@ Namespace Torneo
         Public Function ApiGetClassifica(day As String, top As Boolean) As String
 
             Try
-                If appSett.DataFromDatabase Then
-                    Return WebData.Functions.SerializzaOggetto(GetClassificaGiornata(CInt(day), top), True)
-                Else
-                    Dim j As String = IO.File.ReadAllText(If(top, fname2, fname1))
-                    Dim dicdata As Dictionary(Of String, List(Of Classifica)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, List(Of Classifica)))(j)
-                    If dicdata.ContainsKey(day) Then
-                        Return WebData.Functions.SerializzaOggetto(dicdata(day), True)
-                    End If
-                End If
+                Return WebData.Functions.SerializzaOggetto(GetClassificaGiornata(CInt(day), top), True)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
@@ -59,9 +45,7 @@ Namespace Torneo
         Public Function ApiGetStoricoClassifica() As String
 
             Try
-                If appSett.DataFromDatabase Then
-                    Return WebData.Functions.SerializzaOggetto(GetStoricoData(), True)
-                End If
+                Return WebData.Functions.SerializzaOggetto(GetStoricoData(), True)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try

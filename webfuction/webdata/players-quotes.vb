@@ -68,10 +68,8 @@ Namespace WebData
                         End If
                     Next
 
-                    If appSett.DataFromDatabase Then
-                        Dim pdata As New Torneo.Players(appSett)
-                        pdata.UpdatePlayersQuotes(playersq)
-                    End If
+                    Dim uppdata As New Torneo.Players(appSett)
+                    uppdata.UpdatePlayersQuotes(playersq)
 
                     strdata = Functions.SerializzaOggetto(playersq, False)
 
@@ -195,8 +193,6 @@ Namespace WebData
                     IO.File.WriteAllText(filed, strdata.ToString, Encoding.UTF8)
 
                 End If
-
-                'Players.Data.LoadPlayers(appSett, True)
 
                 If ReturnData Then
                     Return "</br><span style=color:red;font-size:bold;'>Players quotes (" & appSett.Year & "):</span></br>" & strdata.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"

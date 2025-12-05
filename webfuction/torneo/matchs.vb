@@ -17,31 +17,9 @@ Namespace Torneo
             WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Determino la giornata corrente dei matchs per l'anno: " & appSett.Year)
 
             Try
-                If appSett.DataFromDatabase Then
-                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM current_championship_day")
-                    If ds.Tables.Count > 0 Then
-                        cday = ds.Tables(0).Rows(0).Item("gio").ToString()
-                    End If
-                Else
-
-                    Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName(appSett))
-                    Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(ApiGetMatchsData("-1"))
-                    Dim found As Boolean = False
-
-                    For d As Integer = 38 To 1 Step -1
-                        Dim ds As String = d.ToString()
-                        If dicdata.ContainsKey(ds) Then
-                            For Each mid As String In dicdata(ds).Keys
-                                Dim dt As Date = CDate(dicdata(ds)(mid).Time).AddHours(-2)
-                                If dt < Now Then
-                                    cday = ds
-                                    found = True
-                                    Exit For
-                                End If
-                            Next
-                        End If
-                        If found Then Exit For
-                    Next
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM current_championship_day")
+                If ds.Tables.Count > 0 Then
+                    cday = ds.Tables(0).Rows(0).Item("gio").ToString()
                 End If
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -55,80 +33,46 @@ Namespace Torneo
 
             WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiedo la lista dei matchs per la giornata: " & Day & " dell'anno: " & appSett.Year)
 
-            If appSett.DataFromDatabase Then
+            Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Match))
+            Dim mtxdata As List(Of Match) = GetMatchsData(Day)
 
-                Dim dicdata As New Dictionary(Of String, Dictionary(Of String, Match))
-                Dim mtxdata As List(Of Match) = GetMatchsData(Day)
+            For Each m As Match In mtxdata
 
-                For Each m As Match In mtxdata
+                Dim g As String = m.Giornata.ToString()
+                Dim mi As String = m.MatchId.ToString()
 
-                    Dim g As String = m.Giornata.ToString()
-                    Dim mi As String = m.MatchId.ToString()
-
-                    If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New Dictionary(Of String, Match))
-                    If dicdata(g).ContainsKey(mi) = False Then
-                        dicdata(g).Add(mi, m)
-                    End If
-                Next
-
-                Return WebData.Functions.SerializzaOggetto(dicdata, True)
-
-            Else
-
-                Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName(appSett))
-                Dim dicdata As Dictionary(Of String, Dictionary(Of String, Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Match)))(j)
-
-                If Day <> "-1" Then
-                    Dim chiaviDaRimuovere = dicdata.Keys.Where(Function(k) k <> Day).ToList()
-                    For Each chiave In chiaviDaRimuovere
-                        dicdata.Remove(chiave)
-                    Next
+                If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New Dictionary(Of String, Match))
+                If dicdata(g).ContainsKey(mi) = False Then
+                    dicdata(g).Add(mi, m)
                 End If
+            Next
 
-                Return WebData.Functions.SerializzaOggetto(dicdata, True)
-
-            End If
+            Return WebData.Functions.SerializzaOggetto(dicdata, True)
 
         End Function
 
         Public Function ApiGetMatchsDataPlayers(startDay As String, endDay As String) As String
 
-            If appSett.DataFromDatabase Then
+            Dim dicdata As New Dictionary(Of String, Dictionary(Of String, MatchPlayer))
+            Dim mtxdata As List(Of MatchPlayer) = GetMatchsDataPlayers(startDay, endDay)
 
-                Dim dicdata As New Dictionary(Of String, Dictionary(Of String, MatchPlayer))
-                Dim mtxdata As List(Of MatchPlayer) = GetMatchsDataPlayers(startDay, endDay)
+            For Each m As MatchPlayer In mtxdata
 
-                For Each m As MatchPlayer In mtxdata
+                Dim g As String = m.Giornata.ToString()
+                Dim s As String = m.Squadra.ToString()
+                Dim n As String = m.Nome.ToString()
+                Dim key As String = n & "-" & s
 
-                    Dim g As String = m.Giornata.ToString()
-                    Dim s As String = m.Squadra.ToString()
-                    Dim n As String = m.Nome.ToString()
-                    Dim key As String = n & "-" & s
+                If startDay = endDay Then g = "0"
 
-                    If startDay = endDay Then g = "0"
+                If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New Dictionary(Of String, MatchPlayer))
+                If dicdata(g).ContainsKey(key) = False Then
+                    dicdata(g).Add(key, m)
+                End If
 
-                    If dicdata.ContainsKey(g) = False Then dicdata.Add(g, New Dictionary(Of String, MatchPlayer))
-                    If dicdata(g).ContainsKey(key) = False Then
-                        dicdata(g).Add(key, m)
-                    End If
+            Next
 
-                Next
-
-                Return WebData.Functions.SerializzaOggetto(dicdata, True)
-
-            Else
-
-                Dim j As String = IO.File.ReadAllText(WebData.MatchsData.GetMatchPlayersFileName(appSett))
-                Dim dicdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, MatchPlayer))))(j)
-
-                Dim chiaviDaRimuovere = dicdata.Keys.Where(Function(k) k < startDay OrElse k > endDay).ToList()
-                For Each chiave In chiaviDaRimuovere
-                    dicdata.Remove(chiave)
-                Next
-
-                Return WebData.Functions.SerializzaOggetto(dicdata, True)
-
-            End If
+            Return WebData.Functions.SerializzaOggetto(dicdata, True)
 
         End Function
 

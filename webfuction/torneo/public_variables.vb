@@ -1,5 +1,7 @@
 ﻿Namespace Torneo
     Public Class PublicVariables
+
+        Public Property Nome() As String = "TORNEO"
         Public Property Year As String = ""
         Public Property DatabaseTorneo As DatabaseFile = New DatabaseFile()
         Public Property DatabaseUser As DatabaseFile = New DatabaseFile()
@@ -13,13 +15,15 @@
 
         Public Sub InitPath(rootDataPath As String, rootDatabasePath As String, torneo As String, year As String)
 
-            Me.Year = year
             RootTorneiPath = rootDataPath & "tornei\"
             RootWebDataPath = rootDataPath & "webdata\"
 
             DatabaseUser.FolderPath = rootDatabasePath
             DatabaseUser.BackupPath = DatabaseUser.FolderPath & "backup\"
             DatabaseUser.FileName = DatabaseUser.FolderPath & "users.accdb"
+
+            Me.Year = year
+            Me.Nome = torneo
 
             If torneo <> "" AndAlso year <> "" Then
 
