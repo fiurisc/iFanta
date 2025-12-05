@@ -4,23 +4,14 @@ Namespace Torneo
     Public Class Players
 
         Dim appSett As PublicVariables
-        Dim pQuotes As WebData.PlayersQuotes
 
         Sub New(appSett As PublicVariables)
             Me.appSett = appSett
-            pQuotes = New WebData.PlayersQuotes(appSett)
         End Sub
 
         Public Function ApiGetPlayersName() As String
 
-            Dim mtxdata As List(Of PlayerQuotesItem)
-
-            If appSett.DataFromDatabase Then
-                mtxdata = GetPlayersQuotesData("")
-            Else
-                Dim json As String = IO.File.ReadAllText(pQuotes.GetDataFileName())
-                mtxdata = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(json)
-            End If
+            Dim mtxdata As List(Of PlayerQuotesItem) = GetPlayersQuotesData("")
             Dim dicNames As New Dictionary(Of String, List(Of String))
             For Each p As PlayerQuotesItem In mtxdata
                 If dicNames.ContainsKey(p.Ruolo) = False Then dicNames.Add(p.Ruolo, New List(Of String))
@@ -31,19 +22,8 @@ Namespace Torneo
         End Function
 
         Public Function ApiGetPlayersQuotes(Ruolo As String) As String
-
-            Dim mtxdata As New List(Of PlayerQuotesItem)
-
-            If appSett.DataFromDatabase Then
-                mtxdata = GetPlayersQuotesData("")
-            Else
-                Dim json As String = IO.File.ReadAllText(pQuotes.GetDataFileName())
-                mtxdata = WebData.Functions.DeserializeJson(Of List(Of PlayerQuotesItem))(json)
-                If Ruolo <> "" Then mtxdata.RemoveAll(Function(x) x.Ruolo <> Ruolo)
-            End If
-
+            Dim mtxdata As List(Of PlayerQuotesItem) = GetPlayersQuotesData(Ruolo)
             Return WebData.Functions.SerializzaOggetto(mtxdata, True)
-
         End Function
 
         Private Function GetPlayersQuotesData(Ruolo As String) As List(Of PlayerQuotesItem)
@@ -139,17 +119,8 @@ Namespace Torneo
         End Sub
 
         Public Function ApiGetPlayersData() As String
-
-            If appSett.DataFromDatabase Then
-                Dim mtxdata As List(Of PlayerDataItem) = GetPlayersData()
-                Return WebData.Functions.SerializzaOggetto(mtxdata, True)
-            Else
-                Dim pdata As New WebData.PlayersData(appSett)
-                Dim j As String = IO.File.ReadAllText(pdata.GetDataFileName())
-                Dim mtxdata As List(Of PlayerDataItem) = WebData.Functions.DeserializeJson(Of List(Of PlayerDataItem))(j)
-                Return WebData.Functions.SerializzaOggetto(mtxdata, True)
-            End If
-
+            Dim mtxdata As List(Of PlayerDataItem) = GetPlayersData()
+            Return WebData.Functions.SerializzaOggetto(mtxdata, True)
         End Function
 
         Public Function GetPlayersData() As List(Of PlayerDataItem)

@@ -132,26 +132,16 @@ Namespace Torneo
 
         Public Shared Function GetDbConnectionString(appSett As PublicVariables, DbUser As Boolean) As String
             If DbUser Then
-                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & appSett.DatabaseUsers & ";"
+                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & appSett.DatabaseTorneo.FileName & ";"
             Else
-                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & appSett.DatabaseTorneo & ";"
+                Return "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & appSett.DatabaseUser.FileName & ";"
             End If
         End Function
 
-        Public Shared Sub BackupDatabase(appSett As PublicVariables, DbUser As Boolean)
-
-            Dim dirbakup As String = IO.Path.GetDirectoryName(appSett.DatabaseTorneo) & "\backup"
-
-            If IO.Directory.Exists(dirbakup) = False Then IO.Directory.CreateDirectory(dirbakup)
-
-            If DbUser Then
-                Dim fbackup As String = dirbakup & "\" & IO.Path.GetFileNameWithoutExtension(appSett.DatabaseUsers) & "_" & Date.Now.ToString("yyyyMMdd_HHmmss") & ".accdb"
-                IO.File.Copy(appSett.DatabaseTorneo, fbackup, True)
-            Else
-                Dim fbackup As String = dirbakup & "\" & IO.Path.GetFileNameWithoutExtension(appSett.DatabaseTorneo) & "_" & Date.Now.ToString("yyyyMMdd_HHmmss") & ".accdb"
-                IO.File.Copy(appSett.DatabaseTorneo, fbackup, True)
-            End If
-            DeleteOldFiles(appSett, dirbakup, Date.Now.AddDays(-5))
+        Public Shared Sub BackupDatabase(appSett As PublicVariables, DbObject As PublicVariables.DatabaseFile)
+            Dim fbackup As String = DbObject.BackupPath & Path.GetFileNameWithoutExtension(DbObject.FileName) & "_" & Date.Now.ToString("yyyyMMdd_HHmmss") & ".accdb"
+            IO.File.Copy(DbObject.FileName, fbackup, True)
+            DeleteOldFiles(appSett, DbObject.BackupPath, Date.Now.AddDays(-5))
         End Sub
 
         Public Shared Sub DeleteOldFiles(appSett As PublicVariables, percorsoCartella As String, dataLimite As DateTime)

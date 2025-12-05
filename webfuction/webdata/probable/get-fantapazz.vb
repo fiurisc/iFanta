@@ -48,7 +48,7 @@ Namespace WebData
                             ElseIf lines(i).Contains("<div class=""nomeClub""><h2>") Then
                                 sq.Add(Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=h2>)\w+(?=\<\/h2)").Value.ToUpper()))
 
-                                'Cerco di determinare la giornata di riferiemnto'
+                                'Cerco di determinare la giornata di riferimento'
                                 If sq.Count = 2 AndAlso currgg = -1 Then
 
                                     Dim match As String = sq(0) & "-" & sq(1)

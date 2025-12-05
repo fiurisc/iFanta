@@ -30,7 +30,7 @@ Namespace Torneo
                 gen.ReadSettings()
 
                 'eseguo il backup del database'
-                Functions.BackupDatabase(appSett, False)
+                Functions.BackupDatabase(appSett, appSett.DatabaseTorneo)
 
                 'Scarico il file'
                 UpdateStatus("Download file from...", 1, max)

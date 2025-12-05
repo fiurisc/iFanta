@@ -141,13 +141,7 @@ Namespace Torneo
 
         Public Function GetFormazioni(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
 
-            Dim list As List(Of Formazione)
-
-            If appSett.DataFromDatabase Then
-                list = GetFormazioniFromDb(Day, TeamId, Top)
-            Else
-                list = GetFormazioniFromTxt(Day, TeamId, Top)
-            End If
+            Dim list As List(Of Formazione) = GetFormazioniFromDb(Day, TeamId, Top)
 
             For Each forma As Formazione In list
 
@@ -236,57 +230,196 @@ Namespace Torneo
             Return list.Values.ToList()
         End Function
 
-        Private Function GetFormazioniFromTxt(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
+        Sub GetAutomaticFormation(ByVal Giornata As Integer)
+            Dim formaList As New Dictionary(Of Integer, Formazione)
+            For i As Integer = 0 To appSett.Settings.NumberOfTeams - 1
+                formaList.Add(i, GetAutomaticFormation(i, Giornata))
+            Next
+        End Sub
 
-            Dim list As New Dictionary(Of String, Formazione)
+        Function GetAutomaticFormation(ByVal IdTeam As Integer, ByVal Giornata As Integer) As Formazione
 
-            Try
-                If Top = False Then
-                    Dim fname As String = appSett.TorneoPath & "\export\formazioni.txt"
-                    Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
-                    For Each line As String In lines
-                        Dim values() As String = line.Split(Convert.ToChar("|"))
-                        If (Day = "-1" OrElse values(0) = Day) AndAlso TeamId = "-1" OrElse values(1) = TeamId Then
-                            Dim tid As String = values(1)
-                            If list.ContainsKey(tid) = False Then list.Add(tid, New Formazione())
-                            list(tid).Giornata = CInt(Day)
-                            list(tid).TeamId = CInt(tid)
-                            If values.Length > 10 Then
-                                Dim p As New PlayerFormazione
-                                p.RosaId = CInt(values(2))
-                                p.Jolly = CInt(values(3))
-                                p.Type = CInt(values(4))
-                                p.FormaId = CInt(values(5))
-                                p.InCampo = CInt(values(6))
-                                p.Ruolo = values(7)
-                                p.Nome = values(8)
-                                p.Squadra = values(9)
-                                p.Voto = CInt(values(10))
-                                p.Ammonito = CInt(values(11))
-                                p.Espulso = CInt(values(12))
-                                p.Assists = CInt(values(13))
-                                p.AutoGoal = CInt(values(14))
-                                p.GoalSubiti = CInt(values(15))
-                                p.GoalFatti = CInt(values(16))
-                                p.RigoriTirati = CInt(values(17))
-                                p.RigoriSbagliati = CInt(values(18))
-                                p.RigoriParati = CInt(values(19))
-                                p.Punti = CInt(values(20))
-                                list(tid).Players.Add(p)
-                            ElseIf values.Length > 5 Then
-                                list(tid).BonusDifesa = CInt(values(2))
-                                list(tid).BonusCentrocampo = CInt(values(3))
-                                list(tid).BonusAttacco = CInt(values(4))
-                                list(tid).CambioModulo = CInt(values(2))
-                            End If
-                        End If
-                    Next
-                End If
-            Catch ex As Exception
-                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
-            End Try
+            'Dim fc As New List(Of Formazione.PlayerFormazione)
+            'Dim ft As New List(Of Formazione.PlayerFormazione)
+            Dim f As New Formazione
+            'Dim r As New LegaObject.Team(IdTeam, "")
+            'Dim rp As New List(Of LegaObject.Team.Player)
+            'Dim portteam As String = ""
 
-            Return list.Values.ToList()
+            ''Carico la rosa'
+            'r.Load(True, True, True)
+
+            'rp.AddRange(r.Players)
+
+            'Dim dir As String = GetLegaTemDirectory()
+            'Dim str As New System.Text.StringBuilder
+
+            'For i As Integer = 0 To rp.Count - 1
+            '    str.AppendLine(rp(i).Nome & "|" & rp(i).Squadra & "|" & rp(i).Rating)
+            'Next
+            'IO.File.WriteAllText(dir & "\" & IdTeam & "-rating.txt", str.ToString)
+
+            ''Calcolo il rating dei vari giocatori'
+            'rp = CalculateRatingPresenze(Giornata, IdTeam, False, rp)
+
+            ''Determino la formazione automatica'
+            'f = DetectAutomaticForma(IdTeam, False, rp)
+
+            ''Controllo la formazione'
+            'Dim recheck As Boolean = False
+            'Dim pc As New List(Of String)
+            'For i As Integer = f.Count - 1 To 0 Step -1
+            '    If f(i).Tag = "1" AndAlso f(i).Type = 0 Then
+            '        'Verifico un panchinaro utile'
+            '        Dim good As Boolean = False
+            '        For j As Integer = 0 To f.Count - 1
+            '            If f(j).Type = 1 AndAlso f(i).Ruolo = f(j).Ruolo AndAlso pc.Contains(f(j).Nome & "-" & f(j).Squadra) = False AndAlso pc.Count < 3 Then
+            '                If webdata.WebPlayers.ContainsKey(Giornata & "-" & f(j).Nome & "-" & f(j).Squadra) Then
+            '                    Dim wp As wData.wPlayer = webdata.WebPlayers(Giornata & "-" & f(j).Nome & "-" & f(j).Squadra)
+            '                    If wp.Titolare / webdata.NumSitePlayer > 0.79 Then
+            '                        good = True
+            '                        pc.Add(f(j).Nome & "-" & f(j).Squadra)
+            '                        Exit For
+            '                    End If
+            '                End If
+            '            End If
+            '        Next
+            '        If good = False Then
+            '            recheck = True
+            '        Else
+            '            For h As Integer = 0 To rp.Count - 1
+            '                If f(i).Nome = rp(h).Nome AndAlso f(i).Squadra = rp(h).Squadra Then
+            '                    rp(h).Tag = "0"
+            '                    Exit For
+            '                End If
+            '            Next
+            '        End If
+            '    End If
+            'Next
+            'If recheck Then
+            '    For h As Integer = rp.Count - 1 To 0 Step -1
+            '        rp(h).Type = 0
+            '        rp(h).Schierato = 0
+            '    Next
+            '    'Calcolo il rating dei vari giocatori'
+            '    rp = CalculateRatingPresenze(Giornata, IdTeam, True, rp)
+            '    'Determino la formazione automatica'
+            '    f = DetectAutomaticForma(IdTeam, True, rp)
+            'End If
+
+            ''Verifico se ci sno attaccanti della stessa squadra'
+            'If CheckSameTeamForward(f) Then
+            '    f = DetectAutomaticForma(IdTeam, True, f)
+            'End If
+
+            Return f
+
+        End Function
+
+        Private Function DetectAutomaticForma(ByVal IdTeam As Integer, ByVal rechek As Boolean, ByRef rp As List(Of PlayerFormazione)) As List(Of PlayerFormazione)
+
+            Dim f As New List(Of PlayerFormazione)
+            Dim ft As New List(Of PlayerFormazione)
+            Dim fc As New List(Of RoseData.Player)
+
+            Dim portteam As String = ""
+
+            'Ordino i giocatori sulla base del loro rating'
+            Dim rs As New RoseData(appSett)
+            Dim rosa As Dictionary(Of String, List(Of RoseData.Player)) = rs.GetPlayersFromDb(IdTeam.ToString(), "", "")
+
+            If rosa.Count > 0 AndAlso rosa.ContainsKey(IdTeam.ToString()) Then
+                Dim pl As New List(Of RoseData.Player)
+                For Each p As RoseData.Player In rosa(IdTeam.ToString())
+                    p.Rating = GetRating(p)
+                Next
+            End If
+            'fc = rs.GetPlayersFromDb(IdTeam.ToString(), "", "")(IdTeam.ToString()).ToList()
+            'ft(0).
+            ''Determino i titolari'
+            'Dim ntit As Integer = 0
+            'Dim np As Integer = 0
+            'Dim nd As Integer = 0
+            'Dim nc As Integer = 0
+            'Dim na As Integer = 0
+
+            'For i As Integer = 0 To fc.Count - 1
+            '    fc(i).Type = 0
+            '    fc(i).Schierato = 0
+            '    If CheckMudule1(fc(i).Ruolo, np, nd, nc, na) Then
+            '        fc(i).Schierato = 1
+            '        fc(i).Type = 0
+            '        fc(i).IdRosa = i
+            '        Select Case fc(i).Ruolo
+            '            Case "P" : np = np + 1 : portteam = fc(i).Squadra
+            '            Case "D" : nd = nd + 1
+            '            Case "C" : nc = nc + 1
+            '            Case "A" : na = na + 1
+            '        End Select
+            '        ntit = ntit + 1
+            '        'If ntit > 11 Then Exit For
+            '    End If
+            'Next
+
+            ''Ordino i giocatori sulla base ruolo'
+            'ft = LegaObject.Team.Sort(fc, "", False)
+            'For i As Integer = 0 To ft.Count - 1
+            '    ft(i).IdRosa = i + 1
+            'Next
+            'f.AddRange(ft)
+
+            ''Determino i panchinari'
+            'Dim p() As String = {"P", "A", "C", "D"}
+            'Dim ind As Integer = 1
+            'Dim s As Integer = 0
+
+            ''Controllo se esiste un secondo portire della stessa squadra'
+            'For i As Integer = 0 To fc.Count - 1
+            '    If fc(i).Schierato = 0 AndAlso fc(i).Ruolo = "P" AndAlso portteam = fc(i).Squadra Then
+            '        f.Add(New Team.Player(1, fc(i).Ruolo, fc(i).Nome, fc(i).Squadra, 1, 1, 0))
+            '        ind = ind + 1
+            '        s = 1
+            '        Exit For
+            '    End If
+            'Next
+
+            ''Determino il resto dei panchinari'
+            'For i As Integer = s To p.Length - 1
+
+            '    Dim nump As Integer = 1
+            '    Dim maxp As Integer = 2
+
+            '    If p(i) = "P" Then maxp = 1
+
+            '    For k As Integer = 0 To fc.Count - 1
+            '        If fc(k).Schierato = 0 AndAlso fc(k).Ruolo = p(i) Then
+            '            f.Add(New Team.Player(ind, fc(k).Ruolo, fc(k).Nome, fc(k).Squadra, 1, 1, 0))
+            '            nump = nump + 1
+            '            ind = ind + 1
+            '        End If
+            '        If nump > maxp Then Exit For
+            '    Next
+            'Next
+
+            'Dim dir As String = GetLegaTemDirectory()
+            'Dim str As New System.Text.StringBuilder
+            'For i As Integer = 0 To f.Count - 1
+            '    str.AppendLine(f(i).Ruolo & "|" & f(i).Nome & "|" & f(i).Squadra & "|" & f(i).Rating & "|" & f(i).Schierato & "|" & f(i).Type)
+            'Next
+            'If rechek Then
+            '    IO.File.WriteAllText(dir & "\" & IdTeam & "-rating-tot.txt", str.ToString)
+            'Else
+            '    IO.File.WriteAllText(dir & "\" & IdTeam & "-rating-tot-recheck.txt", str.ToString)
+            'End If
+
+            Return f
+        End Function
+
+        Private Function GetRating(p As RoseData.Player) As Integer
+
+            Dim value As Integer = 0
+
+            Return value
 
         End Function
 

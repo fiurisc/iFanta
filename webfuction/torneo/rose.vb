@@ -49,32 +49,26 @@ Namespace Torneo
 
             Try
 
-                If appSett.DataFromDatabase Then
+                Dim teams As New Dictionary(Of String, Object)
 
-                    Dim teams As New Dictionary(Of String, Object)
+                Try
+                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbteam")
 
-                    Try
-                        Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbteam")
+                    If ds.Tables.Count > 0 Then
+                        For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                            Dim team As New TeamItem
+                            team.idTeam = CInt(ds.Tables(0).Rows(i).Item("idteam"))
+                            team.Name = ds.Tables(0).Rows(i).Item("Nome").ToString()
+                            team.Coach = ds.Tables(0).Rows(i).Item("allenatore").ToString()
+                            team.President = ds.Tables(0).Rows(i).Item("presidente").ToString()
+                            teams.Add(team.idTeam.ToString(), team)
+                        Next
+                    End If
+                Catch ex As Exception
+                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+                End Try
 
-                        If ds.Tables.Count > 0 Then
-                            For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
-                                Dim team As New TeamItem
-                                team.idTeam = CInt(ds.Tables(0).Rows(i).Item("idteam"))
-                                team.Name = ds.Tables(0).Rows(i).Item("Nome").ToString()
-                                team.Coach = ds.Tables(0).Rows(i).Item("allenatore").ToString()
-                                team.President = ds.Tables(0).Rows(i).Item("presidente").ToString()
-                                teams.Add(team.idTeam.ToString(), team)
-                            Next
-                        End If
-                    Catch ex As Exception
-                        WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
-                    End Try
-
-                    Return WebData.Functions.SerializzaOggetto(teams, True)
-
-                Else
-                    Return WebData.Functions.CompactJson(IO.File.ReadAllText(appSett.TorneoPath & "export\teams.json"))
-                End If
+                Return WebData.Functions.SerializzaOggetto(teams, True)
 
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -89,12 +83,7 @@ Namespace Torneo
             Dim json As String = ""
 
             Try
-                Dim dicp As New Dictionary(Of String, List(Of Player))
-                If appSett.DataFromDatabase Then
-                    dicp = GetPlayersFromDb(teamId, role, OutOfGame)
-                Else
-                    dicp = GetPlayersFromTxt(teamId, role)
-                End If
+                Dim dicp As Dictionary(Of String, List(Of Player)) = GetPlayersFromDb(teamId, role, OutOfGame)
                 Return WebData.Functions.SerializzaOggetto(dicp, True)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -109,12 +98,7 @@ Namespace Torneo
             Dim json As String = ""
 
             Try
-                Dim dicp As New Dictionary(Of String, List(Of Player))
-                If appSett.DataFromDatabase Then
-                    dicp = GetPlayersFromDb(teamId, "", "")
-                Else
-                    dicp = GetPlayersFromTxt(teamId, "")
-                End If
+                Dim dicp As Dictionary(Of String, List(Of Player)) = GetPlayersFromDb(teamId, "", "")
                 Return WebData.Functions.SerializzaOggetto(dicp, True)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -124,7 +108,7 @@ Namespace Torneo
 
         End Function
 
-        Private Function GetPlayersFromDb(TeamId As String, role As String, OutOfGame As String) As Dictionary(Of String, List(Of Player))
+        Public Function GetPlayersFromDb(TeamId As String, role As String, OutOfGame As String) As Dictionary(Of String, List(Of Player))
 
             Dim list As New Dictionary(Of String, List(Of Player))
 
@@ -195,77 +179,6 @@ Namespace Torneo
 
                     Next
                 End If
-            Catch ex As Exception
-                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
-            End Try
-
-            Return list
-
-        End Function
-
-        Private Function GetPlayersFromTxt(TeamId As String, role As String) As Dictionary(Of String, List(Of Player))
-
-            Dim list As New Dictionary(Of String, List(Of Player))
-
-            Try
-
-                Dim quotes As New Dictionary(Of String, Integer)
-                Dim pQuotes As New WebData.PlayersQuotes(appSett)
-                Dim json As String = IO.File.ReadAllText(pQuotes.GetDataFileName())
-                Dim mtxquotes As List(Of Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Players.PlayerQuotesItem))(json)
-
-                For Each p As Players.PlayerQuotesItem In mtxquotes
-                    Dim key As String = p.Ruolo & "|" & p.Nome & "|" & p.Squadra
-                    If quotes.ContainsKey(key) = False Then quotes.Add(key, p.Qcur)
-                Next
-
-                json = IO.File.ReadAllText(WebData.MatchsData.GetMatchFileName(appSett))
-
-                Dim matchs As New Dictionary(Of String, MatchsData.Match)
-                Dim mtxmatchs As Dictionary(Of String, Dictionary(Of String, MatchsData.Match)) = WebData.Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, MatchsData.Match)))(json)
-
-                Dim fname As String = If(TeamId <> "-2", appSett.TorneoPath & "\export\rose.txt", appSett.TorneoPath & "\export\svincolati.txt")
-                Dim lines As List(Of String) = IO.File.ReadAllLines(fname).ToList()
-
-                For Each line As String In lines
-
-                    Dim values() As String = line.Split(Convert.ToChar("|"))
-                    Dim tid As String = values(1)
-                    Dim r As String = values(2)
-
-                    If (TeamId = "-1" OrElse tid = TeamId) AndAlso (role = "all" OrElse r = role) Then
-
-                        If list.ContainsKey(tid) = False Then list.Add(tid, New List(Of Player))
-
-                        Dim p As New Player
-                        p.TeamId = CInt(values(0))
-                        p.RosaId = CInt(values(1))
-                        p.Ruolo = r
-                        p.NatCode = values(3)
-                        p.Nome = values(4)
-                        p.Squadra = values(5)
-                        p.Riconfermato = CInt(values(6))
-                        p.Costo = CInt(values(7))
-                        p.Qini = CInt(values(8))
-                        p.Qcur = CInt(values(9))
-                        p.StatisticAll.Gs = CInt(values(10))
-                        p.StatisticAll.Gf = CInt(values(11))
-                        p.StatisticAll.Amm = CInt(values(12))
-                        p.StatisticAll.Esp = CInt(values(13))
-                        p.StatisticAll.Ass = CInt(values(14))
-                        p.StatisticAll.AvgPt = CInt(values(15))
-                        p.StatisticAll.pGiocate = CInt(values(16))
-                        p.StatisticAll.Titolare = CInt(values(17))
-                        p.StatisticLast.pGiocate = CInt(values(18))
-                        p.StatisticLast.Titolare = CInt(values(19))
-                        p.StatisticLast.Minuti = CInt(values(20))
-
-                        Dim key As String = p.Ruolo & "|" & p.Nome & "|" & p.Squadra
-                        If quotes.ContainsKey(key) Then p.Qcur = quotes(key)
-
-                        list(tid).Add(p)
-                    End If
-                Next
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
