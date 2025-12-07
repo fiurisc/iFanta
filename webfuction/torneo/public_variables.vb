@@ -50,7 +50,7 @@
                 Dim dirdpf As String = WebDataPath & "data\pforma"
                 Dim dirdmt As String = WebDataPath & "data\matchs"
 
-                If IO.Directory.Exists(TorneoPath) = False Then IO.Directory.CreateDirectory(TorneoPath)
+                If Me.Nome <> "" AndAlso IO.Directory.Exists(TorneoPath) = False Then IO.Directory.CreateDirectory(TorneoPath)
                 If IO.Directory.Exists(WebDataPath) = False Then IO.Directory.CreateDirectory(WebDataPath)
                 If IO.Directory.Exists(DatabaseUser.FolderPath) = False Then IO.Directory.CreateDirectory(DatabaseUser.FolderPath)
                 If IO.Directory.Exists(DatabaseUser.BackupPath) = False Then IO.Directory.CreateDirectory(DatabaseUser.BackupPath)
@@ -60,8 +60,8 @@
                     If IO.Directory.Exists(dird) = False Then IO.Directory.CreateDirectory(dird)
                     If IO.Directory.Exists(dirdpf) = False Then IO.Directory.CreateDirectory(dirdpf)
                     If IO.Directory.Exists(dirdmt) = False Then IO.Directory.CreateDirectory(dirdmt)
-                    If IO.Directory.Exists(DatabaseTorneo.FolderPath) = False Then IO.Directory.CreateDirectory(DatabaseTorneo.FolderPath)
-                    If IO.Directory.Exists(DatabaseTorneo.BackupPath) = False Then IO.Directory.CreateDirectory(DatabaseTorneo.BackupPath)
+                    If Me.Nome <> "" AndAlso IO.Directory.Exists(DatabaseTorneo.FolderPath) = False Then IO.Directory.CreateDirectory(DatabaseTorneo.FolderPath)
+                    If Me.Nome <> "" AndAlso IO.Directory.Exists(DatabaseTorneo.BackupPath) = False Then IO.Directory.CreateDirectory(DatabaseTorneo.BackupPath)
                 End If
 
             End If

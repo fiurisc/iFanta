@@ -7,7 +7,7 @@ Imports webfuction.Torneo.ProbablePlayers
 
 Public Class Form1
 
-    Dim year As String = ""
+    Dim year As String = "2025"
     Dim appSett As New Torneo.PublicVariables
 
     Public Class ArubaSmtpTest
@@ -49,6 +49,7 @@ Public Class Form1
         Dim pquotes As New WebData.PlayersQuotes(appSett)
         Dim gen As New Torneo.General(appSett)
         Dim years As List(Of Torneo.General.YearTorneo) = gen.ApiGetYearsList()
+        appSett.InitPath(My.Application.Info.DirectoryPath & "\", My.Application.Info.DirectoryPath & "\tornei\", "Parenti", year)
         pquotes.GetPlayersQuotes(False)
     End Sub
 
@@ -126,7 +127,7 @@ Public Class Form1
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
 
-        SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
+        'SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
         'Dim dicData As Dictionary(Of String, Probable) = Torneo.ProbablePlayers.GetProbableFormation("")
         'Dim dicName As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Integer)))
 

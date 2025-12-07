@@ -89,7 +89,7 @@ Namespace Torneo
                 Dim year As String = IO.Path.GetDirectoryName(d(i))
                 Dim fname As String = d(i) & "/active.txt"
                 If IO.File.Exists(fname) Then
-                    Return IO.Path.GetDirectoryName(d(i))
+                    Return IO.Path.GetFileName(d(i))
                 End If
             Next
 
