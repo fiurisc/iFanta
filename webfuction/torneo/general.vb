@@ -47,15 +47,17 @@ Namespace Torneo
 
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Get tornei associati all'account: " & acc.Id)
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT st.torneoid,to.nome,st.anno as anno,st.teamid FROM stagioni AS st LEFT JOIN tornei AS [to] ON to.id=st.torneoid WHERE userid=" & acc.Id & ";", True)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT st.torneoid,tor.nome,st.anno as anno,st.teamid FROM stagioni AS st LEFT JOIN tornei AS tor ON tor.id=st.torneoid WHERE userid=" & acc.Id & ";", True)
+
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Records found: " & ds.Tables(0).Rows.Count)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As System.Data.DataRow = ds.Tables(0).Rows(i)
                         Dim torneoNome As String = Functions.ReadFieldStringData("nome", row, "")
-                        Dim anno As Integer = Functions.ReadFieldIntegerData("anno", row, -1)
+                        Dim anno As String = Functions.ReadFieldStringData("anno", row, "2000")
                         Dim teamid As Integer = Functions.ReadFieldIntegerData("teamid", row, -1)
-                        If acc.Tornei.ContainsKey(torneoNome) = False Then acc.Tornei.Add(torneoNome, New Dictionary(Of Integer, Integer))
+                        If acc.Tornei.ContainsKey(torneoNome) = False Then acc.Tornei.Add(torneoNome, New Dictionary(Of String, Integer))
                         If acc.Tornei(torneoNome).ContainsKey(anno) = False Then acc.Tornei(torneoNome).Add(anno, teamid)
                     Next
                 End If
@@ -96,24 +98,6 @@ Namespace Torneo
             Return ""
 
         End Function
-
-        'Public Function ApiGetTorneiList() As List(Of String)
-
-        '    Dim tornei As New List(Of String)
-
-        '    If IO.Directory.Exists(appSett.RootTorneiPath) Then
-
-        '        Dim d() As String = IO.Directory.GetDirectories(appSett.RootTorneiPath)
-
-        '        For i As Integer = 0 To d.Length - 1
-        '            tornei.Add(IO.Path.GetDirectoryName(d(i)))
-        '        Next
-
-        '    End If
-
-        '    Return tornei
-
-        'End Function
 
         Public Function ApiGetTorneoYearsList(Torneo As String) As List(Of YearTorneo)
 
@@ -586,7 +570,7 @@ Namespace Torneo
             Public Id As Integer = -1
             Public Username As String = ""
             Public Password As String = ""
-            Public Tornei As New Dictionary(Of String, Dictionary(Of Integer, Integer))
+            Public Tornei As New Dictionary(Of String, Dictionary(Of String, Integer))
             Public Role As String = "user"
             Public Mail As String = ""
             Public Token As String = ""
