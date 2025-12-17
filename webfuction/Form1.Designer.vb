@@ -37,12 +37,13 @@ Partial Class Form1
         Me.Button13 = New System.Windows.Forms.Button()
         Me.Button14 = New System.Windows.Forms.Button()
         Me.Button15 = New System.Windows.Forms.Button()
+        Me.cmdcoppa = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Button1
         '
         Me.Button1.Location = New System.Drawing.Point(22, 19)
-        Me.Button1.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button1.Margin = New System.Windows.Forms.Padding(2)
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(115, 36)
         Me.Button1.TabIndex = 0
@@ -52,7 +53,7 @@ Partial Class Form1
         'Button2
         '
         Me.Button2.Location = New System.Drawing.Point(22, 55)
-        Me.Button2.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button2.Margin = New System.Windows.Forms.Padding(2)
         Me.Button2.Name = "Button2"
         Me.Button2.Size = New System.Drawing.Size(115, 36)
         Me.Button2.TabIndex = 1
@@ -62,7 +63,7 @@ Partial Class Form1
         'Button3
         '
         Me.Button3.Location = New System.Drawing.Point(22, 91)
-        Me.Button3.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button3.Margin = New System.Windows.Forms.Padding(2)
         Me.Button3.Name = "Button3"
         Me.Button3.Size = New System.Drawing.Size(115, 36)
         Me.Button3.TabIndex = 2
@@ -72,7 +73,7 @@ Partial Class Form1
         'Button4
         '
         Me.Button4.Location = New System.Drawing.Point(22, 127)
-        Me.Button4.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button4.Margin = New System.Windows.Forms.Padding(2)
         Me.Button4.Name = "Button4"
         Me.Button4.Size = New System.Drawing.Size(115, 36)
         Me.Button4.TabIndex = 3
@@ -82,7 +83,7 @@ Partial Class Form1
         'Button5
         '
         Me.Button5.Location = New System.Drawing.Point(150, 19)
-        Me.Button5.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button5.Margin = New System.Windows.Forms.Padding(2)
         Me.Button5.Name = "Button5"
         Me.Button5.Size = New System.Drawing.Size(153, 36)
         Me.Button5.TabIndex = 4
@@ -92,7 +93,7 @@ Partial Class Form1
         'Button6
         '
         Me.Button6.Location = New System.Drawing.Point(150, 55)
-        Me.Button6.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button6.Margin = New System.Windows.Forms.Padding(2)
         Me.Button6.Name = "Button6"
         Me.Button6.Size = New System.Drawing.Size(153, 36)
         Me.Button6.TabIndex = 5
@@ -102,7 +103,7 @@ Partial Class Form1
         'Button7
         '
         Me.Button7.Location = New System.Drawing.Point(150, 91)
-        Me.Button7.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button7.Margin = New System.Windows.Forms.Padding(2)
         Me.Button7.Name = "Button7"
         Me.Button7.Size = New System.Drawing.Size(153, 36)
         Me.Button7.TabIndex = 6
@@ -112,7 +113,7 @@ Partial Class Form1
         'Button8
         '
         Me.Button8.Location = New System.Drawing.Point(150, 127)
-        Me.Button8.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button8.Margin = New System.Windows.Forms.Padding(2)
         Me.Button8.Name = "Button8"
         Me.Button8.Size = New System.Drawing.Size(153, 36)
         Me.Button8.TabIndex = 7
@@ -122,7 +123,7 @@ Partial Class Form1
         'Button9
         '
         Me.Button9.Location = New System.Drawing.Point(150, 163)
-        Me.Button9.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button9.Margin = New System.Windows.Forms.Padding(2)
         Me.Button9.Name = "Button9"
         Me.Button9.Size = New System.Drawing.Size(153, 36)
         Me.Button9.TabIndex = 8
@@ -132,7 +133,7 @@ Partial Class Form1
         'Button10
         '
         Me.Button10.Location = New System.Drawing.Point(150, 199)
-        Me.Button10.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button10.Margin = New System.Windows.Forms.Padding(2)
         Me.Button10.Name = "Button10"
         Me.Button10.Size = New System.Drawing.Size(153, 36)
         Me.Button10.TabIndex = 9
@@ -178,18 +179,28 @@ Partial Class Form1
         'Button15
         '
         Me.Button15.Location = New System.Drawing.Point(150, 235)
-        Me.Button15.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Button15.Margin = New System.Windows.Forms.Padding(2)
         Me.Button15.Name = "Button15"
         Me.Button15.Size = New System.Drawing.Size(153, 36)
         Me.Button15.TabIndex = 210
         Me.Button15.Text = "get pform fanta pazz"
         Me.Button15.UseVisualStyleBackColor = True
         '
+        'cmdcoppa
+        '
+        Me.cmdcoppa.Location = New System.Drawing.Point(150, 270)
+        Me.cmdcoppa.Name = "cmdcoppa"
+        Me.cmdcoppa.Size = New System.Drawing.Size(153, 36)
+        Me.cmdcoppa.TabIndex = 211
+        Me.cmdcoppa.Text = "Get Coppa"
+        Me.cmdcoppa.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(328, 340)
+        Me.Controls.Add(Me.cmdcoppa)
         Me.Controls.Add(Me.Button15)
         Me.Controls.Add(Me.Button14)
         Me.Controls.Add(Me.Button13)
@@ -206,7 +217,7 @@ Partial Class Form1
         Me.Controls.Add(Me.Button2)
         Me.Controls.Add(Me.Button1)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow
-        Me.Margin = New System.Windows.Forms.Padding(2, 2, 2, 2)
+        Me.Margin = New System.Windows.Forms.Padding(2)
         Me.Name = "Form1"
         Me.Text = "Form1"
         Me.ResumeLayout(False)
@@ -227,4 +238,5 @@ Partial Class Form1
     Friend WithEvents Button13 As Button
     Friend WithEvents Button14 As Button
     Friend WithEvents Button15 As Button
+    Friend WithEvents cmdcoppa As Button
 End Class

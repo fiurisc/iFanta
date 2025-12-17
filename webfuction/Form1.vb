@@ -210,4 +210,8 @@ Public Class Form1
         pdata.ApiGetStoricoClassifica()
     End Sub
 
+    Private Sub cmdcoppa_Click(sender As Object, e As EventArgs) Handles cmdcoppa.Click
+        Dim pdata As New Torneo.CoppaData(appSett)
+        pdata.ApiGetCoppa()
+    End Sub
 End Class

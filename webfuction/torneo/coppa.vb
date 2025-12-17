@@ -132,6 +132,7 @@ Namespace Torneo
 
                 pt1 = GetPtTeam(partita.GoalAnd1, partita.GoalAnd2)
                 pt2 = GetPtTeam(partita.GoalAnd2, partita.GoalAnd1)
+
                 If pt1 > -1 Then
                     clasa(partita.TeamGironeId1).PartiteGiocate = clasa(partita.TeamGironeId1).PartiteGiocate + 1
                     clasa(partita.TeamGironeId1).Pt = clasa(partita.TeamGironeId1).Pt + pt1
@@ -155,6 +156,9 @@ Namespace Torneo
                     clasa(partita.TeamGironeId2).PartiteGiocate = clasa(partita.TeamGironeId2).PartiteGiocate + 1
                     clasa(partita.TeamGironeId2).Pt = clasa(partita.TeamGironeId2).Pt + pt2
                 End If
+
+                SetTypeOfResult(clasa(partita.TeamGironeId1), pt1)
+                SetTypeOfResult(clasa(partita.TeamGironeId2), pt2)
 
                 If partita.GoalAnd1 > 0 Then
                     clasa(partita.TeamGironeId1).GoalFatti += partita.GoalAnd1
