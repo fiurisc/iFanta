@@ -207,7 +207,7 @@ Public Class Form1
 
     Private Sub Button14_Click(sender As Object, e As EventArgs) Handles Button14.Click
         Dim pdata As New Torneo.ClassificaData(appSett)
-        pdata.ApiGetStoricoClassifica()
+        pdata.ApiGetClassifica("5", False)
     End Sub
 
     Private Sub cmdcoppa_Click(sender As Object, e As EventArgs) Handles cmdcoppa.Click
