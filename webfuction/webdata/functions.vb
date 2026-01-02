@@ -300,7 +300,18 @@ Namespace WebData
 
         Public Shared Function CleanSpecialChar(txt As String) As String
             txt = txt.Replace("’", "")
-            txt = txt.Replace(".", "")
+            If txt.Contains(".") Then
+                Dim list() As String = txt.Split(CChar(" "))
+                txt = ""
+                For Each s In list
+                    Dim val As String = s
+                    If val.Contains(".") Then
+                        val = val.Substring(0, 1)
+                    End If
+                    txt += val & " "
+                Next
+            End If
+            txt = txt.Trim()
             Return txt
         End Function
 
