@@ -112,8 +112,11 @@ Public Class Form1
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
 
-        Dim match As New Torneo.MatchsData(appSett)
-        match.ApiGetMatchDetails("1", "1")
+        Dim accCheck As New Torneo.General(appSett)
+        Dim acc As Torneo.General.Account = accCheck.GetAccountByUsername("fernando.iurisci")
+        acc = Nothing
+        'Dim match As New Torneo.MatchsData(appSett)
+        'match.ApiGetMatchDetails("1", "1")
 
         'Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa.json")
         'Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
@@ -127,7 +130,7 @@ Public Class Form1
 
     Private Sub Button12_Click(sender As Object, e As EventArgs) Handles Button12.Click
 
-        'SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\data.db", AppContext.BaseDirectory & "tornei\2025.accdb")
+        SQLiteToAccessCopier.CopyData(AppContext.BaseDirectory & "tornei\2024\data.db", AppContext.BaseDirectory & "tornei\2024\data.accdb")
         'Dim dicData As Dictionary(Of String, Probable) = Torneo.ProbablePlayers.GetProbableFormation("")
         'Dim dicName As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Integer)))
 
