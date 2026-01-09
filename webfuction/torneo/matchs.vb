@@ -190,7 +190,7 @@ Namespace Torneo
             Dim mtxtdata As New List(Of Match)
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbmatch " & If(days.Count > 0 AndAlso days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM match_pos " & If(days.Count > 0 AndAlso days.Contains("-1") = False, " WHERE gio IN ( " & WebData.Functions.ConvertListStringToString(days, ",") & ")", ""))
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -204,6 +204,10 @@ Namespace Torneo
                         m.Time = Convert.ToDateTime(row.Item("timem")).ToString("yyyy/MM/dd HH:mm:ss")
                         m.GoalA = Functions.ReadFieldStringData(row.Item("goala").ToString())
                         m.GoalB = Functions.ReadFieldStringData(row.Item("goalb").ToString())
+                        m.PositionA = Functions.ReadFieldIntegerData(row.Item("pos1"), 1)
+                        m.PositionB = Functions.ReadFieldIntegerData(row.Item("pos2"), 1)
+                        m.PositionGroupA = Functions.ReadFieldIntegerData(row.Item("pos1"), 0)
+                        m.PositionGroupB = Functions.ReadFieldIntegerData(row.Item("pos2"), 0)
                         mtxtdata.Add(m)
                     Next
                 End If
@@ -415,6 +419,10 @@ Namespace Torneo
             Public Property Time As String = Now.ToString("yyyy/MM/dd HH:mm:ss")
             Public Property GoalA As String = ""
             Public Property GoalB As String = ""
+            Public Property PositionA As Integer = 1
+            Public Property PositionB As Integer = 1
+            Public Property PositionGroupA As Integer = 0
+            Public Property PositionGroupB As Integer = 0
 
         End Class
 

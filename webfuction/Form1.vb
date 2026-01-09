@@ -113,7 +113,7 @@ Public Class Form1
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
 
         Dim match As New Torneo.MatchsData(appSett)
-        match.ApiGetMatchDetails("1", "1")
+        match.ApiGetMatchsData("1")
 
         'Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa.json")
         'Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
