@@ -28,7 +28,7 @@ Namespace WebData
 
                         For Each p As Torneo.Players.PlayerQuotesItem In playersq
 
-                            If p.Nome.Contains("BERNA") Then
+                            If p.Nome.Contains("MARTINEZ") Then
                                 p.Nome = p.Nome
                             End If
 
