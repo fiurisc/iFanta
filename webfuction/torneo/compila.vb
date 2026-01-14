@@ -48,7 +48,7 @@ Namespace Torneo
                 UpdateStatus("Compilazione formazioni...", 4, max)
                 Dim lst1 As New List(Of FormazioniData.Formazione)
                 For i As Integer = 0 To appSett.Settings.NumberOfTeams - 1
-                    lst1.Add(CompileDataForma(giornata, i))
+                    lst1.Add(CompileDataForma(CInt(giornata), i))
                 Next
 
                 UpdateStatus("Salvataggio formazioni...", 5, max)
@@ -262,9 +262,9 @@ Namespace Torneo
                                         ptf = vtf
 
                                         If esp <> "" AndAlso esp <> "0" Then
-                                            ptf = ptf + appSett.Settings.Points.Expulsion
+                                            ptf += appSett.Settings.Points.Expulsion
                                         ElseIf amm <> "" AndAlso amm <> "0" Then
-                                            ptf = ptf + appSett.Settings.Points.Admonition
+                                            ptf += appSett.Settings.Points.Admonition
                                         End If
                                         If datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass) * appSett.Settings.Points.Assist(ruolo)
                                         If datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut) * appSett.Settings.Points.OwnGoal(ruolo)
@@ -348,7 +348,11 @@ Namespace Torneo
 
         End Sub
 
-        Private Function CompileDataForma(ByVal Giornata As String, ByVal TeamId As Integer) As FormazioniData.Formazione
+        Public Function CompileDataForma(ByVal Giornata As Integer, ByVal TeamId As Integer) As FormazioniData.Formazione
+            Return CompileDataForma(Giornata, TeamId, "tbformazioni")
+        End Function
+
+        Public Function CompileDataForma(ByVal Giornata As Integer, ByVal TeamId As Integer, Table As String) As FormazioniData.Formazione
 
             Dim f As New FormazioniData.Formazione()
 
@@ -362,7 +366,7 @@ Namespace Torneo
                 Dim str As New System.Text.StringBuilder
                 str.Append("SELECT f.idrosa,f.type,f.idformazione,f.ruolo,f.nome,f.squadra,")
                 str.Append("d.amm,d.esp,d.ass,d.autogol,d.gs,d.gf,d.rigp,d.rigs,d.voto,d.pt ")
-                str.Append("FROM tbformazioni as f LEFT JOIN tbdati as d ON (f.nome = d.nome AND (f.squadra = d.squadra or f.squadra='') AND f.gio = d.gio) ")
+                str.Append("FROM " & Table & " as f LEFT JOIN tbdati as d ON (f.nome = d.nome AND (f.squadra = d.squadra or f.squadra='') AND f.gio = d.gio) ")
                 str.Append("WHERE f.gio=" & Giornata & " AND idteam=" & TeamId & " AND type<10 ")
                 str.Append("ORDER BY f.type,f.idformazione;")
 
@@ -405,7 +409,6 @@ Namespace Torneo
 
                         'Dati giornata'
                         If idforma.Contains(keyp) = False AndAlso ((p.FormaId < 12 AndAlso p.Type = 1) OrElse (p.FormaId >= 12 AndAlso p.FormaId <= 11 + appSett.Settings.NumberOfReserve AndAlso p.Type = 2)) Then
-
 
                             If p.Type <> 0 Then
                                 If p.Type = 1 Then
@@ -682,13 +685,13 @@ Namespace Torneo
                         If f.Players(i).Type > 0 AndAlso f.Players(i).InCampo = 1 AndAlso f.Players(i).Voto > -100 Then
                             Select Case f.Players(i).Ruolo
                                 Case "D"
-                                    If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd = ndgoodd + GetGoodForBonus(f.Players(i))
+                                    If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(f.Players(i))
                                     ndt += 1
                                 Case "C"
-                                    If appSett.Settings.Bonus.EnableCenterField Then ndgoodc = ndgoodc + GetGoodForBonus(f.Players(i))
+                                    If appSett.Settings.Bonus.EnableCenterField Then ndgoodc += GetGoodForBonus(f.Players(i))
                                     nct += 1
                                 Case "A"
-                                    If appSett.Settings.Bonus.EnableCenterField Then ndgooda = ndgooda + GetGoodForBonus(f.Players(i))
+                                    If appSett.Settings.Bonus.EnableCenterField Then ndgooda += GetGoodForBonus(f.Players(i))
                                     nat += 1
                             End Select
                         End If
@@ -863,9 +866,7 @@ Namespace Torneo
                 Case "A" : CurrA += 1
             End Select
 
-            If CurrP < 2 AndAlso CurrD < 4 AndAlso CurrC < 5 AndAlso CurrA < 4 Then
-                ris = True
-            ElseIf CurrP < 2 AndAlso CurrD < 3 AndAlso CurrC < 5 AndAlso CurrA < 3 Then '343'
+            If CurrP < 2 AndAlso CurrD < 4 AndAlso CurrC < 5 AndAlso CurrA < 4 Then '343'
                 ris = True
             ElseIf CurrP < 2 AndAlso CurrD < 4 AndAlso CurrC < 6 AndAlso CurrA < 3 Then '352'
                 ris = True
