@@ -1,4 +1,5 @@
-﻿Imports System.Net
+﻿Imports System.Data.OleDb
+Imports System.Net
 Imports System.Net.Http
 Imports System.Net.Mail
 Imports System.Text
@@ -42,6 +43,8 @@ Public Class Form1
         Dim str As New System.Text.StringBuilder
 
         appSett.InitPath(My.Application.Info.DirectoryPath & "\", My.Application.Info.DirectoryPath & "\tornei\", "Parenti", year)
+        Dim gen As New Torneo.General(appSett)
+        gen.ReadSettings()
 
     End Sub
 
@@ -112,8 +115,44 @@ Public Class Form1
 
     Private Sub Button11_Click(sender As Object, e As EventArgs) Handles Button11.Click
 
-        Dim match As New Torneo.MatchsData(appSett)
-        match.ApiGetMatchsData("1")
+        Dim data As New Torneo.FormazioniData(appSett)
+        Dim comp As New Torneo.CompilaData(appSett)
+
+        'Torneo.Functions.CloneTableStructure(appSett, "tbformazioni", "tbtemp")
+
+        data.GetFormazioneAutomatica(2, 17, False)
+        'Dim a As Torneo.FormazioniData.Formazione = comp.CompileDataForma(11, 6, "tbtemp")
+
+        For g As Integer = 19 To 20
+
+            Dim lst As New List(Of Torneo.FormazioniData.Formazione)
+            Dim lstOld As List(Of Torneo.FormazioniData.Formazione)
+
+            For i As Integer = 0 To 9
+                lst.Add(data.GetFormazioneAutomatica(i, g, i <> 0 OrElse g <> 1))
+            Next
+
+            data.SaveFormazioni(g, lst, "tbtemp")
+
+            For i As Integer = 0 To 9
+                lst(i) = comp.CompileDataForma(g, i, "tbtemp")
+            Next
+
+            data.SaveFormazioni(g, lst, "tbtemp")
+
+            lst = data.GetFormazioni(g.ToString(), "-1", "tbtemp")
+            lstOld = data.GetFormazioni(g.ToString(), "-1", False)
+
+            If lstOld.Count > 0 Then
+                Debug.WriteLine("Punteggi giornata: " & g)
+                For i As Integer = 0 To 9
+                    Debug.WriteLine(lst(i).Punti / 10 & vbTab & lstOld(i).Punti / 10 & vbTab & lst(i).PlayersInCampo)
+                Next
+            End If
+
+        Next
+
+        '
 
         'Dim htmlstr As String = IO.File.ReadAllText(My.Application.Info.DirectoryPath & "\tornei\2025\export\Rosa.json")
         'Dim json As String = RegularExpressions.Regex.Match(htmlstr, "(?<=\<script\>const data \= ).*(?=;\<\/script\>)").Value
@@ -163,7 +202,7 @@ Public Class Form1
 
         'IO.File.WriteAllText(AppContext.BaseDirectory & "test.txt", strout.ToString())
         Dim comp As New Torneo.CompilaData(appSett)
-        comp.ApiCompila("11")
+        comp.ApiCompila("20")
 
         For i As Integer = 1 To 6
             'Torneo.CompilaData.ApiCompila(CStr(i))
@@ -214,4 +253,5 @@ Public Class Form1
         Dim pdata As New Torneo.CoppaData(appSett)
         pdata.ApiGetCoppa()
     End Sub
+
 End Class

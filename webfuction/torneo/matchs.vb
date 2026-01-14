@@ -206,8 +206,8 @@ Namespace Torneo
                         m.GoalB = Functions.ReadFieldStringData(row.Item("goalb").ToString())
                         m.PositionA = Functions.ReadFieldIntegerData(row.Item("pos1"), 1)
                         m.PositionB = Functions.ReadFieldIntegerData(row.Item("pos2"), 1)
-                        m.PositionGroupA = Functions.ReadFieldIntegerData(row.Item("pos1"), 0)
-                        m.PositionGroupB = Functions.ReadFieldIntegerData(row.Item("pos2"), 0)
+                        m.PositionGroupA = Functions.ReadFieldIntegerData(row.Item("posgr1"), 0)
+                        m.PositionGroupB = Functions.ReadFieldIntegerData(row.Item("posgr2"), 0)
                         mtxtdata.Add(m)
                     Next
                 End If

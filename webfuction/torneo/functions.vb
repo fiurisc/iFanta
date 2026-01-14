@@ -103,6 +103,21 @@ Namespace Torneo
             ExecuteSql(appSett, New List(Of String) From {SqlString}, DbUser)
         End Sub
 
+        Public Shared Sub CloneTableStructure(appSett As PublicVariables, sourceTable As String, targetTable As String, Optional DbUser As Boolean = False)
+            Using cn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
+                cn.Open()
+                ' Elimina la destinazione se esiste già (facoltativo)
+                Using dropCmd As New OleDbCommand($"DROP TABLE [{targetTable}]", cn)
+                    Try : dropCmd.ExecuteNonQuery() : Catch : End Try
+                End Using
+
+                Dim sql As String = $"SELECT * INTO [{targetTable}] FROM [{sourceTable}] WHERE 1=0;"
+                Using cmd As New OleDbCommand(sql, cn)
+                    Try : cmd.ExecuteNonQuery() : Catch : End Try
+                End Using
+            End Using
+        End Sub
+
         Public Shared Sub ExecuteSql(appSett As PublicVariables, ByVal SqlString As List(Of String), Optional DbUser As Boolean = False)
             If SqlString.Count = 0 Then Exit Sub
             Using conn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
@@ -119,6 +134,7 @@ Namespace Torneo
 
             Dim ds As New System.Data.DataSet
 
+            'Debug.WriteLine(SqlString)
             Using conn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
                 conn.Open()
                 Using da As New OleDbDataAdapter(SqlString, conn)

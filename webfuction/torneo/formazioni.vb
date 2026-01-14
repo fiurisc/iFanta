@@ -1,4 +1,6 @@
 ﻿Imports System.Data
+Imports System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder
+Imports webfuction.Torneo.ProbablePlayers
 
 Namespace Torneo
 
@@ -30,9 +32,12 @@ Namespace Torneo
         End Function
 
         Public Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Cancellazione formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
-            Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
-            Functions.ExecuteSql(appSett, "DELETE FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
+            DeleteFormazioni(Day, TeamId, If(Top, "tbformazionitop", "tbformazioni"))
+        End Sub
+
+        Public Sub DeleteFormazioni(Day As String, TeamId As String, Table As String)
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Cancellazione formazione giornata: " & Day & " per il team: " & TeamId & " table: " & Table)
+            Functions.ExecuteSql(appSett, "DELETE FROM " & Table & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
         End Sub
 
         Public Function ApiGetFormazione(Day As String, TeamId As String, Top As Boolean) As String
@@ -83,10 +88,13 @@ Namespace Torneo
         End Sub
 
         Public Sub SaveFormazioni(day As Integer, lst As List(Of Formazione), top As Boolean)
-
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio formazioni: " & day & " top: " & top.ToString())
-
             Dim tb As String = If(top, "tbformazionitop", "tbformazioni")
+            SaveFormazioni(day, lst, tb)
+        End Sub
+
+        Public Sub SaveFormazioni(day As Integer, lst As List(Of Formazione), Table As String)
+
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio formazioni: " & day & " table: " & Table)
 
             For Each forma As Formazione In lst
 
@@ -94,54 +102,57 @@ Namespace Torneo
 
                 If forma.BonusDifesa > 0 Then
                     Dim sqlp As New System.Text.StringBuilder
-                    sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
+                    sqlp.AppendLine("INSERT INTO " & Table & " (gio,idteam,type,pt) values (")
                     sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",10," & forma.BonusDifesa & ")")
                     sqlinsert.Add(sqlp.ToString())
                 End If
 
                 If forma.BonusCentrocampo > 0 Then
                     Dim sqlp As New System.Text.StringBuilder
-                    sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
+                    sqlp.AppendLine("INSERT INTO " & Table & " (gio,idteam,type,pt) values (")
                     sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",20," & forma.BonusDifesa & ")")
                     sqlinsert.Add(sqlp.ToString())
                 End If
 
                 If forma.BonusAttacco > 0 Then
                     Dim sqlp As New System.Text.StringBuilder
-                    sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
+                    sqlp.AppendLine("INSERT INTO " & Table & " (gio,idteam,type,pt) values (")
                     sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",30," & forma.BonusDifesa & ")")
                     sqlinsert.Add(sqlp.ToString())
                 End If
 
                 If forma.CambioModulo > 0 Then
                     Dim sqlp As New System.Text.StringBuilder
-                    sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,type,pt) values (")
+                    sqlp.AppendLine("INSERT INTO " & Table & " (gio,idteam,type,pt) values (")
                     sqlp.AppendLine(day + 1000 & "," & forma.TeamId & ",40,1)")
                     sqlinsert.Add(sqlp.ToString())
                 End If
 
                 For Each p As PlayerFormazione In forma.Players
                     Dim sqlp As New System.Text.StringBuilder
-                    sqlp.AppendLine("INSERT INTO " & tb & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
+                    sqlp.AppendLine("INSERT INTO " & Table & " (gio,idteam,idrosa,jolly,type,idformazione,incampo,ruolo,nome,squadra,vote,amm,esp,ass,autogol,gs,gf,rigs,rigp,pt) values (")
                     sqlp.AppendLine(day + 1000 & "," & forma.TeamId & "," & p.RosaId & "," & p.Jolly & "," & p.Type & "," & p.FormaId & "," & p.InCampo & ",'" & p.Ruolo & "',")
                     sqlp.AppendLine("'" & p.Nome.ToUpper() & "','" & p.Squadra.ToUpper() & "'," & p.Voto & "," & p.Ammonito & "," & p.Espulso & "," & p.Assists & "," & p.AutoGoal & ",")
                     sqlp.AppendLine(p.GoalSubiti & "," & p.GoalFatti & "," & p.RigoriSbagliati & "," & p.RigoriParati & "," & p.Punti & ")")
                     sqlinsert.Add(sqlp.ToString())
                 Next
 
-                Functions.ExecuteSql(appSett, "DELETE FROM " & tb & " WHERE gio=" & day + 1000 & " AND idteam=" & forma.TeamId)
+                Functions.ExecuteSql(appSett, "DELETE FROM " & Table & " WHERE gio=" & day + 1000 & " AND idteam=" & forma.TeamId)
                 Functions.ExecuteSql(appSett, sqlinsert)
-                ApiDeleteFormazioni(day.ToString(), forma.TeamId.ToString(), top)
-                Functions.ExecuteSql(appSett, "UPDATE " & tb & " SET gio=gio-1000 WHERE gio=" & day + 1000 & " AND idteam=" & forma.TeamId)
+                DeleteFormazioni(day.ToString(), forma.TeamId.ToString(), Table)
+                Functions.ExecuteSql(appSett, "UPDATE " & Table & " SET gio=gio-1000 WHERE gio=" & day + 1000 & " AND idteam=" & forma.TeamId)
 
             Next
-
 
         End Sub
 
         Public Function GetFormazioni(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
+            Return GetFormazioni(Day, TeamId, If(Top, "formazioni_top", "formazioni"))
+        End Function
 
-            Dim list As List(Of Formazione) = GetFormazioniFromDb(Day, TeamId, Top)
+        Public Function GetFormazioni(Day As String, TeamId As String, Table As String) As List(Of Formazione)
+
+            Dim list As List(Of Formazione) = GetFormazioniFromDb(Day, TeamId, Table)
 
             For Each forma As Formazione In list
 
@@ -172,13 +183,13 @@ Namespace Torneo
 
         End Function
 
-        Private Function GetFormazioniFromDb(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
+        Private Function GetFormazioniFromDb(Day As String, TeamId As String, Table As String) As List(Of Formazione)
 
             Dim list As New Dictionary(Of Integer, Formazione)
 
             Try
-                Dim tb As String = If(Top, "formazioni_top", "formazioni")
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM " & tb & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam = " & TeamId, "") & " ORDER BY idteam,idformazione")
+
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM " & Table & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam = " & TeamId, "") & " ORDER BY idteam,idformazione")
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -216,9 +227,9 @@ Namespace Torneo
                         ElseIf type = 10 AndAlso appSett.Settings.Bonus.EnableBonusDefense Then
                             list(tid).BonusDifesa = Functions.ReadFieldIntegerData("pt", row, 0)
                         ElseIf type = 20 AndAlso appSett.Settings.Bonus.EnableCenterField Then
-                            list(tid).BonusDifesa = Functions.ReadFieldIntegerData("pt", row, 0)
+                            list(tid).BonusCentrocampo = Functions.ReadFieldIntegerData("pt", row, 0)
                         ElseIf type = 30 AndAlso appSett.Settings.Bonus.EnableBonusAttack Then
-                            list(tid).BonusDifesa = Functions.ReadFieldIntegerData("pt", row, 0)
+                            list(tid).BonusAttacco = Functions.ReadFieldIntegerData("pt", row, 0)
                         ElseIf type = 40 AndAlso appSett.Settings.SubstitutionType <> TorneoSettings.eSubstitutionType.Normal Then
                             list(tid).CambioModulo = Functions.ReadFieldIntegerData("pt", row, 0)
                         End If
@@ -230,196 +241,392 @@ Namespace Torneo
             Return list.Values.ToList()
         End Function
 
-        Sub GetAutomaticFormation(ByVal Giornata As Integer)
+        Public Function ApiGetFormazioniAutomatiche(Day As String, TeamId As String) As String
+
+            Dim json As String = ""
+
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazioni automatiche giornata: " & Day & " per il team: " & TeamId)
+
+            Try
+                Dim list As New List(Of Formazione)
+                For i As Integer = 0 To appSett.Settings.NumberOfTeams - 1
+                    If TeamId = "-1" OrElse i.ToString() = TeamId Then
+                        list.Add(GetFormazioneAutomatica(i, CInt(Day), i <> 0))
+                    End If
+                Next
+                Dim dicForma As Dictionary(Of String, Formazione) = list.ToDictionary(Function(x) x.TeamId.ToString(), Function(x) x)
+                Return WebData.Functions.SerializzaOggetto(dicForma, True)
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+            Return json
+
+        End Function
+
+        Sub GetFormazioniAutomatiche(ByVal Giornata As Integer)
             Dim formaList As New Dictionary(Of Integer, Formazione)
             For i As Integer = 0 To appSett.Settings.NumberOfTeams - 1
-                formaList.Add(i, GetAutomaticFormation(i, Giornata))
+                formaList.Add(i, GetFormazioneAutomatica(i, Giornata, i <> 0))
             Next
         End Sub
 
-        Function GetAutomaticFormation(ByVal IdTeam As Integer, ByVal Giornata As Integer) As Formazione
+        Function GetFormazioneAutomatica(ByVal IdTeam As Integer, ByVal Giornata As Integer, AppendLog As Boolean) As Formazione
 
-            'Dim fc As New List(Of Formazione.PlayerFormazione)
-            'Dim ft As New List(Of Formazione.PlayerFormazione)
-            Dim f As New Formazione
-            'Dim r As New LegaObject.Team(IdTeam, "")
-            'Dim rp As New List(Of LegaObject.Team.Player)
-            'Dim portteam As String = ""
+            ' Determino la rosa con i dati statistici'
 
-            ''Carico la rosa'
-            'r.Load(True, True, True)
+            Dim fileLog As String = appSett.WebDataPath & "\temp\autoforma.log"
+            Dim addlastpresence As Boolean = True
+            Dim addpostionrank As Boolean = True
+            Dim addhomerank As Boolean = True
+            Dim addprobable As Boolean = True
+            Dim probable As New Dictionary(Of String, Probable)
+            Dim sr As New IO.StreamWriter(fileLog, AppendLog)
+            Dim daydata As Integer = Giornata - 1
+            Dim pforma As New List(Of PlayerFormazione)
+            Dim maxday As Integer = 0
 
-            'rp.AddRange(r.Players)
+            Try
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT max(gio) as gio FROM tbrank")
+                If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
+                    maxday = CInt(ds.Tables(0).Rows(0)("gio"))
+                    If Giornata > maxday + 1 Then
+                        daydata = maxday
+                    End If
+                End If
 
-            'Dim dir As String = GetLegaTemDirectory()
-            'Dim str As New System.Text.StringBuilder
+                If addprobable Then
+                    Dim probdata As New Torneo.ProbablePlayers(appSett)
+                    probable = probdata.GetProbableFormation("")
+                End If
 
-            'For i As Integer = 0 To rp.Count - 1
-            '    str.AppendLine(rp(i).Nome & "|" & rp(i).Squadra & "|" & rp(i).Rating)
-            'Next
-            'IO.File.WriteAllText(dir & "\" & IdTeam & "-rating.txt", str.ToString)
+                sr.WriteLine("**** Dertermino la rosa (" & IdTeam & ") con tutti i valori utili aggiornati alla giornata (" & Giornata & ") ****")
 
-            ''Calcolo il rating dei vari giocatori'
-            'rp = CalculateRatingPresenze(Giornata, IdTeam, False, rp)
+                '************************************************************************************************
+                '** i seguenti paramentri servono solo se si desidera compilare una formazione                 **
+                '** automatica delle giornate passate, perchè a sistema non è presente uno storico delle rose  **
+                '************************************************************************************************
+                Dim tbref As String = If(Giornata > maxday, "tbrose", "tbformazioni")
+                Dim tbwhere As String = If(Giornata > maxday, "tbr.idteam=" & IdTeam, "tbr.idteam=" & IdTeam & " AND tbr.gio=" & Giornata & " AND tbr.type<3")
+                '************************************************************************************************
+                Dim fc As New List(Of PlayerRosaFormazione)
+                Dim nday As Integer = If(daydata > 5, 5, daydata)
+                Dim daydiff As Integer = 5
+                Dim sqlstr As New Text.StringBuilder
+                sqlstr.AppendLine("SELECT tbd.*,tbr.pos as posb,int((tbr.pos -1) / 5) AS posgrb FROM (")
+                sqlstr.AppendLine(" SELECT tbd.*,tbr.pos as posa,int((tbr.pos -1) / 5) AS posgra FROM (")
+                sqlstr.AppendLine("  SELECT tbd.*,tbm.teama,teamb,iif(tbd.squadra=teama,1,0) as home,timem,iif(CDate(timem)>Now(),1,0) as available,DateDiff('h', Now(), CDate(timem)) AS tleft FROM (")
+                sqlstr.AppendLine("   SELECT tbd.*,tbp.squadra FROM (")
+                sqlstr.AppendLine("    SELECT tbd.idrosa,tbd.ruolo, tbd.nome,sum(tbd.gf) as gf,sum(tbd.gs) as gs,sum(tbd.ass) as ass,sum(tbd.pt) as pt, IIf(Sum(tbd.pt)>0,CInt(Avg(tbd.pt)),0) AS avg_pt, Count(*) AS pgio, Sum(tbt.tit) AS tit, Sum(tbt.sos) AS sos, Sum(tbt.sub) AS sub, Sum(tbt.mm) AS mm, iif(Sum(tbt.mm) > 0,CInt (Sum(tbt.mm)) / " & nday & ",0 ) AS avg_mm FROM (")
+                sqlstr.AppendLine("     SELECT tbr.idrosa,tbr.ruolo,tbr.nome,tbd.gio,tbd.gf,tbd.gs,tbd.ass,tbd.pt")
+                sqlstr.AppendLine("     FROM  " & tbref & " as tbr")
+                sqlstr.AppendLine("     LEFT JOIN tbdati as tbd on (tbd.nome=tbr.nome AND tbd.pt > -100 AND tbd.gio >" & daydata - (daydiff + 2) & " and tbd.gio<=" & daydata & ")")
+                sqlstr.AppendLine("     WHERE " & tbwhere & ") as tbd")
+                sqlstr.AppendLine("    LEFT JOIN tbtabellini AS tbt ON (tbd.gio = tbt.gio) AND (tbd.nome = tbt.nome)")
+                sqlstr.AppendLine("    GROUP BY tbd.idrosa,tbd.ruolo, tbd.nome) as tbd")
+                sqlstr.AppendLine("   LEFT JOIN tbplayer as tbp on tbp.nome=tbd.nome) as tbd")
+                sqlstr.AppendLine("  LEFT JOIN tbmatch as tbm ON (tbm.gio = " & Giornata & " AND (tbd.squadra = tbm.teama OR tbd.squadra = tbm.teamb))) as tbd")
+                sqlstr.AppendLine(" LEFT JOIN tbrank as tbr ON (tbd.teama=tbr.squadra and tbr.gio=" & daydata & ")) as tbd")
+                sqlstr.AppendLine("LEFT JOIN tbrank as tbr ON (tbd.teamb=tbr.squadra and tbr.gio=" & daydata & ")")
+                sqlstr.AppendLine("ORDER BY idrosa")
 
-            ''Determino la formazione automatica'
-            'f = DetectAutomaticForma(IdTeam, False, rp)
+                Dim a As String = sqlstr.ToString()
 
-            ''Controllo la formazione'
-            'Dim recheck As Boolean = False
-            'Dim pc As New List(Of String)
-            'For i As Integer = f.Count - 1 To 0 Step -1
-            '    If f(i).Tag = "1" AndAlso f(i).Type = 0 Then
-            '        'Verifico un panchinaro utile'
-            '        Dim good As Boolean = False
-            '        For j As Integer = 0 To f.Count - 1
-            '            If f(j).Type = 1 AndAlso f(i).Ruolo = f(j).Ruolo AndAlso pc.Contains(f(j).Nome & "-" & f(j).Squadra) = False AndAlso pc.Count < 3 Then
-            '                If webdata.WebPlayers.ContainsKey(Giornata & "-" & f(j).Nome & "-" & f(j).Squadra) Then
-            '                    Dim wp As wData.wPlayer = webdata.WebPlayers(Giornata & "-" & f(j).Nome & "-" & f(j).Squadra)
-            '                    If wp.Titolare / webdata.NumSitePlayer > 0.79 Then
-            '                        good = True
-            '                        pc.Add(f(j).Nome & "-" & f(j).Squadra)
-            '                        Exit For
-            '                    End If
-            '                End If
-            '            End If
-            '        Next
-            '        If good = False Then
-            '            recheck = True
-            '        Else
-            '            For h As Integer = 0 To rp.Count - 1
-            '                If f(i).Nome = rp(h).Nome AndAlso f(i).Squadra = rp(h).Squadra Then
-            '                    rp(h).Tag = "0"
-            '                    Exit For
-            '                End If
-            '            Next
-            '        End If
-            '    End If
-            'Next
-            'If recheck Then
-            '    For h As Integer = rp.Count - 1 To 0 Step -1
-            '        rp(h).Type = 0
-            '        rp(h).Schierato = 0
-            '    Next
-            '    'Calcolo il rating dei vari giocatori'
-            '    rp = CalculateRatingPresenze(Giornata, IdTeam, True, rp)
-            '    'Determino la formazione automatica'
-            '    f = DetectAutomaticForma(IdTeam, True, rp)
-            'End If
+                ds = Functions.ExecuteSqlReturnDataSet(appSett, sqlstr.ToString())
 
-            ''Verifico se ci sno attaccanti della stessa squadra'
-            'If CheckSameTeamForward(f) Then
-            '    f = DetectAutomaticForma(IdTeam, True, f)
-            'End If
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim row As DataRow = ds.Tables(0).Rows(i)
+                        Dim p As New PlayerRosaFormazione
+                        p.RosaId = Functions.ReadFieldIntegerData("idrosa", row, 0)
+                        p.Ruolo = Functions.ReadFieldStringData("ruolo", row, "")
+                        p.Nome = Functions.ReadFieldStringData("nome", row, "")
+                        p.Squadra = Functions.ReadFieldStringData("squadra", row, "")
+                        p.Gf = Functions.ReadFieldIntegerData("gf", row, 0)
+                        p.Gs = Functions.ReadFieldIntegerData("gs", row, 0)
+                        p.Ass = Functions.ReadFieldIntegerData("ass", row, 0)
+                        p.Pt = Functions.ReadFieldIntegerData("pt", row, 0)
+                        p.AvgPt = Functions.ReadFieldIntegerData("avg_pt", row, 0)
+                        p.pGiocate = Functions.ReadFieldIntegerData("pgio", row, 0)
+                        p.Titolare = Functions.ReadFieldIntegerData("tit", row, 0)
+                        p.Sostituito = Functions.ReadFieldIntegerData("sos", row, 0)
+                        p.Minuti = Functions.ReadFieldIntegerData("mm", row, 0)
+                        p.AvgMinuti = Functions.ReadFieldIntegerData("avg_mm", row, 0)
+                        p.TimeMatch = Functions.ReadFieldStringData("timem", row, "")
+                        p.TimeLeft = Functions.ReadFieldIntegerData("tleft", row, 0)
+                        p.Available = Functions.ReadFieldIntegerData("available", row, 0)
+                        p.TeamA = Functions.ReadFieldStringData("teama", row, "")
+                        p.TeamB = Functions.ReadFieldStringData("teamb", row, "")
+                        p.PosA = Functions.ReadFieldIntegerData("posa", row, 1)
+                        p.PosB = Functions.ReadFieldIntegerData("posb", row, 1)
+                        p.PosGroupA = Functions.ReadFieldIntegerData("posgra", row, 0)
+                        p.PosGroupB = Functions.ReadFieldIntegerData("posgrb", row, 0)
+                        fc.Add(p)
+                    Next
+                End If
 
-            Return f
+                Dim dicPosGroup As New Dictionary(Of String, Double)
+                Dim minPosFact As Double = 60
+                Dim maxPosFact As Double = 60
+                Dim maxposvalue As Integer = 110
 
-        End Function
+                If addpostionrank Then
 
-        Private Function DetectAutomaticForma(ByVal IdTeam As Integer, ByVal rechek As Boolean, ByRef rp As List(Of PlayerFormazione)) As List(Of PlayerFormazione)
+                    For Each p As PlayerRosaFormazione In fc
+                        Dim key As String = p.Ruolo & "-" & If(p.Squadra = p.TeamA, "1", "0") & "-" & If(p.Squadra = p.TeamA, p.PosGroupA, p.PosGroupB) & "-" & If(p.Squadra = p.TeamA, p.PosGroupB, p.PosGroupA)
+                        If dicPosGroup.ContainsKey(key) = False Then dicPosGroup.Add(key, 60)
+                    Next
 
-            Dim f As New List(Of PlayerFormazione)
-            Dim ft As New List(Of PlayerFormazione)
-            Dim fc As New List(Of RoseData.Player)
+                    sqlstr = New Text.StringBuilder
+                    sqlstr.AppendLine("SELECT ruolo, casa, pos, avv, avg(pt) AS fact FROM (")
+                    sqlstr.AppendLine(" SELECT tb.*, int((tbrank.pos -1) / 5) AS avv FROM (")
+                    sqlstr.AppendLine("  SELECT tbdati.gio, tbdati.ruolo, tbdati.squadra, int((tbrank.pos -1) / 5) AS pos, tbdati.voto as pt,iif(tbdati.squadra = tbmatch.teama, 1, 0) AS casa, iif( tbdati.squadra = tbmatch.teama, tbmatch.teamb, tbmatch.teama) AS avversaria FROM (")
+                    sqlstr.AppendLine("  tbdati LEFT JOIN tbmatch ON tbdati.gio = tbmatch.gio AND ( tbmatch.teama = tbdati.squadra OR tbmatch.teamb = tbdati.squadra))")
+                    sqlstr.AppendLine("  LEFT JOIN tbrank ON tbdati.gio = tbrank.gio AND tbdati.squadra = tbrank.squadra WHERE tbdati.pt > -100 AND tbdati.gio>" & daydata - 10 & " AND tbdati.gio<=" & daydata & ") AS tb")
+                    sqlstr.AppendLine(" LEFT JOIN tbrank ON tb.gio = tbrank.gio AND tb.avversaria = tbrank.squadra) AS tb")
+                    sqlstr.AppendLine("GROUP BY ruolo,casa,pos,avv")
+                    sqlstr.AppendLine("ORDER BY ruolo,casa,pos, avv;")
 
-            Dim portteam As String = ""
+                    ds = Functions.ExecuteSqlReturnDataSet(appSett, sqlstr.ToString())
 
-            'Ordino i giocatori sulla base del loro rating'
-            Dim rs As New RoseData(appSett)
-            Dim rosa As Dictionary(Of String, List(Of RoseData.Player)) = rs.GetPlayersFromDb(IdTeam.ToString(), "", "")
+                    If ds.Tables.Count > 0 Then
+                        For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                            Dim row As DataRow = ds.Tables(0).Rows(i)
+                            Dim key As String = ds.Tables(0).Rows(i)("ruolo").ToString() & "-" & ds.Tables(0).Rows(i)("casa").ToString() & "-" & ds.Tables(0).Rows(i)("pos").ToString() & "-" & ds.Tables(0).Rows(i)("avv").ToString()
+                            Dim factGroup As Double = CDbl(ds.Tables(0).Rows(i)("fact").ToString())
+                            'If dicPosGroup.ContainsKey(key) = False Then dicPosGroup.Add(key, factGroup)
+                            If dicPosGroup.ContainsKey(key) Then dicPosGroup(key) = factGroup
+                            If factGroup < minPosFact Then minPosFact = factGroup
+                            If factGroup > maxPosFact Then maxPosFact = factGroup
+                        Next
+                    End If
 
-            If rosa.Count > 0 AndAlso rosa.ContainsKey(IdTeam.ToString()) Then
-                Dim pl As New List(Of RoseData.Player)
-                For Each p As RoseData.Player In rosa(IdTeam.ToString())
-                    p.Rating = GetRating(p)
+                End If
+
+                sr.WriteLine("**** Determino i fattori di rating su base punti/presenza ultime giornate ****")
+
+                Dim ptMax As Single = 0
+                Dim ptMin As Single = 0
+                Dim maxavgvalue As Integer = 40
+
+                If fc.Count > 0 Then
+                    ptMax = fc.Select(Function(x) If(x.pGiocate > daydiff, x.AvgPt * daydiff, x.AvgPt * x.pGiocate)).ToList().Max
+                    ptMin = fc.Select(Function(x) If(x.pGiocate > daydiff, x.AvgPt * daydiff, x.AvgPt * x.pGiocate)).ToList().Min
+                End If
+
+                Dim factpt As Double = If(ptMax <> ptMin, maxavgvalue / (ptMax - ptMin), 0)
+
+                sr.WriteLine("Rating dei singoli giocatori")
+
+                For Each p As PlayerRosaFormazione In fc
+
+                    If p.Nome = "YILDIZ" Then
+                        p.Nome = p.Nome
+                    End If
+
+                    Dim rat1 As Double = 0
+                    Dim rat2 As Double = 0
+                    Dim rat3 As Double = 0
+                    Dim rat4 As Double = 0
+                    Dim rat5 As Double = 0
+
+                    If p.pGiocate > daydiff Then
+                        rat1 = CInt(Math.Floor(If(factpt = 0, maxavgvalue, factpt * (p.AvgPt * daydiff - ptMin))))
+                    Else
+                        rat1 = CInt(Math.Floor(If(factpt = 0, maxavgvalue, factpt * (p.AvgPt * p.pGiocate - ptMin))))
+                    End If
+
+                    Dim factpos As Double = If(maxPosFact <> minPosFact, maxposvalue / (maxPosFact - minPosFact), 0)
+
+                    If addpostionrank AndAlso minPosFact < 1000 Then
+                        Dim key As String = p.Ruolo & "-" & If(p.Squadra = p.TeamA, "1", "0") & "-" & If(p.Squadra = p.TeamA, p.PosGroupA, p.PosGroupB) & "-" & If(p.Squadra = p.TeamA, p.PosGroupB, p.PosGroupA)
+                        Dim prat As Integer = CInt(Math.Floor(If(factpos = 0, maxposvalue, factpos * (dicPosGroup(key) - minPosFact))))
+                        If dicPosGroup.ContainsKey(key) Then rat2 = prat
+                    End If
+
+                    rat3 = p.Gf * 3 + p.Ass * 2
+
+                    If p.Ruolo = "C" Then rat4 = 10
+                    If p.Ruolo = "A" Then rat4 = 30
+
+                    If addlastpresence AndAlso p.Minuti > 0 Then
+                        rat5 = CInt(p.Minuti / 450 * 30)
+                    End If
+
+                    p.Rating = CInt(rat1 + rat2 + rat3 + rat4 + rat5)
+
+                    If addprobable Then
+
+                        'se abilitato tengo conto anche delle probabili formazioni attuali'
+                        Dim val As Double = -1
+
+                        For Each site As String In probable.Keys
+                            If probable(site).Day = Giornata Then
+                                If val < 0 Then val = 0
+                                Dim keyp As String = p.Nome & "/" & p.Squadra
+                                If probable(site).Players.ContainsKey(keyp) Then
+                                    If probable(site).Players(keyp).State = "Titolare" Then
+                                        val += 1
+                                    ElseIf probable(site).Players(keyp).State = "Panchina" Then
+                                        val += 0.8
+                                    End If
+                                End If
+                            End If
+                        Next
+
+                        If val >= 0 Then
+                            If val > 3 Then val = 3
+                            val /= 3
+                            p.Rating = CInt(p.Rating * val)
+                        End If
+
+                    End If
+
+                    sr.WriteLine(p.RosaId & vbTab & p.Ruolo & vbTab & p.Nome & vbTab & p.Squadra & vbTab & p.Rating & vbTab & rat1 & vbTab & rat2 & vbTab & rat3 & vbTab & rat4 & vbTab & rat5)
+
                 Next
-            End If
-            'fc = rs.GetPlayersFromDb(IdTeam.ToString(), "", "")(IdTeam.ToString()).ToList()
-            'ft(0).
-            ''Determino i titolari'
-            'Dim ntit As Integer = 0
-            'Dim np As Integer = 0
-            'Dim nd As Integer = 0
-            'Dim nc As Integer = 0
-            'Dim na As Integer = 0
 
-            'For i As Integer = 0 To fc.Count - 1
-            '    fc(i).Type = 0
-            '    fc(i).Schierato = 0
-            '    If CheckMudule1(fc(i).Ruolo, np, nd, nc, na) Then
-            '        fc(i).Schierato = 1
-            '        fc(i).Type = 0
-            '        fc(i).IdRosa = i
-            '        Select Case fc(i).Ruolo
-            '            Case "P" : np = np + 1 : portteam = fc(i).Squadra
-            '            Case "D" : nd = nd + 1
-            '            Case "C" : nc = nc + 1
-            '            Case "A" : na = na + 1
-            '        End Select
-            '        ntit = ntit + 1
-            '        'If ntit > 11 Then Exit For
-            '    End If
-            'Next
+                sr.WriteLine("**** Ordino i giocatori su base rating ****")
 
-            ''Ordino i giocatori sulla base ruolo'
-            'ft = LegaObject.Team.Sort(fc, "", False)
-            'For i As Integer = 0 To ft.Count - 1
-            '    ft(i).IdRosa = i + 1
-            'Next
-            'f.AddRange(ft)
+                fc = fc.OrderByDescending(Function(x) x.Rating).ToList()
 
-            ''Determino i panchinari'
-            'Dim p() As String = {"P", "A", "C", "D"}
-            'Dim ind As Integer = 1
-            'Dim s As Integer = 0
+                For i As Integer = 0 To fc.Count - 1
+                    sr.WriteLine(i + 1 & vbTab & fc(i).Ruolo & vbTab & fc(i).Nome & vbTab & fc(i).Squadra & vbTab & fc(i).Rating)
+                Next
 
-            ''Controllo se esiste un secondo portire della stessa squadra'
-            'For i As Integer = 0 To fc.Count - 1
-            '    If fc(i).Schierato = 0 AndAlso fc(i).Ruolo = "P" AndAlso portteam = fc(i).Squadra Then
-            '        f.Add(New Team.Player(1, fc(i).Ruolo, fc(i).Nome, fc(i).Squadra, 1, 1, 0))
-            '        ind = ind + 1
-            '        s = 1
-            '        Exit For
-            '    End If
-            'Next
+                sr.WriteLine("**** Determino i titolari ****")
 
-            ''Determino il resto dei panchinari'
-            'For i As Integer = s To p.Length - 1
+                For i As Integer = 0 To fc.Count - 1
+                    Dim p As New PlayerFormazione
+                    p.RosaId = fc(i).RosaId
+                    p.Ruolo = fc(i).Ruolo
+                    p.Nome = fc(i).Nome
+                    p.Squadra = fc(i).Squadra
+                    p.InCampo = 0
+                    p.Type = 0
+                    pforma.Add(p)
+                Next
 
-            '    Dim nump As Integer = 1
-            '    Dim maxp As Integer = 2
+                Dim np As Integer = 0
+                Dim nd As Integer = 0
+                Dim nc As Integer = 0
+                Dim na As Integer = 0
+                Dim ntit As Integer = 1
+                Dim npanc As Integer = 1
+                Dim portteam As String = ""
+                Dim ruoliPanc As New List(Of String) From {"P", "A", "C", "D"}
+                Dim ruoliPancNbr As New Dictionary(Of String, Integer) From {{"P", 0}, {"A", 0}, {"C", 0}, {"D", 0}}
+                Dim ruoliPancMax As New Dictionary(Of String, Integer) From {{"P", 1}, {"A", 3}, {"C", 3}, {"D", 3}}
+                Dim indrp As Integer = 0
 
-            '    If p(i) = "P" Then maxp = 1
+                Do Until ntit > 11 AndAlso indrp > 3
+                    For Each p As PlayerFormazione In pforma
+                        If p.Type = 0 Then
+                            If CheckMudule(p.Ruolo, np, nd, nc, na) Then
+                                If (p.Ruolo = "P" AndAlso np = 0) OrElse ntit < 12 Then
+                                    p.Type = 1
+                                    Select Case p.Ruolo
+                                        Case "P" : np += 1 : portteam = p.Squadra
+                                        Case "D" : nd += 1
+                                        Case "C" : nc += 1
+                                        Case "A" : na += 1
+                                    End Select
+                                    ntit += 1
+                                End If
+                                If ntit > 11 Then Exit For
+                            ElseIf npanc < 11 AndAlso ruoliPanc(indrp) = p.Ruolo AndAlso ruoliPancNbr(ruoliPanc(indrp)) < ruoliPancMax(ruoliPanc(indrp)) Then
+                                p.Type = 2
+                                p.FormaId = npanc + 11
+                                npanc += 1
+                                ruoliPancNbr(ruoliPanc(indrp)) += 1
+                                If ruoliPancNbr(ruoliPanc(indrp)) = ruoliPancMax(ruoliPanc(indrp)) Then indrp += 1 : Exit For
+                            End If
+                        End If
+                    Next
+                Loop
 
-            '    For k As Integer = 0 To fc.Count - 1
-            '        If fc(k).Schierato = 0 AndAlso fc(k).Ruolo = p(i) Then
-            '            f.Add(New Team.Player(ind, fc(k).Ruolo, fc(k).Nome, fc(k).Squadra, 1, 1, 0))
-            '            nump = nump + 1
-            '            ind = ind + 1
-            '        End If
-            '        If nump > maxp Then Exit For
-            '    Next
-            'Next
+                For Each p In pforma.Where(Function(x) x.Type = 1)
+                    p.FormaId = p.RosaId
+                Next
 
-            'Dim dir As String = GetLegaTemDirectory()
-            'Dim str As New System.Text.StringBuilder
-            'For i As Integer = 0 To f.Count - 1
-            '    str.AppendLine(f(i).Ruolo & "|" & f(i).Nome & "|" & f(i).Squadra & "|" & f(i).Rating & "|" & f(i).Schierato & "|" & f(i).Type)
-            'Next
-            'If rechek Then
-            '    IO.File.WriteAllText(dir & "\" & IdTeam & "-rating-tot.txt", str.ToString)
-            'Else
-            '    IO.File.WriteAllText(dir & "\" & IdTeam & "-rating-tot-recheck.txt", str.ToString)
-            'End If
+                pforma = pforma.OrderBy(Function(x) x.RosaId).ToList()
 
-            Return f
+                Dim fid As Integer = 1
+
+                sr.WriteLine("**** Titolari ****")
+
+                For i As Integer = 0 To pforma.Count - 1
+                    If pforma(i).Type = 1 Then
+                        pforma(i).FormaId = fid
+                        sr.WriteLine(pforma(i).FormaId & vbTab & pforma(i).Ruolo & vbTab & pforma(i).Nome & vbTab & pforma(i).Squadra)
+                        fid += 1
+                    End If
+                Next
+
+                sr.WriteLine("**** Panchinari ****")
+
+                pforma = pforma.OrderBy(Function(x) x.FormaId).ToList()
+
+                For i As Integer = 0 To pforma.Count - 1
+                    If pforma(i).Type = 2 Then
+                        sr.WriteLine(pforma(i).FormaId & vbTab & pforma(i).Ruolo & vbTab & pforma(i).Nome & vbTab & pforma(i).Squadra)
+                    End If
+                Next
+
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+            sr.Close()
+            sr.Dispose()
+
+            Dim forma As New Formazione With {
+                .Giornata = Giornata,
+                .TeamId = IdTeam,
+                .Players = pforma
+            }
+
+            Return forma
+
         End Function
 
-        Private Function GetRating(p As RoseData.Player) As Integer
+        Public Shared Function CheckMudule(ByVal Ruolo As String, ByVal CurrP As Integer, ByVal CurrD As Integer, ByVal CurrC As Integer, ByVal CurrA As Integer) As Boolean
 
-            Dim value As Integer = 0
+            Dim ris As Boolean = False
 
-            Return value
+            Dim tot As Integer = CurrP + CurrD + CurrC + CurrA + 1
+
+            Select Case Ruolo
+                Case "P" : CurrP += 1
+                Case "D" : CurrD += 1
+                Case "C" : CurrC += 1
+                Case "A" : CurrA += 1
+            End Select
+
+            If CurrP < 2 AndAlso CurrD < 4 AndAlso CurrC < 5 AndAlso CurrA < 4 Then '343'
+                ris = True
+                'ris = Not (CurrD = 3 AndAlso CurrC = 4 AndAlso CurrA = 5)
+            ElseIf CurrP < 2 AndAlso CurrD < 4 AndAlso CurrC < 6 AndAlso CurrA < 3 Then '352'
+                ris = True
+            ElseIf CurrP < 2 AndAlso CurrD < 5 AndAlso CurrC < 4 AndAlso CurrA < 4 Then '433'
+                ris = True
+                ris = Not (CurrD = 4 AndAlso CurrC = 4 AndAlso CurrA = 3)
+            ElseIf CurrP < 2 AndAlso CurrD < 5 AndAlso CurrC < 5 AndAlso CurrA < 3 Then '442'
+                ris = True
+                'ris = Not (CurrD = 4 AndAlso CurrC = 4 AndAlso CurrA = 2)
+            ElseIf CurrP < 2 AndAlso CurrD < 5 AndAlso CurrC < 6 AndAlso CurrA < 2 Then '451'
+                ris = True
+                'ris = Not (CurrD = 4 AndAlso CurrC = 5 AndAlso CurrA = 1)
+                'ElseIf CurrP < 2 AndAlso CurrD < 6 AndAlso CurrC < 4 AndAlso CurrA < 3 Then '532'
+                '    ris = True
+                '    ris = Not (CurrD = 5 AndAlso CurrC = 3 AndAlso CurrA = 2)
+                'ElseIf CurrP < 2 AndAlso CurrD < 6 AndAlso CurrC < 5 AndAlso CurrA < 2 Then '541'
+                '    ris = True
+                '    ris = Not (CurrD = 5 AndAlso CurrC = 4 AndAlso CurrA = 1)
+            End If
+
+
+            Return ris
 
         End Function
 
@@ -477,6 +684,37 @@ Namespace Torneo
             Public Property RigoriSbagliati() As Integer = 0
             Public Property RigoriParati() As Integer = 0
             Public Property Punti As Integer = 0
+
+        End Class
+
+        Public Class PlayerRosaFormazione
+            Public Property RosaId() As Integer = 0
+            Public Property Ruolo As String = ""
+            Public Property Nome As String = ""
+            Public Property Squadra As String = ""
+            Public Property Gs() As Integer = 0
+            Public Property Gf() As Integer = 0
+            Public Property Ass() As Integer = 0
+            Public Property Pt As Single = 0
+            Public Property AvgPt As Single = 0
+            Public Property nPartite() As Integer = 0
+            Public Property pGiocate() As Integer = 0
+            Public Property Titolare() As Integer = 0
+            Public Property Sostituito() As Integer = 0
+            Public Property Subentrato() As Integer = 0
+            Public Property Minuti() As Integer = 0
+            Public Property AvgMinuti() As Integer = 0
+            Public Property Available As Integer = 0
+            Public Property TimeMatch As String = ""
+            Public Property TimeLeft As Integer = 0
+            Public Property Home() As Integer = 0
+            Public Property TeamA As String = ""
+            Public Property TeamB As String = ""
+            Public Property PosA() As Integer = 0
+            Public Property PosGroupA() As Integer = 0
+            Public Property PosB() As Integer = 0
+            Public Property PosGroupB() As Integer = 0
+            Public Property Rating() As Integer = 0
 
         End Class
     End Class
