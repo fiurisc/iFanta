@@ -48,6 +48,10 @@ Namespace WebData
                         If line(i).Contains("data-filter-role-classic") Then
                             p.Ruolo = System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim()
                         End If
+                        'Leggo il Ruolo mantra'
+                        If line(i).Contains("data-filter-role-mantra") Then
+                            p.RuoloMantra = System.Text.RegularExpressions.Regex.Match(line(i), "(?<="").*(?="")").Value.ToUpper().Trim()
+                        End If
                         'Leggo se fuori dalla lista'
                         If line(i).Contains("out-of-game") Then
                             p.OutOfGame = 1

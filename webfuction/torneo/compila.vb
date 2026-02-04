@@ -150,7 +150,7 @@ Namespace Torneo
                                 Next
 
                                 Dim datplayer As New Dictionary(Of String, PtPlayer)
-                                Dim name As String = cell(1)
+                                Dim name As String = cell(1).ToUpper()
                                 Dim ruolo As String = cell(2)
                                 Dim squadra As String = cell(4)
                                 Dim amm As String = cell(23)
@@ -166,12 +166,14 @@ Namespace Torneo
                                 If ruolo = "P" OrElse ruolo = "D" OrElse ruolo = "C" OrElse ruolo = "A" Then
 
                                     name = WebData.Functions.NormalizeText(name)
-                                    If name.Contains("ROMAGNOLI") Then
+                                    If name.Contains("TOURE ID.") Then
                                         name = name
                                     End If
 
                                     Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
-
+                                    If pmath.Matched = False Then
+                                        pmath = WebData.Players.Data.ResolveName("", name, squadra, True)
+                                    End If
                                     fname = pmath.MatchedPlayer.Name
 
                                     If pmath.Matched Then
@@ -349,37 +351,26 @@ Namespace Torneo
         End Sub
 
         Public Function CompileDataForma(ByVal Giornata As Integer, ByVal TeamId As Integer) As FormazioniData.Formazione
-            Return CompileDataForma(Giornata, TeamId, "tbformazioni")
-        End Function
-
-        Public Function CompileDataForma(ByVal Giornata As Integer, ByVal TeamId As Integer, Table As String) As FormazioniData.Formazione
 
             Dim f As New FormazioniData.Formazione()
 
             Try
 
-                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Compilazione formazione  teamid: " & TeamId & " giornata: " & Giornata)
-
-                f.Giornata = CInt(Giornata)
+                f.Giornata = Giornata
                 f.TeamId = TeamId
 
                 Dim str As New System.Text.StringBuilder
                 str.Append("SELECT f.idrosa,f.type,f.idformazione,f.ruolo,f.nome,f.squadra,")
                 str.Append("d.amm,d.esp,d.ass,d.autogol,d.gs,d.gf,d.rigp,d.rigs,d.voto,d.pt ")
-                str.Append("FROM " & Table & " as f LEFT JOIN tbdati as d ON (f.nome = d.nome AND (f.squadra = d.squadra or f.squadra='') AND f.gio = d.gio) ")
+                str.Append("FROM tbformazioni as f LEFT JOIN tbdati as d ON (f.nome = d.nome AND (f.squadra = d.squadra or f.squadra='') AND f.gio = d.gio) ")
                 str.Append("WHERE f.gio=" & Giornata & " AND idteam=" & TeamId & " AND type<10 ")
                 str.Append("ORDER BY f.type,f.idformazione;")
 
+                Dim a As String = str.ToString
                 Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, str.ToString)
 
                 If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
 
-                    Dim svp As Integer = 0
-                    Dim svd As Integer = 0
-                    Dim svc As Integer = 0
-                    Dim sva As Integer = 0
-                    Dim numsos As Integer = 0
-                    Dim idforma As New List(Of String)
 
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
 
@@ -407,56 +398,228 @@ Namespace Torneo
                         p.Voto = Functions.ReadFieldIntegerData(data.Item("voto"), -200)
                         p.Punti = Functions.ReadFieldIntegerData(data.Item("pt"), -200)
 
-                        'Dati giornata'
-                        If idforma.Contains(keyp) = False AndAlso ((p.FormaId < 12 AndAlso p.Type = 1) OrElse (p.FormaId >= 12 AndAlso p.FormaId <= 11 + appSett.Settings.NumberOfReserve AndAlso p.Type = 2)) Then
-
-                            If p.Type <> 0 Then
-                                If p.Type = 1 Then
-                                    If p.Punti <> -200 Then
-                                        p.InCampo = 1
-                                    Else
-                                        p.InCampo = 0
-                                        Select Case p.Ruolo
-                                            Case "P" : svp += 1
-                                            Case "D" : svd += 1
-                                            Case "C" : svc += 1
-                                            Case "A" : sva += 1
-                                        End Select
-                                    End If
-                                End If
-                            Else
-                                p.InCampo = 0
-                            End If
-                            idforma.Add(keyp)
-                        End If
                         f.Players.Add(p)
                     Next
 
-                    'Determino le eventuali sostituzioni'
-                    Dim npp As Integer = 0
-                    Dim npd As Integer = 0
-                    Dim npc As Integer = 0
-                    Dim npa As Integer = 0
+                    Return CompileDataForma(f, True)
 
-                    f.Players = f.Players.OrderBy(Function(x) x.FormaId).ToList()
+                End If
 
-                    For i As Integer = 0 To f.Players.Count - 1
-                        If f.Players(i).Type = 2 Then
-                            Select Case f.Players(i).Ruolo
-                                Case "P" : npp += 1
-                                Case "D" : npd += 1
-                                Case "C" : npc += 1
-                                Case "A" : npa += 1
-                            End Select
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+            Return f
+
+        End Function
+
+        Public Function CompileDataForma(f As FormazioniData.Formazione, EnableLog As Boolean) As FormazioniData.Formazione
+
+            Try
+
+                If EnableLog Then WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Compilazione formazione  teamid: " & f.TeamId & " giornata: " & f.Giornata)
+
+                Dim svp As Integer = 0
+                Dim svd As Integer = 0
+                Dim svc As Integer = 0
+                Dim sva As Integer = 0
+                Dim numsos As Integer = 0
+                Dim idforma As New List(Of Integer)
+
+                For Each p As FormazioniData.PlayerFormazione In f.Players
+                    If idforma.Contains(p.FormaId) = False AndAlso ((p.FormaId < 12 AndAlso p.Type = 1) OrElse (p.FormaId >= 12 AndAlso p.FormaId <= 11 + appSett.Settings.NumberOfReserve AndAlso p.Type = 2)) Then
+                        If p.Type <> 0 Then
+                            If p.Type = 1 Then
+                                If p.Punti <> -200 Then
+                                    p.InCampo = 1
+                                Else
+                                    p.InCampo = 0
+                                    Select Case p.Ruolo
+                                        Case "P" : svp += 1
+                                        Case "D" : svd += 1
+                                        Case "C" : svc += 1
+                                        Case "A" : sva += 1
+                                    End Select
+                                End If
+                            End If
+                        Else
+                            p.InCampo = 0
                         End If
-                    Next
+                        idforma.Add(p.FormaId)
+                    End If
+                Next
 
-                    Dim nsm As Integer = 0
+                'Determino le eventuali sostituzioni'
+                Dim npp As Integer = 0
+                Dim npd As Integer = 0
+                Dim npc As Integer = 0
+                Dim npa As Integer = 0
 
-                    If svp > 0 OrElse svd > 0 OrElse svc > 0 OrElse sva > 0 Then
-                        If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.ChangeModule Then
+                f.Players = f.Players.OrderBy(Function(x) x.FormaId).ToList()
 
-                            'Determino il modulo attuale'
+                For i As Integer = 0 To f.Players.Count - 1
+                    If f.Players(i).Type = 2 Then
+                        Select Case f.Players(i).Ruolo
+                            Case "P" : npp += 1
+                            Case "D" : npd += 1
+                            Case "C" : npc += 1
+                            Case "A" : npa += 1
+                        End Select
+                    End If
+                Next
+
+                Dim nsm As Integer = 0
+
+                If svp > 0 OrElse svd > 0 OrElse svc > 0 OrElse sva > 0 Then
+                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.ChangeModule Then
+
+                        'Determino il modulo attuale'
+                        Dim nm() As Integer = {0, 0, 0}
+                        Dim oldmodule As String = ""
+                        Dim newmodule As String = ""
+
+                        For i As Integer = 0 To f.Players.Count - 1
+                            If f.Players(i).Type = 1 Then
+                                Select Case f.Players(i).Ruolo
+                                    Case "D" : nm(0) = nm(0) + 1
+                                    Case "C" : nm(1) = nm(1) + 1
+                                    Case "A" : nm(2) = nm(2) + 1
+                                End Select
+                            End If
+                        Next
+
+                        oldmodule = nm(0) & "-" & nm(1) & "-" & nm(2)
+
+                        nm(0) = 0
+                        nm(1) = 0
+                        nm(2) = 0
+
+                        For i As Integer = 0 To f.Players.Count - 1
+                            If f.Players(i).InCampo = 1 Then
+                                Select Case f.Players(i).Ruolo
+                                    Case "D" : nm(0) += 1
+                                    Case "C" : nm(1) += 1
+                                    Case "A" : nm(2) += 1
+                                End Select
+                            End If
+                        Next
+
+                        For i As Integer = 0 To f.Players.Count - 1
+                            If f.Players(i).Type = 2 Then
+                                Select Case f.Players(i).Ruolo
+                                    Case "P"
+                                        If svp > 0 Then
+                                            If f.Players(i).Punti > -100 Then
+                                                f.Players(i).InCampo = 1
+                                                numsos += 1
+                                                svp -= 1
+                                            End If
+                                        End If
+                                        npp -= 1
+                                    Case Else
+                                        If f.Players(i).Punti > -100 Then
+                                            If CheckMudule(f.Players(i).Ruolo, 1, nm(0), nm(1), nm(2)) Then
+                                                Select Case f.Players(i).Ruolo
+                                                    Case "D" : nm(0) += 1
+                                                    Case "C" : nm(1) += 1
+                                                    Case "A" : nm(2) += 1
+                                                End Select
+                                                f.Players(i).InCampo = 1
+                                                numsos += 1
+                                                nsm -= 1
+                                            End If
+                                        End If
+                                End Select
+                                If numsos >= appSett.Settings.NumberOfSubstitution Then Exit For
+                            End If
+                        Next
+
+                        nm(0) = 0
+                        nm(1) = 0
+                        nm(2) = 0
+
+                        For i As Integer = 0 To f.Players.Count - 1
+                            If f.Players(i).InCampo = 1 AndAlso f.Players(i).Punti > -100 Then
+                                Select Case f.Players(i).Ruolo
+                                    Case "D" : nm(0) += 1
+                                    Case "C" : nm(1) += 1
+                                    Case "A" : nm(2) += 1
+                                End Select
+                            End If
+                        Next
+
+                        newmodule = nm(0) & "-" & nm(1) & "-" & nm(2)
+
+                        If oldmodule <> newmodule Then f.CambioModulo = 1
+
+                    Else
+
+                        For i As Integer = 0 To f.Players.Count - 1
+                            If f.Players(i).Type = 2 Then
+                                Select Case f.Players(i).Ruolo
+                                    Case "P"
+                                        If svp > 0 Then
+                                            If f.Players(i).Punti > -100 Then
+                                                f.Players(i).InCampo = 1
+                                                numsos += 1
+                                                svp -= 1
+                                            End If
+                                        End If
+                                        npp = npp - 1
+                                    Case "D"
+                                        If svd > 0 Then
+                                            If f.Players(i).Punti > -100 Then
+                                                f.Players(i).InCampo = 1
+                                                numsos += 1
+                                                svd -= 1
+                                            End If
+                                        End If
+                                        npd -= 1
+                                    Case "C"
+                                        If svc > 0 Then
+                                            If f.Players(i).Punti > -100 Then
+                                                f.Players(i).InCampo = 1
+                                                numsos += 1
+                                                svc -= 1
+                                            End If
+                                        End If
+                                        npc -= 1
+                                    Case "A"
+                                        If sva > 0 Then
+                                            If f.Players(i).Punti > -100 Then
+                                                f.Players(i).InCampo = 1
+                                                numsos += 1
+                                                sva -= 1
+                                            End If
+                                        End If
+                                        npa -= 1
+                                End Select
+                                If numsos >= appSett.Settings.NumberOfSubstitution Then Exit For
+                            End If
+                            If npp = 0 AndAlso svp > 0 Then
+                                If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                svp = 0
+                            End If
+                            If npd = 0 AndAlso svd > 0 Then
+                                If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                nsm += svd : svd = 0
+                            End If
+                            If npc = 0 AndAlso svc > 0 Then
+                                If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                nsm += svc : svc = 0
+                            End If
+                            If npa = 0 AndAlso sva > 0 Then
+                                If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
+                                nsm += sva : sva = 0
+                            End If
+
+                        Next
+                    End If
+
+                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.NormalAndChangeModule Then
+
+                        If nsm > 0 Then
+
                             Dim nm() As Integer = {0, 0, 0}
                             Dim oldmodule As String = ""
                             Dim newmodule As String = ""
@@ -464,9 +627,9 @@ Namespace Torneo
                             For i As Integer = 0 To f.Players.Count - 1
                                 If f.Players(i).Type = 1 Then
                                     Select Case f.Players(i).Ruolo
-                                        Case "D" : nm(0) = nm(0) + 1
-                                        Case "C" : nm(1) = nm(1) + 1
-                                        Case "A" : nm(2) = nm(2) + 1
+                                        Case "D" : nm(0) += 1
+                                        Case "C" : nm(1) += 1
+                                        Case "A" : nm(2) += 1
                                     End Select
                                 End If
                             Next
@@ -488,33 +651,19 @@ Namespace Torneo
                             Next
 
                             For i As Integer = 0 To f.Players.Count - 1
-                                If f.Players(i).Type = 2 Then
-                                    Select Case f.Players(i).Ruolo
-                                        Case "P"
-                                            If svp > 0 Then
-                                                If f.Players(i).Punti > -100 Then
-                                                    f.Players(i).InCampo = 1
-                                                    numsos += 1
-                                                    svp -= 1
-                                                End If
-                                            End If
-                                            npp -= 1
-                                        Case Else
-                                            If f.Players(i).Punti > -100 Then
-                                                If CheckMudule(f.Players(i).Ruolo, 1, nm(0), nm(1), nm(2)) Then
-                                                    Select Case f.Players(i).Ruolo
-                                                        Case "D" : nm(0) += 1
-                                                        Case "C" : nm(1) += 1
-                                                        Case "A" : nm(2) += 1
-                                                    End Select
-                                                    f.Players(i).InCampo = 1
-                                                    numsos += 1
-                                                    nsm -= 1
-                                                End If
-                                            End If
-                                    End Select
-                                    If numsos >= appSett.Settings.NumberOfSubstitution Then Exit For
+                                If f.Players(i).Type = 2 AndAlso f.Players(i).InCampo = 0 AndAlso f.Players(i).Ruolo <> "P" AndAlso f.Players(i).Punti > -100 Then
+                                    If CheckMudule(f.Players(i).Ruolo, 1, nm(0), nm(1), nm(2)) Then
+                                        Select Case f.Players(i).Ruolo
+                                            Case "D" : nm(0) += 1
+                                            Case "C" : nm(1) += 1
+                                            Case "A" : nm(2) += 1
+                                        End Select
+                                        f.Players(i).InCampo = 1
+                                        numsos += 1
+                                        nsm -= 1
+                                    End If
                                 End If
+                                If numsos >= appSett.Settings.NumberOfSubstitution OrElse nsm = 0 Then Exit For
                             Next
 
                             nm(0) = 0
@@ -535,191 +684,58 @@ Namespace Torneo
 
                             If oldmodule <> newmodule Then f.CambioModulo = 1
 
-                        Else
-
-                            For i As Integer = 0 To f.Players.Count - 1
-                                If f.Players(i).Type = 2 Then
-                                    Select Case f.Players(i).Ruolo
-                                        Case "P"
-                                            If svp > 0 Then
-                                                If f.Players(i).Punti > -100 Then
-                                                    f.Players(i).InCampo = 1
-                                                    numsos += 1
-                                                    svp -= 1
-                                                End If
-                                            End If
-                                            npp = npp - 1
-                                        Case "D"
-                                            If svd > 0 Then
-                                                If f.Players(i).Punti > -100 Then
-                                                    f.Players(i).InCampo = 1
-                                                    numsos += 1
-                                                    svd -= 1
-                                                End If
-                                            End If
-                                            npd -= 1
-                                        Case "C"
-                                            If svc > 0 Then
-                                                If f.Players(i).Punti > -100 Then
-                                                    f.Players(i).InCampo = 1
-                                                    numsos += 1
-                                                    svc -= 1
-                                                End If
-                                            End If
-                                            npc -= 1
-                                        Case "A"
-                                            If sva > 0 Then
-                                                If f.Players(i).Punti > -100 Then
-                                                    f.Players(i).InCampo = 1
-                                                    numsos += 1
-                                                    sva -= 1
-                                                End If
-                                            End If
-                                            npa -= 1
-                                    End Select
-                                    If numsos >= appSett.Settings.NumberOfSubstitution Then Exit For
-                                End If
-                                If npp = 0 AndAlso svp > 0 Then
-                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
-                                    svp = 0
-                                End If
-                                If npd = 0 AndAlso svd > 0 Then
-                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
-                                    nsm += svd : svd = 0
-                                End If
-                                If npc = 0 AndAlso svc > 0 Then
-                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
-                                    nsm += svc : svc = 0
-                                End If
-                                If npa = 0 AndAlso sva > 0 Then
-                                    If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.Normal Then numsos += 1
-                                    nsm += sva : sva = 0
-                                End If
-
-                            Next
                         End If
-
-                        If appSett.Settings.SubstitutionType = TorneoSettings.eSubstitutionType.NormalAndChangeModule Then
-
-                            If nsm > 0 Then
-
-                                Dim nm() As Integer = {0, 0, 0}
-                                Dim oldmodule As String = ""
-                                Dim newmodule As String = ""
-
-                                For i As Integer = 0 To f.Players.Count - 1
-                                    If f.Players(i).Type = 1 Then
-                                        Select Case f.Players(i).Ruolo
-                                            Case "D" : nm(0) += 1
-                                            Case "C" : nm(1) += 1
-                                            Case "A" : nm(2) += 1
-                                        End Select
-                                    End If
-                                Next
-
-                                oldmodule = nm(0) & "-" & nm(1) & "-" & nm(2)
-
-                                nm(0) = 0
-                                nm(1) = 0
-                                nm(2) = 0
-
-                                For i As Integer = 0 To f.Players.Count - 1
-                                    If f.Players(i).InCampo = 1 Then
-                                        Select Case f.Players(i).Ruolo
-                                            Case "D" : nm(0) += 1
-                                            Case "C" : nm(1) += 1
-                                            Case "A" : nm(2) += 1
-                                        End Select
-                                    End If
-                                Next
-
-                                For i As Integer = 0 To f.Players.Count - 1
-                                    If f.Players(i).Type = 2 AndAlso f.Players(i).InCampo = 0 AndAlso f.Players(i).Ruolo <> "P" AndAlso f.Players(i).Punti > -100 Then
-                                        If CheckMudule(f.Players(i).Ruolo, 1, nm(0), nm(1), nm(2)) Then
-                                            Select Case f.Players(i).Ruolo
-                                                Case "D" : nm(0) += 1
-                                                Case "C" : nm(1) += 1
-                                                Case "A" : nm(2) += 1
-                                            End Select
-                                            f.Players(i).InCampo = 1
-                                            numsos += 1
-                                            nsm -= 1
-                                        End If
-                                    End If
-                                    If numsos >= appSett.Settings.NumberOfSubstitution OrElse nsm = 0 Then Exit For
-                                Next
-
-                                nm(0) = 0
-                                nm(1) = 0
-                                nm(2) = 0
-
-                                For i As Integer = 0 To f.Players.Count - 1
-                                    If f.Players(i).InCampo = 1 AndAlso f.Players(i).Punti > -100 Then
-                                        Select Case f.Players(i).Ruolo
-                                            Case "D" : nm(0) += 1
-                                            Case "C" : nm(1) += 1
-                                            Case "A" : nm(2) += 1
-                                        End Select
-                                    End If
-                                Next
-
-                                newmodule = nm(0) & "-" & nm(1) & "-" & nm(2)
-
-                                If oldmodule <> newmodule Then f.CambioModulo = 1
-
-                            End If
-                        End If
-
-                    End If
-
-                    'Determino i bonus difesa/centrocampo/attacco'
-                    Dim ndgoodd As Integer = 0
-                    Dim ndgoodc As Integer = 0
-                    Dim ndgooda As Integer = 0
-                    Dim ndt As Integer = 0
-                    Dim nct As Integer = 0
-                    Dim nat As Integer = 0
-
-                    'Determino il bonus centrocampo'
-                    For i As Integer = 0 To f.Players.Count - 1
-                        If f.Players(i).Type > 0 AndAlso f.Players(i).InCampo = 1 AndAlso f.Players(i).Voto > -100 Then
-                            Select Case f.Players(i).Ruolo
-                                Case "D"
-                                    If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(f.Players(i))
-                                    ndt += 1
-                                Case "C"
-                                    If appSett.Settings.Bonus.EnableCenterField Then ndgoodc += GetGoodForBonus(f.Players(i))
-                                    nct += 1
-                                Case "A"
-                                    If appSett.Settings.Bonus.EnableCenterField Then ndgooda += GetGoodForBonus(f.Players(i))
-                                    nat += 1
-                            End Select
-                        End If
-                    Next
-
-                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Difensori con voto >=6: " & ndgoodd & "/" & ndt)
-
-                    If appSett.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = ndt Then
-                        f.BonusDifesa = BonusDefense(ndgoodd)
-                    Else
-                        f.BonusDifesa = 0
-                    End If
-
-                    WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Bonus defense: " & f.BonusDifesa)
-
-                    If appSett.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nct Then
-                        f.BonusCentrocampo = BonusCenterField(ndgoodc)
-                    Else
-                        f.BonusCentrocampo = 0
-                    End If
-
-                    If appSett.Settings.Bonus.EnableBonusAttack AndAlso ndgooda = nat Then
-                        f.BonusAttacco = BonusAttack(ndgooda)
-                    Else
-                        f.BonusAttacco = 0
                     End If
 
                 End If
+
+                'Determino i bonus difesa/centrocampo/attacco'
+                Dim ndgoodd As Integer = 0
+                Dim ndgoodc As Integer = 0
+                Dim ndgooda As Integer = 0
+                Dim ndt As Integer = 0
+                Dim nct As Integer = 0
+                Dim nat As Integer = 0
+
+                'Determino il bonus centrocampo'
+                For i As Integer = 0 To f.Players.Count - 1
+                    If f.Players(i).Type > 0 AndAlso f.Players(i).InCampo = 1 AndAlso f.Players(i).Voto > -100 Then
+                        Select Case f.Players(i).Ruolo
+                            Case "D"
+                                If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(f.Players(i))
+                                ndt += 1
+                            Case "C"
+                                If appSett.Settings.Bonus.EnableCenterField Then ndgoodc += GetGoodForBonus(f.Players(i))
+                                nct += 1
+                            Case "A"
+                                If appSett.Settings.Bonus.EnableCenterField Then ndgooda += GetGoodForBonus(f.Players(i))
+                                nat += 1
+                        End Select
+                    End If
+                Next
+
+                If EnableLog Then WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Difensori con voto >=6: " & ndgoodd & "/" & ndt)
+
+                If appSett.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = ndt Then
+                    f.BonusDifesa = BonusDefense(ndgoodd)
+                Else
+                    f.BonusDifesa = 0
+                End If
+
+                If EnableLog Then WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Bonus defense: " & f.BonusDifesa)
+
+                If appSett.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nct Then
+                    f.BonusCentrocampo = BonusCenterField(ndgoodc)
+                Else
+                    f.BonusCentrocampo = 0
+                End If
+
+                If appSett.Settings.Bonus.EnableBonusAttack AndAlso ndgooda = nat Then
+                    f.BonusAttacco = BonusAttack(ndgooda)
+                Else
+                    f.BonusAttacco = 0
+                End If
+
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try

@@ -1,4 +1,5 @@
 ﻿Imports System.Web.Script.Serialization
+Imports Newtonsoft.Json.Linq
 
 Namespace WebData
     Partial Class ProbableFormations
@@ -24,9 +25,9 @@ Namespace WebData
 
                 If html <> "" Then
 
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding("UTF-8"))
 
-                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("UTF-8"))
                     Dim plaryersData As New Torneo.ProbablePlayers.Probable
                     Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)
                     Dim team As String = ""
@@ -72,14 +73,14 @@ Namespace WebData
                                         If pname = "seoName" Then
                                             team = Functions.CheckTeamName(pvalue.ToUpper())
                                         ElseIf pname = "fullname" AndAlso cpath.Contains("substitutes") Then
-                                            Dim plist() As String = pvalue.ToUpper().Split(Convert.ToChar(" "))
+                                            Dim plist() As String = System.Text.RegularExpressions.Regex.Replace(pvalue.ToUpper(), "(?<=\s\w{2})\s(?=\w+)", "-").Split(Convert.ToChar(" "))
                                             For Each p As String In plist
-                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", p, team, playersLog, False)
+                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", System.Text.RegularExpressions.Regex.Replace(p.Replace("-", " "), "(?<=\w)\.(?=\w+)", ". "), team, playersLog, False)
                                                 name = pm.GetName()
                                                 Call AddInfo(name, team, site, "Panchina", "", 0, plaryersData.Players)
                                             Next
                                         ElseIf pname = "fullname" AndAlso cpath.Contains("startingLineup") Then
-                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", pvalue.ToUpper(), team, playersLog, False)
+                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", System.Text.RegularExpressions.Regex.Replace(pvalue.ToUpper(), "(?<=\w)\.(?=\w+)", ". "), team, playersLog, False)
                                             name = pm.GetName()
                                             Call AddInfo(name, team, site, "Titolare", "", 0, plaryersData.Players)
                                         ElseIf pname = "round" Then
@@ -94,7 +95,8 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(plaryersData, fileData)
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If

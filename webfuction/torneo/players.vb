@@ -47,6 +47,7 @@ Namespace Torneo
                         Dim p As New PlayerQuotesItem
                         p.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
                         p.Ruolo = Functions.ReadFieldStringData(row.Item("Ruolo").ToString())
+                        p.RuoloMantra = Functions.ReadFieldStringData(row.Item("Ruolomantra").ToString())
                         p.Nome = Functions.ReadFieldStringData(row.Item("Nome").ToString())
                         p.Squadra = Functions.ReadFieldStringData(row.Item("Squadra").ToString())
                         p.Qini = Functions.ReadFieldIntegerData(row.Item("Qini"), 0)
@@ -88,11 +89,11 @@ Namespace Torneo
                     ckey = key
                     Dim p As PlayerQuotesItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
+                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,ruolomantra,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.RuoloMantra & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                            sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.Ruolo & "',squadra='" & p.Squadra & "',qini=" & p.Qini & ",qcur=" & p.Qcur & ",outofgame=" & p.OutOfGame & " WHERE Nome='" & p.Nome & "'")
+                            sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.Ruolo & "',ruolomantra='" & p.RuoloMantra & "',squadra='" & p.Squadra & "',qini=" & p.Qini & ",qcur=" & p.Qcur & ",outofgame=" & p.OutOfGame & " WHERE Nome='" & p.Nome & "'")
                         End If
                     End If
                 Next
@@ -209,6 +210,7 @@ Namespace Torneo
         Public Class PlayerQuotesItem
             Public Property RecordId As Integer = 0
             Public Property Ruolo As String = ""
+            Public Property RuoloMantra As String = ""
             Public Property Nome As String = ""
             Public Property Squadra As String = ""
             Public Property Qini As Integer = 0
@@ -219,8 +221,9 @@ Namespace Torneo
 
             End Sub
 
-            Sub New(Ruolo As String, Nome As String, Squadra As String, Qini As Integer, Qcur As Integer, OutOfGame As Integer)
+            Sub New(Ruolo As String, RuoloMantra As String, Nome As String, Squadra As String, Qini As Integer, Qcur As Integer, OutOfGame As Integer)
                 Me.Ruolo = Ruolo
+                Me.RuoloMantra = RuoloMantra
                 Me.Nome = Nome
                 Me.Squadra = Squadra
                 Me.Qini = Qini

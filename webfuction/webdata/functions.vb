@@ -76,7 +76,7 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-
+                Debug.WriteLine(ex.Message)
             End Try
         End Sub
 
@@ -244,7 +244,7 @@ Namespace WebData
 
         Public Shared Function NormalizeText(ByVal txt As String) As String
 
-            If txt.Contains("distrazione muscolare al bicipite") Then
+            If txt.Contains("KON") Then
                 txt = txt
             End If
 

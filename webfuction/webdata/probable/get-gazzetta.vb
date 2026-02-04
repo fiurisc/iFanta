@@ -20,7 +20,6 @@ Namespace WebData
 
             Try
 
-
                 Dim html As String = Functions.GetPage(appSett, "http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
 
                 If html <> "" Then
@@ -118,27 +117,42 @@ Namespace WebData
 
                                     If pstate <> "Infortunato" Then
                                         value = value.Replace("<strong>Panchina: </strong>", "").Replace("<strong>Ballottaggio: </strong>", "").Replace("<strong>Squalificato: </strong>", "")
-                                        value = System.Text.RegularExpressions.Regex.Replace(value, "(?<=\w\s)(\d)", ",$1")
-                                    End If
-                                    Dim list() As String = value.Replace(" e ", ",").Replace(") ", "),").Trim().Split(CChar(","))
-                                    For Each Nome In list
-                                        Try
-                                            Dim info As String = ""
-                                            Nome = Nome.Trim()
-                                            If RegularExpressions.Regex.Match(Nome, "^\d+").Success Then
-                                                Nome = Nome.Substring(Nome.IndexOf(" "))
-                                            End If
-                                            If RegularExpressions.Regex.Match(Nome, "\(").Success Then
-                                                info = Nome.Substring(Nome.IndexOf("(") + 1).Replace(")", "").Trim()
-                                                Nome = Nome.Substring(0, Nome.IndexOf("("))
-                                            End If
-                                            Nome = Nome.Trim().ToUpper()
-                                            Nome = Functions.NormalizeText(Nome)
-                                            info = Functions.NormalizeText(info)
-                                            Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
-                                            Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData.Players)
-                                        Catch ex As Exception
+                                        If pstate = "Panchina" Then
+                                            value = System.Text.RegularExpressions.Regex.Replace(value, "(?<=\w\s)(\d)", ",$1")
+                                        End If
 
+                                    End If
+                                    Dim items() As String = value.Replace(" e ", ",").Replace(") ", "),").Trim().Split(CChar(","))
+                                    For Each item In items
+                                        Try
+
+                                            If pstate = "Ballottaggio" Then
+                                                Dim nomi() As String = RegularExpressions.Regex.Match(item.Trim(), "[a-zA-Z\s]{1,}-[a-zA-Z\s]{1,}").Value.Split(CChar("-"))
+                                                Dim perc() As String = RegularExpressions.Regex.Match(item.Trim().Replace("%", ""), "\d+-\d+").Value.Split(CChar("-"))
+                                                For n As Integer = 0 To nomi.Length - 1
+                                                    Dim Nome As String = Functions.NormalizeText(nomi(n))
+                                                    Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
+                                                    Call AddInfo(Nome, sq(sqid), site, "", "", CInt(perc(n)), plaryersData.Players)
+                                                Next
+                                            Else
+                                                Dim info As String = ""
+                                                Dim Nome As String = item.Trim()
+                                                If RegularExpressions.Regex.Match(Nome, "^\d+").Success Then
+                                                    Nome = Nome.Substring(Nome.IndexOf(" "))
+                                                End If
+                                                If RegularExpressions.Regex.Match(Nome, "\(").Success Then
+                                                    info = Nome.Substring(Nome.IndexOf("(") + 1).Replace(")", "").Trim()
+                                                    Nome = Nome.Substring(0, Nome.IndexOf("("))
+                                                End If
+                                                Nome = Nome.Trim().ToUpper()
+                                                Nome = Functions.NormalizeText(Nome)
+                                                info = Functions.NormalizeText(info)
+                                                Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
+                                                Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData.Players)
+                                            End If
+
+                                        Catch ex As Exception
+                                            Debug.WriteLine(ex.Message)
                                         End Try
                                     Next
                                 End If
@@ -147,7 +161,8 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(plaryersData, fileData)
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If

@@ -108,7 +108,8 @@ Namespace WebData
 
                     If currgg <> -1 Then
                         plaryersData.Day = currgg
-                        Dim out As String = WriteData(plaryersData, fileData)
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         Return out.Replace(System.Environment.NewLine, "</br>")
                     Else

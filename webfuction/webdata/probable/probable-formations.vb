@@ -28,7 +28,7 @@ Namespace WebData
 
             For Each m As Torneo.MatchsData.Match In matchs
                 Dim dt As Date = CDate(m.Time)
-                Dim ndays As Integer = CInt(dt.Subtract(Date.Now).TotalDays())
+                Dim ndays As Integer = CInt(dt.Subtract(Date.Now).TotalHours())
                 If dicMatchDays.ContainsKey(m.Giornata) = False Then dicMatchDays.Add(m.Giornata, 0)
                 If dicMatchDays(m.Giornata) < ndays Then dicMatchDays(m.Giornata) = ndays
             Next
@@ -48,8 +48,12 @@ Namespace WebData
 
         End Function
 
-        Function GetDataFileName(site As String) As String
-            Return appSett.WebDataPath & "data\pforma\" & site.ToLower() & ".json"
+        Function GetDataFileName(site As String, Optional giornata As Integer = -1) As String
+            If giornata = -1 Then
+                Return appSett.WebDataPath & "data\pforma\" & site.ToLower() & ".json"
+            Else
+                Return appSett.WebDataPath & "data\pforma\" & giornata & "\" & site.ToLower() & ".json"
+            End If
         End Function
 
         Shared Sub AddInfo(Name As String, Team As String, Site As String, State As String, Info As String, Percentage As Integer, wpList As Dictionary(Of String, Torneo.ProbablePlayers.Probable.Player))
@@ -61,13 +65,13 @@ Namespace WebData
 
                 Dim p As Torneo.ProbablePlayers.Probable.Player = wpList(Name & "/" & Team)
                 If p.Info <> "" Then Info = "," & Info
-                If State = "Ballottaggio" Then State = p.State
+                If p.State <> "" Then State = p.State
                 p.Info += Info
                 p.Percentage = Percentage
             End If
 
             Dim wp As Torneo.ProbablePlayers.Probable.Player = wpList(Name & "/" & Team)
-            Dim GiorniFineCampionato As Integer = dicMatchDays.Values.Last()
+            Dim GiorniFineCampionato As Integer = dicMatchDays.Values.Last() \ 24
 
             If Info <> "" AndAlso State = "Infortunato" Then
                 Dim m As System.Text.RegularExpressions.Match = System.Text.RegularExpressions.Regex.Match(Info, "\d+(?=\s+settiman[ea])")
@@ -82,7 +86,7 @@ Namespace WebData
                         If m.Success Then
                             Dim mday As Integer = CInt(m.Value)
                             If dicMatchDays.ContainsKey(mday) Then
-                                wp.Infortunio.Giorni = dicMatchDays(mday)
+                                wp.Infortunio.Giorni = dicMatchDays(mday) \ 24
                             End If
                         Else
                             m = System.Text.RegularExpressions.Regex.Match(Info, "agosto|settembre|ottobre|novembre|dicembre|gennaio|febbraio|marzo|aprile|maggio|giugno")
@@ -158,7 +162,7 @@ Namespace WebData
 
         End Sub
 
-        Public Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String) As String
+        Public Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String, filebackup As String) As String
 
             Dim json As String = ""
             Try
@@ -167,6 +171,9 @@ Namespace WebData
                 Next
                 json = WebData.Functions.SerializzaOggetto(Data, False)
                 IO.File.WriteAllText(fileDestiNazione, json, System.Text.Encoding.Default)
+                Dim dirback As String = IO.Path.GetDirectoryName(filebackup)
+                If IO.Directory.Exists(dirback) = False Then IO.Directory.CreateDirectory(dirback)
+                IO.File.WriteAllText(filebackup, json, System.Text.Encoding.Default)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try

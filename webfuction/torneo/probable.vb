@@ -13,7 +13,7 @@ Namespace Torneo
             Return WebData.Functions.SerializzaOggetto(dicData, True)
         End Function
 
-        Public Function GetProbableFormation(state As String) As Dictionary(Of String, Probable)
+        Public Function GetProbableFormation(state As String, Optional Giornata As Integer = -1) As Dictionary(Of String, Probable)
 
             Dim dicData As New Dictionary(Of String, Probable) From {{"Gazzetta", New Probable}, {"Fantacalcio", New Probable}, {"PianetaFantacalcio", New Probable}, {"Sky", New Probable}, {"FantaPazz", New Probable}}
             Dim states() As String = state.Split(Convert.ToChar(","))
@@ -21,12 +21,11 @@ Namespace Torneo
 
             For Each site As String In dicData.Keys.ToList()
 
-
-                Dim fname As String = probData.GetDataFileName(site)
+                Dim fname As String = probData.GetDataFileName(site, Giornata)
 
                 If IO.File.Exists(fname) Then
 
-                    Dim json As String = IO.File.ReadAllText(fname)
+                    Dim json As String = IO.File.ReadAllText(fname, System.Text.Encoding.GetEncoding(1252))
                     Dim tmp = WebData.Functions.DeserializeJson(Of Probable)(json)
 
                     If state <> "" Then

@@ -2,6 +2,7 @@
 Imports System.Data.OleDb
 Imports System.IO
 Imports System.Reflection
+Imports System.Runtime.Serialization.Formatters.Binary
 
 Namespace Torneo
     Public Class Functions
@@ -174,6 +175,19 @@ Namespace Torneo
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
+
+        Public Shared Function Clone(Of T)(ByVal obj As T) As T
+            If obj Is Nothing Then
+                Return Nothing
+            End If
+
+            Using ms As New MemoryStream()
+                Dim formatter As New BinaryFormatter()
+                formatter.Serialize(ms, obj)
+                ms.Position = 0
+                Return CType(formatter.Deserialize(ms), T)
+            End Using
+        End Function
 
     End Class
 End Namespace

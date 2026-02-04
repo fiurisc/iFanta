@@ -38,7 +38,7 @@
                     sr.WriteLine("Reading html page")
                     IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
-                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding(1252))
                     Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                     Dim pstate As String = "Titolare"
@@ -76,7 +76,8 @@
                             If pstate <> "" AndAlso line.Contains("href=""https://www.fantacalcio.it/serie-a/squadre/") AndAlso lines(i + 2).Contains("</span>") Then
                                 team = Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=www\.fantacalcio\.it\/serie\-a\/squadre\/)\w+(?=\/)").Value.ToUpper())
                                 name = lines(i + 2).Replace("<span>", "").Replace("</span>", "").Trim().ToUpper().Replace("'", "’").Replace("&#X27;", "’")
-                                If name.Contains("CALLIGARIS") Then
+                                name = Functions.NormalizeText(name)
+                                If name.Contains("&#XE8;") Then
                                     name = name
                                 End If
                                 If pstate = "Titolare" OrElse pstate = "Panchina" Then
@@ -90,18 +91,20 @@
                                     info = Functions.NormalizeText(lines(i + 5).Trim())
                                 End If
                                 name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-                                If name.Contains("SOMMER") Then
+                                If name.Contains("CANDE") Then
                                     name = name
                                 End If
                                 Call AddInfo(name, team, site, pstate, info, perc, wpd.Players)
                                 If sq.Contains(team) = False Then sq.Add(team)
+                                perc = 0
                             End If
                         End If
                     Next
 
                     If currgg <> -1 Then
                         wpd.Day = currgg
-                        Dim out As String = WriteData(wpd, fileData)
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If

@@ -69,17 +69,19 @@ Namespace WebData
 
                                     If pdata.Length = 11 Then
 
-                                        Console.WriteLine(pdata(6) & "-" & pdata(4))
                                         Dim role As String = pdata(2).Replace("role:", "")
                                         Dim nat As String = ""
                                         Dim NatCode As String = Functions.GetNatCode(pdata(3).Replace("flag:", ""))
                                         Dim birthdays As String = System.Text.RegularExpressions.Regex.Match(pdata(4), "\d{1,}-\d{1,}-\d{1,}").Value
                                         Dim anni As Integer = 0
-                                        Dim name1 As String = Functions.NormalizeText(pdata(6).Replace("name:", "").ToUpper() & " " & pdata(5).Replace("surname:", "").ToUpper()).Trim()
+                                        Dim name1 As String = Functions.NormalizeText(pdata(5).Replace("surname:", "").ToUpper()).Trim() & " " & pdata(6).Replace("name:", "").ToUpper().Substring(0, 1)
                                         Dim name2 As String = Functions.NormalizeText(pdata(9).Replace("fullname:", "").ToUpper()).Replace(".", ". ").Replace("  ", " ").Trim()
                                         Dim peso As String = pdata(7).Replace("weight:", "")
                                         Dim altezza As String = pdata(10).Replace("height:", "")
 
+                                        If name2.Contains("MARTINEZ") Then
+                                            name2 = name2
+                                        End If
                                         If birthdays <> "" Then
                                             Dim birthday As Date = CDate(birthdays)
                                             anni = Date.Now.Year - birthday.Year
@@ -106,14 +108,14 @@ Namespace WebData
 
                                         If role <> "" Then
                                             Dim playerm As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(role, name1, sq, wpl, True)
-                                            If playerm.Matched = False AndAlso name1 <> name2 Then
-                                                playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, True)
-                                                If playerm.Matched Then
-                                                    wpl.Remove(name1)
-                                                Else
-                                                    wpl.Remove(name2)
-                                                End If
-                                            End If
+                                            'If playerm.Matched = False AndAlso name1 <> name2 Then
+                                            '    playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, True)
+                                            '    If playerm.Matched Then
+                                            '        wpl.Remove(name1)
+                                            '    Else
+                                            '        wpl.Remove(name2)
+                                            '    End If
+                                            'End If
                                             If playerm.Matched Then
                                                 Dim newname As String = playerm.GetName()
                                                 If dicname.Contains(newname) = False Then
