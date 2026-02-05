@@ -217,7 +217,7 @@ Public Class Form1
 
         'IO.File.WriteAllText(AppContext.BaseDirectory & "test.txt", strout.ToString())
         Dim comp As New Torneo.CompilaData(appSett)
-        comp.ApiCompila("22")
+        comp.ApiCompila("23")
 
         For i As Integer = 1 To 6
             'Torneo.CompilaData.ApiCompila(CStr(i))
@@ -278,19 +278,26 @@ Public Class Form1
 
         Exit Sub
 
-        Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        'Dim team As List(Of Integer) = Enumerable.Range(3, 1).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
+        Dim team As List(Of Integer) = Enumerable.Range(9, 1).ToList()
 
         For g As Integer = 1 To 23
+
+            Console.WriteLine("Giornata: " & g)
 
             Dim probdata As New Torneo.ProbablePlayers(appSett)
             Dim probable As Dictionary(Of String, Probable) = probdata.GetProbableFormation("", g)
 
-            For Each id As Integer In team
-                Dim autoForma As New Torneo.AutoFormazioniData(appSett)
-                autoForma.SetProbable(probable)
-                autoForma.BestHitoricalAnalysis(g, id)
-            Next
+            Dim autoForma As New Torneo.AutoFormazioniData(appSett)
+            autoForma.SetProbable(probable)
+            autoForma.BestHitoricalAnalysis(g)
+
+
+            'For Each id As Integer In team
+            '    Dim autoForma As New Torneo.AutoFormazioniData(appSett)
+            '    autoForma.SetProbable(probable)
+            '    autoForma.BestHitoricalAnalysis(g, id)
+            'Next
         Next
 
     End Sub
@@ -303,8 +310,8 @@ Public Class Form1
         Dim fileLog1 As String = appSett.WebDataPath & "\temp\autoformaresult1.log"
         Dim fileLog2 As String = appSett.WebDataPath & "\temp\autoformaresult2.log"
         Dim fileLog3 As String = appSett.WebDataPath & "\temp\autoformaresult3.log"
-        Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        'Dim team As List(Of Integer) = Enumerable.Range(3, 1).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
+        Dim team As List(Of Integer) = Enumerable.Range(9, 1).ToList()
 
         If System.IO.File.Exists(fileLog1) Then System.IO.File.Delete(fileLog1)
         If System.IO.File.Exists(fileLog2) Then System.IO.File.Delete(fileLog2)
@@ -358,12 +365,8 @@ Public Class Form1
                         sr3.WriteLine(dicResult(id).Formazione.Players(k).Type & vbTab & dicResult(id).Formazione.Players(k).Ruolo & vbTab & dicResult(id).Formazione.Players(k).Nome & vbTab & dicResult(id).Formazione.Players(k).Squadra & vbTab & dicResult(id).Formazione.Players(k).InCampo & vbTab & If(dicResult(id).Formazione.Players(k).Punti > -100, dicResult(id).Formazione.Players(k).Punti.ToString(), ""))
                     Next
 
-                    If g > 1 AndAlso histData(id).Count > 0 Then
-                        Dim res As String = dicResult(id).Formazione.Giornata & vbTab & dicResult(id).Formazione.TeamId & vbTab & dicResult(id).Parameters.Points / 10 & vbTab & dicResult(id).Parameters.GetKey().Replace("|", vbTab)
-                        sr2.WriteLine(res)
-                    End If
-
-                    histData(id).Add(Torneo.Functions.Clone(dicResult(id)))
+                    Dim res As String = dicResult(id).Formazione.Giornata & vbTab & dicResult(id).Formazione.TeamId & vbTab & dicResult(id).Parameters.Points / 10 & vbTab & dicResult(id).Parameters.GetKey().Replace("|", vbTab)
+                    sr2.WriteLine(res)
 
                 Next
 
