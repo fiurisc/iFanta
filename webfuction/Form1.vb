@@ -310,8 +310,8 @@ Public Class Form1
         Dim fileLog1 As String = appSett.WebDataPath & "\temp\autoformaresult1.log"
         Dim fileLog2 As String = appSett.WebDataPath & "\temp\autoformaresult2.log"
         Dim fileLog3 As String = appSett.WebDataPath & "\temp\autoformaresult3.log"
-        'Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        Dim team As List(Of Integer) = Enumerable.Range(9, 1).ToList()
+        Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(9, 1).ToList()
 
         If System.IO.File.Exists(fileLog1) Then System.IO.File.Delete(fileLog1)
         If System.IO.File.Exists(fileLog2) Then System.IO.File.Delete(fileLog2)
@@ -323,7 +323,7 @@ Public Class Form1
             histData.Add(id, New List(Of Torneo.AutoFormazioniData.AutoFormazione))
         Next
 
-        For g As Integer = 1 To 23
+        For g As Integer = 20 To 23
 
             Dim sr2 As New IO.StreamWriter(fileLog2, True)
             Dim sr3 As New IO.StreamWriter(fileLog3, True)
@@ -406,127 +406,6 @@ Public Class Form1
         Next
 
     End Sub
-
-    'Private Sub GetAutomaticFormationAsync()
-
-    '    Dim data As New Torneo.FormazioniData(appSett)
-    '    Dim comp As New Torneo.CompilaData(appSett)
-
-    '    Dim fileLog1 As String = appSett.WebDataPath & "\temp\autoformaresult1.log"
-    '    Dim fileLog2 As String = appSett.WebDataPath & "\temp\autoformaresult2.log"
-    '    Dim fileLog3 As String = appSett.WebDataPath & "\temp\autoformaresult3.log"
-    '    Dim fileLog4 As String = appSett.WebDataPath & "\temp\autoformaresult4.log"
-
-    '    If IO.File.Exists(fileLog1) Then IO.File.Delete(fileLog1)
-    '    If IO.File.Exists(fileLog2) Then IO.File.Delete(fileLog2)
-    '    If IO.File.Exists(fileLog3) Then IO.File.Delete(fileLog3)
-    '    If IO.File.Exists(fileLog4) Then IO.File.Delete(fileLog4)
-
-    '    Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-    '    'Dim team As List(Of Integer) = Enumerable.Range(3, 1).ToList()
-
-    '    Dim histData As New Dictionary(Of Integer, List(Of Torneo.AutoFormazioniData.AutoFormazione))
-
-    '    For Each id As Integer In team
-    '        histData.Add(id, New List(Of Torneo.AutoFormazioniData.AutoFormazione))
-    '    Next
-
-    '    For g As Integer = 1 To 22
-
-    '        Try
-
-    '            Dim result As New Dictionary(Of Integer, Torneo.AutoFormazioniData.AutoFormazione)
-
-    '            Dim probdata As New Torneo.ProbablePlayers(appSett)
-    '            Dim probable As Dictionary(Of String, Probable) = probdata.GetProbableFormation("", g)
-
-    '            For Each id As Integer In team
-    '                result.Add(id, New Torneo.AutoFormazioniData.AutoFormazione())
-    '            Next
-
-    '            Parallel.ForEach(team, Sub(teamid)
-    '                                       Dim id As Integer = teamid
-    '                                       Dim dataautoTeam As New Torneo.AutoFormazioniData(appSett)
-    '                                       dataautoTeam.SetProbable(probable)
-    '                                       dicResult(id) = dataautoTeam.GetFormazioneAutomatica(g, id)
-    '                                   End Sub)
-
-    '            Dim sr2 As New IO.StreamWriter(fileLog2, True)
-    '            Dim sr3 As New IO.StreamWriter(fileLog3, True)
-    '            Dim sr4 As New IO.StreamWriter(fileLog4, True)
-
-    '            For Each id As Integer In team
-    '                Dim autoForma As New Torneo.AutoFormazioniData(appSett)
-    '                Dim dicpt As Dictionary(Of String, Integer) = autoForma.GetPlayerPuntiData(g, id)
-    '                For Each p As Torneo.FormazioniData.PlayerFormazione In dicResult(id).Formazione.Players
-    '                    If dicpt.ContainsKey(p.Nome) Then p.Punti = dicpt(p.Nome)
-    '                Next
-    '                dicResult(id).Formazione = comp.CompileDataForma(result(id).Formazione, False)
-    '                data.CalculatePuntiFormazione(result(id).Formazione)
-
-    '                sr3.WriteLine("**** Rating giornata: " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
-    '                For k As Integer = 0 To dicResult(id).PlayerRating.Count - 1
-    '                    sr3.WriteLine(result(id).PlayerRating(k).Ruolo & vbTab & dicResult(id).PlayerRating(k).Nome & vbTab & dicResult(id).PlayerRating(k).Squadra & vbTab & dicResult(id).PlayerRating(k).Rating.Total & vbTab & dicResult(id).PlayerRating(k).Rating.Rating1 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating3 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating4 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating5 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating6 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating7)
-    '                Next
-
-    '                sr3.WriteLine("**** Formazione giornata: " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
-    '                For k As Integer = 0 To dicResult(id).Formazione.Players.Count - 1
-    '                    sr3.WriteLine(result(id).Formazione.Players(k).Type & vbTab & dicResult(id).Formazione.Players(k).Ruolo & vbTab & dicResult(id).Formazione.Players(k).Nome & vbTab & dicResult(id).Formazione.Players(k).Squadra & vbTab & dicResult(id).Formazione.Players(k).InCampo & vbTab & If(result(id).Formazione.Players(k).Punti > -100, dicResult(id).Formazione.Players(k).Punti.ToString(), ""))
-    '                Next
-
-
-
-    '                If g > 1 AndAlso histData(id).Count > 0 Then
-    '                    Dim oldaforma As Torneo.AutoFormazioniData.AutoFormazione = histData(id)(histData(id).Count - 1)
-    '                    Dim res1 As String = oldaforma.Formazione.Giornata & vbTab & oldaforma.Formazione.TeamId & vbTab & oldaforma.Formazione.Punti / 10 & vbTab & oldaforma.Formazione.PlayersInCampo & vbTab & oldaforma.Parameters.HistoricalPlayerData & vbTab & oldaforma.Parameters.AvarangePointsWitdh & vbTab & oldaforma.Parameters.PositionWidth & vbTab & oldaforma.Parameters.LastPresenceWitdh
-    '                    Dim res2 As String = dicResult(id).Parameters.DayRef & vbTab & dicResult(id).Parameters.Points / 10 & vbTab & dicResult(id).Parameters.HistoricalPlayerData & vbTab & dicResult(id).Parameters.AvarangePointsWitdh & vbTab & dicResult(id).Parameters.PositionWidth & vbTab & dicResult(id).Parameters.LastPresenceWitdh
-    '                    sr2.WriteLine(res1 & vbTab & vbTab & res2)
-    '                End If
-
-    '                histData(id).Add(Torneo.Functions.Clone(result(id)))
-
-    '            Next
-
-    '            sr2.Close()
-    '            sr2.Dispose()
-
-    '            sr3.Close()
-    '            sr3.Dispose()
-
-    '            sr4.Close()
-    '            sr4.Dispose()
-
-    '            Dim lstOld As List(Of Torneo.FormazioniData.Formazione)
-
-    '            lstOld = data.GetFormazioni(g.ToString(), "-1", False)
-
-    '            If lstOld.Count > 0 Then
-
-    '                Dim tit As String = "Punteggi giornata: " & g
-    '                Dim sr As New IO.StreamWriter(fileLog1, True)
-
-    '                Debug.WriteLine(tit)
-    '                sr.WriteLine(tit)
-
-    '                For i As Integer = 0 To lstOld.Count - 1
-    '                    If result.ContainsKey(lstOld(i).TeamId) = False Then Continue For
-    '                    Dim res As String = result(lstOld(i).TeamId).Formazione.Punti / 10 & vbTab & lstOld(i).Punti / 10 & vbTab & result(lstOld(i).TeamId).Formazione.PlayersInCampo
-    '                    sr.WriteLine(res)
-    '                    Debug.WriteLine(res)
-    '                Next
-
-    '                sr.Close()
-    '                sr.Dispose()
-
-    '            End If
-
-    '        Catch ex As Exception
-    '            Debug.WriteLine(ex.Message)
-    '        End Try
-
-    '    Next
-
-    'End Sub
 
     Private Sub Button16_Click(sender As Object, e As EventArgs) Handles Button16.Click
         Dim prob As New WebData.ProbableFormations(appSett)

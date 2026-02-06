@@ -24,7 +24,7 @@ Namespace Torneo
         Public Property EnableRoleMantraRanking As Boolean = True 'rank ruolo giocatore'
         Public Property EnableProbable As Boolean = True
         Public Property EanblePreanalisys As Boolean = True
-        Public Property EanbleHistoricalPreanalisys As Boolean = True
+        Public Property EanbleHistoricalPreanalisys As Boolean = False
         Public Property BestHistoricalDataByDecisionTree As Boolean = True
         Public Property BestDataByDecisionTree As Boolean = True
 
@@ -111,13 +111,14 @@ Namespace Torneo
 
             If EanbleHistoricalPreanalisys Then
 
-                Dim oldp As New List(Of String) From {"POSS"}
+                Dim oldp As New List(Of String) From {"HPOSD", "HPD"}
                 Parameters = GetHistoricalParamenters(Giornata, IdTeam, 15, oldp)
 
                 If Parameters.Count > 0 Then
                     If BestHistoricalDataByDecisionTree Then
-                        Parameters = GetAnalysisParametersList(Parameters)
+
                         Parameters = GetBestParamentersByDecisionTree(Parameters, 100)
+                        Parameters = GetAnalysisParametersList(Parameters)
 
                     Else
                         'Dim dicHistParames As Dictionary(Of String, Integer) = GetOccurenceDictionary(itemsHist)
@@ -335,7 +336,7 @@ Namespace Torneo
             CheckMaxDayData()
             SetDayData(Giornata)
 
-            Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList(False)
+            Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList(True)
             Dim results As List(Of AutoFormazione) = GetData(Giornata, IdTeam, Parameters, False)
 
             Dim dicpt As Dictionary(Of String, Integer) = GetPlayerPuntiData(Giornata, IdTeam)
@@ -457,8 +458,7 @@ Namespace Torneo
                                             For Each lastw As Integer In LastPresenzeWidthList
                                                 If tr = -1 AndAlso histd = -1 AndAlso histdw = -1 AndAlso posgr = -1 AndAlso histp = -1 AndAlso posw = -1 AndAlso avgw = -1 AndAlso lastw = -1 Then Continue For
                                                 Dim keyp As String = oldpara.GetKey()
-                                                If listp.Contains(keyp) Then Continue For
-                                                listp.Add(keyp)
+
                                                 Dim para As New AutoFormazione.ParamenterValues
                                                 para.SetFromKey(keyp)
                                                 para.Preanalisi = True
@@ -470,6 +470,10 @@ Namespace Torneo
                                                 If posw <> -1 Then para.PositionWidth = posw
                                                 If avgw <> -1 Then para.AvarangePointsWitdh = avgw
                                                 If lastw <> -1 Then para.LastPresenceWitdh = lastw
+
+                                                keyp = para.GetKey()
+                                                If listp.Contains(keyp) Then Continue For
+                                                listp.Add(keyp)
 
                                                 Parameters.Add(para)
                                             Next
@@ -1142,7 +1146,7 @@ Namespace Torneo
 
                     If val > -10 Then
 
-                        If ntit > 0 Then
+                        If ntit > 1 Then
                             val = 1
                             'If npanc > 3 Then val = 0.8
                         Else
@@ -1153,7 +1157,7 @@ Namespace Torneo
                             Else
                                 If nsitefound > 0 Then
                                     If npanc > 0 Then
-                                        val = npanc / nsitefound + 0.4
+                                        val = npanc / nsitefound + 0.2
                                         If val > 1 Then val = 1
                                     Else
                                         val = 0.2
@@ -1195,7 +1199,7 @@ Namespace Torneo
                 pf.InCampo = 0
                 pf.Type = 0
                 pf.Punti = CInt(p.AvgPt)
-                If p.Rating.Total < 15 AndAlso p.Ruolo <> "P" Then
+                If p.Rating.Total < 20 AndAlso p.Ruolo <> "P" Then
                     pf.Type = -1
                 End If
                 pforma.Add(pf)
