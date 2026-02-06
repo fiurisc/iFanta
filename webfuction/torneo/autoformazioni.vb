@@ -9,13 +9,13 @@ Namespace Torneo
     Public Class AutoFormazioniData
 
         Dim appSett As New PublicVariables
-        Dim maxday As Integer = -1
         Dim daydata As Integer = -10
 
         Dim probable As New Dictionary(Of String, Probable)
         Dim probableloaded As Boolean = False
         Dim preanalisiphase As Boolean = False
 
+        Public Property MaxDayInArchive As Integer = -1
         Public Property EnableAvarangePointsRanking As Boolean = True 'rank punti ultime giornate'
         Public Property EnablePostionRanking As Boolean = True 'rank determinato sulle posizioni in classifica delle scquadre coivolte nel match del giocatore'
         Public Property EnableBonusRanking As Boolean = True 'rank goal e assist'
@@ -82,7 +82,7 @@ Namespace Torneo
                     LoadProbable(Giornata)
                 End If
 
-                CheckMaxDayData()
+                If MaxDayInArchive = -1 Then CheckMaxDayData()
 
                 Dim para As New AutoFormazione.ParamenterValues
                 SetDayData(Giornata)
@@ -104,7 +104,7 @@ Namespace Torneo
 
         Private Function PreAnalisi(ByVal Giornata As Integer, ByVal IdTeam As Integer) As AutoFormazione.ParamenterValues
 
-            Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetAnalysisParametersList(True)
+            Dim Parameters As New List(Of AutoFormazione.ParamenterValues)
             'Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList(True)
 
             preanalisiphase = True
@@ -124,24 +124,26 @@ Namespace Torneo
                         'Dim dicHistParames As Dictionary(Of String, Integer) = GetOccurenceDictionary(itemsHist)
                         'Parameters = GetBestParamentersByOccurence(dicHistParames, 2, 40)
                     End If
+                Else
+                    Parameters = GetAnalysisParametersList(True)
                 End If
-
+            Else
+                Parameters = GetAnalysisParametersList(True)
             End If
 
             Dim results As List(Of AutoFormazione) = GetData(Giornata, IdTeam, Parameters, True)
-            Parameters = results.Select(Function(x) x.Parameters).ToList()
-            Dim maxValue As Integer = Parameters.Select(Function(x) x.Points).Max()
-            Parameters.RemoveAll(Function(x) x.Points < maxValue)
+            If results.Count > 0 Then
+                Parameters = results.Select(Function(x) x.Parameters).ToList()
+                Dim maxValue As Integer = Parameters.Select(Function(x) x.Points).Max()
+                Parameters.RemoveAll(Function(x) x.Points < maxValue)
 
-            If BestDataByDecisionTree Then
-                Parameters = GetBestParamentersByDecisionTree(Parameters, 1)
-            Else
-                Dim items As List(Of String) = Parameters.Select(Function(x) x.GetKey()).ToList()
-                Dim dicParames As Dictionary(Of String, Integer) = GetOccurenceDictionary(items)
-                Parameters = GetBestParamentersByOccurence(dicParames, 1, 1)
-            End If
-
-            If Parameters.Count > 0 Then
+                If BestDataByDecisionTree Then
+                    Parameters = GetBestParamentersByDecisionTree(Parameters, 1)
+                Else
+                    Dim items As List(Of String) = Parameters.Select(Function(x) x.GetKey()).ToList()
+                    Dim dicParames As Dictionary(Of String, Integer) = GetOccurenceDictionary(items)
+                    Parameters = GetBestParamentersByOccurence(dicParames, 1, 1)
+                End If
                 Return Parameters(0)
             Else
                 Return New AutoFormazione.ParamenterValues
@@ -656,7 +658,6 @@ Namespace Torneo
                                                     Dim dicPosGroupLoc = Torneo.Functions.Clone(dicPosGroup(para.PostionGroupSize)(para.HistoricalPosistionData))
                                                     Dim teamRankLoc = Torneo.Functions.Clone(teamrank(para.TeamWidth))
                                                     Dim autoForma As AutoFormazione = GetInternalFormazioneAutomatica(Giornata, IdTeam, para, plistLoc, dicPosGroupLoc, teamRankLoc)
-
                                                     autoForma.Formazione.Players.RemoveAll(Function(x) x.Type = 0)
 
                                                     If Compile Then
@@ -703,7 +704,7 @@ Namespace Torneo
             Try
                 plist = CalculatePlayersRating(Giornata, Parameters, plist, dicPosGroup, dicTeamRank)
                 autoForma.PlayerRating = plist
-                autoForma.Formazione.Players = GetFormazioneFinale(Giornata, Parameters, plist)
+                autoForma.Formazione.Players = GetFormazioneFinale(plist)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
@@ -716,20 +717,24 @@ Namespace Torneo
 
             daydata = Giornata - 1
 
-            If Giornata > maxday + 1 Then
-                daydata = maxday
+            If Giornata > MaxDayInArchive + 1 Then
+                daydata = MaxDayInArchive
             End If
 
         End Sub
 
         Public Sub CheckMaxDayData()
+            MaxDayInArchive = GetMaxDayData()
+        End Sub
 
+        Public Function GetMaxDayData() As Integer
             Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT max(gio) as gio FROM tbrank")
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
-                maxday = CInt(ds.Tables(0).Rows(0)("gio"))
+                Return CInt(ds.Tables(0).Rows(0)("gio"))
+            Else
+                Return 0
             End If
-
-        End Sub
+        End Function
 
         Private Function GetPlayerStatisticData(Giornata As Integer, IdTeam As Integer, Parameters As AutoFormazione.ParamenterValues) As List(Of PlayerAutoFormazione)
 
@@ -754,9 +759,9 @@ Namespace Torneo
                 '** i seguenti paramentri servono solo se si desidera compilare una formazione                 **
                 '** automatica delle giornate passate, perchè a sistema non è presente uno storico delle rose  **
                 '************************************************************************************************
-                Dim tbref As String = If(Giornata > maxday, "tbrose", "tbformazioni")
-                Dim sqf As String = If(Giornata > maxday, "tb.sqp", "tb.sqf")
-                Dim tbwhere As String = If(Giornata > maxday, "tb.idteam=" & IdTeam, "tb.idteam=" & IdTeam & " AND tb.gio=" & Giornata & " AND tb.type<3")
+                Dim tbref As String = If(Giornata > MaxDayInArchive, "tbrose", "tbformazioni")
+                Dim sqf As String = If(Giornata > MaxDayInArchive, "tb.sqp", "tb.sqf")
+                Dim tbwhere As String = If(Giornata > MaxDayInArchive, "tb.idteam=" & IdTeam, "tb.idteam=" & IdTeam & " AND tb.gio=" & Giornata & " AND tb.type<3")
 
                 If daydata = 0 Then
 
@@ -1157,7 +1162,7 @@ Namespace Torneo
                             Else
                                 If nsitefound > 0 Then
                                     If npanc > 0 Then
-                                        val = npanc / nsitefound + 0.2
+                                        val = npanc / nsitefound + 0.4
                                         If val > 1 Then val = 1
                                     Else
                                         val = 0.2
@@ -1184,7 +1189,7 @@ Namespace Torneo
 
         End Function
 
-        Private Function GetFormazioneFinale(giornata As Integer, Parameters As AutoFormazione.ParamenterValues, plist As List(Of PlayerAutoFormazione)) As List(Of FormazioniData.PlayerFormazione)
+        Private Function GetFormazioneFinale(plist As List(Of PlayerAutoFormazione)) As List(Of FormazioniData.PlayerFormazione)
 
             Dim pforma As New List(Of FormazioniData.PlayerFormazione)
 

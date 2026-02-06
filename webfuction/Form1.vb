@@ -310,8 +310,8 @@ Public Class Form1
         Dim fileLog1 As String = appSett.WebDataPath & "\temp\autoformaresult1.log"
         Dim fileLog2 As String = appSett.WebDataPath & "\temp\autoformaresult2.log"
         Dim fileLog3 As String = appSett.WebDataPath & "\temp\autoformaresult3.log"
-        Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        'Dim team As List(Of Integer) = Enumerable.Range(9, 1).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
+        Dim team As List(Of Integer) = Enumerable.Range(8, 1).ToList()
 
         If System.IO.File.Exists(fileLog1) Then System.IO.File.Delete(fileLog1)
         If System.IO.File.Exists(fileLog2) Then System.IO.File.Delete(fileLog2)
@@ -323,8 +323,12 @@ Public Class Form1
             histData.Add(id, New List(Of Torneo.AutoFormazioniData.AutoFormazione))
         Next
 
-        For g As Integer = 20 To 23
+        Dim dataauto As New Torneo.AutoFormazioniData(appSett)
+        Dim maxday As Integer = dataauto.GetMaxDayData()
 
+        For g As Integer = 22 To 22
+
+            Dim sr1 As New IO.StreamWriter(fileLog1, True)
             Dim sr2 As New IO.StreamWriter(fileLog2, True)
             Dim sr3 As New IO.StreamWriter(fileLog3, True)
 
@@ -339,6 +343,7 @@ Public Class Form1
 
                                            Dim dataautoTeam As New Torneo.AutoFormazioniData(appSett)
                                            dataautoTeam.SetProbable(probable)
+                                           dataautoTeam.MaxDayInArchive = maxday
                                            result.Add(dataautoTeam.GetFormazioneAutomatica(gio, id))
                                        End Sub)
 
@@ -370,11 +375,6 @@ Public Class Form1
 
                 Next
 
-                sr2.Close()
-                sr2.Dispose()
-
-                sr3.Close()
-                sr3.Dispose()
 
                 Dim lstOld As List(Of Torneo.FormazioniData.Formazione)
 
@@ -383,7 +383,6 @@ Public Class Form1
                 If lstOld.Count > 0 Then
 
                     Dim tit As String = "Punteggi giornata: " & g
-                    Dim sr1 As New IO.StreamWriter(fileLog1, True)
 
                     Debug.WriteLine(tit)
                     sr1.WriteLine(tit)
@@ -395,13 +394,21 @@ Public Class Form1
                         Debug.WriteLine(res)
                     Next
 
-                    sr1.Close()
-                    sr1.Dispose()
 
                 End If
             Catch ex As Exception
-
+                Debug.WriteLine(ex.Message)
             End Try
+
+            sr1.Close()
+            sr1.Dispose()
+
+            sr2.Close()
+            sr2.Dispose()
+
+            sr3.Close()
+            sr3.Dispose()
+
 
         Next
 
