@@ -1,4 +1,5 @@
 ﻿
+Imports System.Data
 Imports System.Text.RegularExpressions
 
 Namespace WebData
@@ -15,6 +16,24 @@ Namespace WebData
             Public Shared Sub ResetCacheData()
                 players.Clear()
             End Sub
+
+            Public Shared Function GetPlayers() As List(Of String)
+
+                Dim plist As New List(Of String)
+
+                For Each sq As String In players.Keys
+                    For Each r As String In players(sq).Keys
+                        For Each p As String In players(sq)(r)
+                            If plist.Contains(p) = False Then
+                                plist.Add(p)
+                            End If
+                        Next
+                    Next
+                Next
+
+                Return plist
+
+            End Function
 
             Public Shared Sub LoadPlayers(appSett As Torneo.PublicVariables, forceRelod As Boolean)
 
@@ -62,7 +81,7 @@ Namespace WebData
                 Dim keylist As New List(Of String)
                 Dim NameOptions As New List(Of String) From {Name}
 
-                If Name.Contains("MARTINEZ") Then
+                If Name.Contains("ANGUISSA") Then
                     Name = Name
                 End If
                 If Name.Contains("’") Then
@@ -73,31 +92,6 @@ Namespace WebData
                     If n.Contains(" ") Then
 
                         Dim parts = n.Trim().Split({" "}, StringSplitOptions.RemoveEmptyEntries)
-
-                        '' Se la prima parola è lunga, è il nome
-                        'If parts(0).Length > 3 Then
-                        '    keylist.Add(parts(0))
-                        'Else
-
-                        '    Dim pattern As String = "^(.+)\s+(\S+)$"
-                        '    Dim m As Match = Regex.Match(n.ToUpper(), pattern)
-
-                        '    If m.Success Then
-
-                        '        Dim cognome As String = m.Groups(1).Value.Trim()
-                        '        Dim nome As String = m.Groups(2).Value.Trim()
-
-                        '        Try
-                        '            keylist.Add(cognome)
-                        '            keylist.Add(cognome & "/" & nome)
-                        '            keylist.Add(cognome & "/" & nome.Substring(0, 1))
-                        '        Catch ex As Exception
-                        '            nome = Name
-                        '        End Try
-
-                        '    End If
-                        'End If
-
                         Dim pattern As String = "^(.+)\s+(\S+)$"
                         Dim m As Match = Regex.Match(n.ToUpper(), pattern)
 
@@ -110,6 +104,11 @@ Namespace WebData
                                 keylist.Add(cognome)
                                 keylist.Add(cognome & "/" & nome)
                                 keylist.Add(cognome & "/" & nome.Substring(0, 1))
+                                If nome.Length > 3 Then
+                                    keylist.Add(nome)
+                                    keylist.Add(nome & "/" & cognome)
+                                    keylist.Add(nome & "/" & cognome.Substring(0, 1))
+                                End If
                             Catch ex As Exception
                                 nome = Name
                             End Try
@@ -148,6 +147,9 @@ Namespace WebData
                 Name = Name.ToUpper().Trim()
                 Name = Functions.NormalizeText(Name)
 
+                If Regex.Match(Name, "\w+\s+\w+").Success Then
+                    Name = Regex.Match(Name, "[\w+\.]{1,}\s+[\w+\.]{1,}").Value
+                End If
                 If Regex.Match(Name, "\w{1}\.\s\w{1,}").Success Then
                     Dim s() As String = Name.Split(CChar(" "))
                     Name = s(1) & " " & s(0)
@@ -163,9 +165,9 @@ Namespace WebData
                             Name = Name
                         End If
 
-                        For Each r As String In keyplayers(Team).Keys
+                        For Each r As String In keyplayers(t).Keys
                             If keyplayers(t)(r).ContainsKey(Name) Then
-                                pm.MatchedPlayer = New WebPlayer(r, keyplayers(t)(r)(Name), Team)
+                                pm.MatchedPlayer = New WebPlayer(r, keyplayers(t)(r)(Name), t)
                                 If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
                                 Return pm
                             End If
@@ -173,9 +175,8 @@ Namespace WebData
 
                         Dim pkeyLenght As Integer = 0
 
-                        For Each r As String In keyplayers(Team).Keys
+                        For Each r As String In keyplayers(t).Keys
                             If Role = "" OrElse r = Role Then
-
                                 For Each pkey As String In keylist
                                     If keyplayers(t)(r).ContainsKey(pkey) Then
                                         If pkey.Length > pkeyLenght Then
@@ -187,7 +188,9 @@ Namespace WebData
                                 Next
                             End If
                         Next
-
+                        If pm.Matched = False Then
+                            CheckPlayer(pm, "", t, keylist)
+                        End If
                     End If
                 Next
 
@@ -232,6 +235,22 @@ Namespace WebData
                 Return pm
 
             End Function
+
+            Private Shared Sub CheckPlayer(pm As Players.PlayerMatch, Role As String, Team As String, keylist As List(Of String))
+                Dim pkeyLenght As Integer = 0
+                For Each r As String In keyplayers(Team).Keys
+                    If Role = "" OrElse r = Role Then
+                        For Each pkey As String In keylist
+                            If keyplayers(Team)(r).ContainsKey(pkey) Then
+                                If pkey.Length > pkeyLenght Then
+                                    pm.MatchedPlayer = New WebPlayer(r, keyplayers(Team)(r)(pkey), Team)
+                                    pkeyLenght = pkey.Length
+                                End If
+                            End If
+                        Next
+                    End If
+                Next
+            End Sub
 
             'Public Shared Function CheckName(wk As Dictionary(Of String, Players.WebPlayerKey), Team As String, keylist As List(Of String)) As Players.WebPlayerKeyMatch
 

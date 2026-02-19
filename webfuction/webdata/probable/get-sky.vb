@@ -95,6 +95,7 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
+                        If dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
                         Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
                         Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)

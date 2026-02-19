@@ -287,6 +287,11 @@ Namespace WebData
             txt = txt.Replace("&#XE8;", "E’").Replace("&#xE8;", "E’")
             txt = txt.Replace("&#XF2;", "O").Replace("&#xF2;", "O")
             txt = txt.Replace("a\u0027", "a'")
+            txt = txt.Replace("Ø", "O")
+            txt = txt.Replace("Ö", "O")
+            txt = txt.Replace("Ä", "A")
+            txt = txt.Replace("Ä", "A")
+            txt = txt.Replace("Ü", "U")
             Dim regex As New System.Text.RegularExpressions.Regex("[0-9a-zA-Z\'\s\.\-\’ª]{0,}")
             Dim newtxt As String = ""
 
@@ -448,11 +453,17 @@ Namespace WebData
 
             Try
 
+                Dim plist As List(Of String) = WebData.Players.Data.GetPlayers()
+                Dim plistnf As List(Of String) = Torneo.Functions.Clone(plist)
 
                 Dim notfound As New List(Of Players.WebPlayer)
 
                 For Each pkey As String In wp.Keys
-                    If wp(pkey).Matched = False Then notfound.Add(wp(pkey).SourcePlayer)
+                    If wp(pkey).Matched = False Then
+                        notfound.Add(wp(pkey).SourcePlayer)
+                    Else
+                        plistnf.Remove(wp(pkey).GetName())
+                    End If
                 Next
 
                 If PlayerList Then
@@ -475,6 +486,19 @@ Namespace WebData
                     strdata.AppendLine("Percentage players not found = " & CInt((notfound.Count * 1000) / wp.Count) / 10 & "%")
                 Else
                     strdata.AppendLine("Percentage players not found = 0%")
+                End If
+
+                strdata.AppendLine("***List sys players not found***")
+                For i As Integer = 0 To plistnf.Count - 1
+                    strdata.AppendLine(plistnf(i))
+                Next
+                strdata.AppendLine("")
+
+                strdata.AppendLine("Number of system players not found = " & plistnf.Count)
+                If wp.Count > 0 Then
+                    strdata.AppendLine("Percentage system players not found = " & CInt((plistnf.Count * 1000) / plist.Count) / 10 & "%")
+                Else
+                    strdata.AppendLine("Percentage system players not found = 0%")
                 End If
 
             Catch ex As Exception

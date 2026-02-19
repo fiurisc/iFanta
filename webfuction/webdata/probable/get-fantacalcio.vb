@@ -103,6 +103,7 @@
 
                     If currgg <> -1 Then
                         wpd.Day = currgg
+                        If dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
                         Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
                         Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)

@@ -159,7 +159,7 @@ Namespace Torneo
                                 Dim rigp As String = cell(28)
                                 Dim rigt As String = cell(29)
 
-                                If name.Contains("CARNESECCHI M.") Then
+                                If name.Contains("GIOVANE") Then
                                     name = name
                                 End If
 
@@ -744,92 +744,143 @@ Namespace Torneo
 
         End Function
 
-        Private Function CompileTopFormazioni(giornata As String) As List(Of FormazioniData.Formazione)
+        Public Sub CompileTopFormazioni(lst As List(Of FormazioniData.Formazione))
+            For k As Integer = 0 To lst.Count - 1
+                lst(k).CambioModulo = 0
+                lst(k).Players = lst(k).Players.OrderByDescending(Function(x) x.Punti).ToList()
+                CompileTopFormazioni(lst(k))
+            Next
+        End Sub
 
-            Dim lst As List(Of FormazioniData.Formazione) = forma.GetFormazioni(giornata, "-1", False)
+        Public Sub CompileTopFormazioni(forma As FormazioniData.Formazione, Optional ByRating As Boolean = False)
 
             Try
 
-                For k As Integer = 0 To lst.Count - 1
 
-                    Dim ntit As Integer = 0
+                Dim modules As New List(Of String) From {"1-3-4-3", "1-3-5-2", "1-4-3-3", "1-4-4-2", "1-4-5-1", "1-5-3-2", "1-5-4-1"}
+                'Dim modules As New List(Of String) From {"1-4-4-2"}
+                Dim dicPuntiForma As New Dictionary(Of String, Integer)
+                Dim dicBonusForma As New Dictionary(Of String, Dictionary(Of String, Integer))
+                Dim dicRosaIdForma As New Dictionary(Of String, List(Of Integer))
+
+                For Each mudule As String In modules
+
+                    If ByRating Then
+                        forma.Players = forma.Players.OrderByDescending(Function(x) x.Voto).ToList()
+                    Else
+                        forma.Players = forma.Players.OrderByDescending(Function(x) x.Punti).ToList()
+                    End If
+
+                    dicPuntiForma.Add(mudule, 0)
+                    dicRosaIdForma.Add(mudule, New List(Of Integer))
+                    dicBonusForma.Add(mudule, New Dictionary(Of String, Integer) From {{"D", 0}, {"C", 0}, {"A", 0}})
+
                     Dim np As Integer = 0
                     Dim nd As Integer = 0
                     Dim nc As Integer = 0
                     Dim na As Integer = 0
-                    Dim np1 As Integer = 0
-                    Dim nd1 As Integer = 0
-                    Dim nc1 As Integer = 0
-                    Dim na1 As Integer = 0
+
                     Dim ndgoodd As Integer = 0
                     Dim ndgoodc As Integer = 0
                     Dim ndgooda As Integer = 0
 
-                    For i As Integer = 0 To lst(k).Players.Count - 1
-                        If lst(k).Players(i).Type >= 0 AndAlso lst(k).Players(i).Punti > -100 Then
-                            Select Case lst(k).Players(i).Ruolo
-                                Case "P" : np1 += 1
-                                Case "D" : nd1 += 1
-                                Case "C" : nc1 += 1
-                                Case "A" : na1 += 1
-                            End Select
-                        End If
-                    Next
+                    Dim ruoli() As String = mudule.Split(CChar("-"))
+                    Dim rdic As New Dictionary(Of String, Integer) From {
+                            {"P", CInt(ruoli(0))},
+                            {"D", CInt(ruoli(1))},
+                            {"C", CInt(ruoli(2))},
+                            {"A", CInt(ruoli(3))}
+                        }
 
-                    lst(k).CambioModulo = 0
-                    lst(k).Players = lst(k).Players.OrderByDescending(Function(x) x.Punti).ToList()
+                    For Each r As String In rdic.Keys
 
-                    For i As Integer = 0 To lst(k).Players.Count - 1
-                        lst(k).Players(i).FormaId = 0
-                        lst(k).Players(i).Type = 0
-                        lst(k).Players(i).InCampo = 0
-                        If lst(k).Players(i).Type >= 0 AndAlso lst(k).Players(i).Punti > -100 Then
-                            If CheckMudule(lst(k).Players(i).Ruolo, np, nd, nc, na) Then
-                                Select Case lst(k).Players(i).Ruolo
-                                    Case "P"
-                                        np += 1
-                                    Case "D"
-                                        If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(lst(k).Players(i))
-                                        nd += 1
-                                    Case "C"
-                                        If appSett.Settings.Bonus.EnableCenterField Then ndgoodc += GetGoodForBonus(lst(k).Players(i))
-                                        nc += 1
-                                    Case "A"
-                                        If appSett.Settings.Bonus.EnableCenterField Then ndgooda += GetGoodForBonus(lst(k).Players(i))
-                                        na += 1
-                                End Select
-                                lst(k).Players(i).Type = 1
-                                lst(k).Players(i).InCampo = 1
-                                ntit += 1
+                        Dim n As Integer = 0
+
+                        For Each p As FormazioniData.PlayerFormazione In forma.Players
+                            If p.Type <> -1 AndAlso p.Ruolo = r AndAlso (ByRating OrElse p.Punti > -100) Then
+
+                                If ByRating Then
+                                    dicPuntiForma(mudule) += p.Voto
+                                Else
+                                    dicPuntiForma(mudule) += p.Punti
+                                End If
+
+                                dicRosaIdForma(mudule).Add(p.RosaId)
+                                n += 1
+
+                                If ByRating = False Then
+                                    Select Case p.Ruolo
+                                        Case "P" : np += 1
+                                        Case "D"
+                                            nd += 1
+                                            If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(p)
+                                        Case "C"
+                                            nc += 1
+                                            If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodc += GetGoodForBonus(p)
+                                        Case "A"
+                                            na += 1
+                                            If appSett.Settings.Bonus.EnableBonusDefense Then ndgooda += GetGoodForBonus(p)
+                                    End Select
+                                End If
+
+                                If n = rdic(r) Then Exit For
                             End If
-                        End If
-                    Next
-
-                    Dim idforma As Integer = 1
-                    lst(k).Players = lst(k).Players.OrderBy(Function(x) x.RosaId).ToList()
-                    For i As Integer = 0 To lst(k).Players.Count - 1
-                        If lst(k).Players(i).InCampo = 1 Then
-                            lst(k).Players(i).FormaId = idforma
-                            idforma += 1
-                        End If
+                        Next
                     Next
 
                     If appSett.Settings.Bonus.EnableBonusDefense AndAlso ndgoodd = nd Then
-                        lst(k).BonusDifesa = BonusDefense(ndgoodd)
-                    Else
-                        lst(k).BonusDifesa = 0
+                        dicBonusForma(mudule)("D") = BonusDefense(ndgoodd)
                     End If
 
                     If appSett.Settings.Bonus.EnableCenterField AndAlso ndgoodc = nc Then
-                        lst(k).BonusCentrocampo = BonusCenterField(ndgoodc)
-                    Else
-                        lst(k).BonusCentrocampo = 0
+                        dicBonusForma(mudule)("C") = BonusCenterField(ndgoodc)
                     End If
 
                     If appSett.Settings.Bonus.EnableBonusAttack AndAlso ndgooda = na Then
-                        lst(k).BonusAttacco = BonusAttack(ndgooda)
-                    Else
-                        lst(k).BonusAttacco = 0
+                        dicBonusForma(mudule)("A") = BonusAttack(ndgooda)
+                    End If
+
+                    dicPuntiForma(mudule) += (dicBonusForma(mudule)("D") + dicBonusForma(mudule)("C") + dicBonusForma(mudule)("A"))
+                Next
+
+                Dim maxpt As Integer = dicPuntiForma.Values.ToList().Max
+                Dim count As Integer = dicPuntiForma.Values.Where(Function(x) x = maxpt).Count
+
+                If count > 1 Then
+                    count = 0
+                End If
+
+                For Each key As String In dicPuntiForma.Keys
+                    If dicPuntiForma(key) = maxpt Then
+
+                        Dim np As Integer = 0
+                        Dim indf As Integer = 1
+
+                        forma.Players = forma.Players.OrderBy(Function(x) x.RosaId).ToList()
+
+                        'Determino i titolari'
+                        For Each p As FormazioniData.PlayerFormazione In forma.Players
+                            If p.Type <> -1 Then p.Type = 0
+                            p.InCampo = 0
+                            If dicRosaIdForma(key).Contains(p.RosaId) Then
+                                p.Type = 1
+                                p.InCampo = 1
+                                p.FormaId = indf
+                                indf += 1
+                            End If
+                        Next
+
+                        For Each p As FormazioniData.PlayerFormazione In forma.Players
+                            If p.Type = 0 Then
+                                p.FormaId = indf
+                                indf += 1
+                            End If
+                        Next
+
+                        forma.BonusDifesa = dicBonusForma(key)("D")
+                        forma.BonusCentrocampo = dicBonusForma(key)("C")
+                        forma.BonusAttacco = dicBonusForma(key)("A")
+
                     End If
                 Next
 
@@ -837,9 +888,14 @@ Namespace Torneo
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
 
-            Return lst
+        End Sub
 
+        Private Function CompileTopFormazioni(giornata As String) As List(Of FormazioniData.Formazione)
+            Dim lst As List(Of FormazioniData.Formazione) = forma.GetFormazioni(giornata, "-1", False)
+            CompileTopFormazioni(lst)
+            Return lst
         End Function
+
         Private Function BonusDefense(nplayer As Integer) As Integer
             Dim bonus As Integer = 0
             Select Case nplayer

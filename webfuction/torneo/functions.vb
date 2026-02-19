@@ -70,6 +70,15 @@ Namespace Torneo
             Return defvalue
         End Function
 
+        Public Shared Function ReadFieldDoubleData(FieldsName As String, DataRow As DataRow, Optional defvalue As Double = 0) As Double
+            If DataRow.Table.Columns.Contains(FieldsName) Then
+                If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then
+                    defvalue = CDbl(DataRow.Item(FieldsName))
+                End If
+            End If
+            Return defvalue
+        End Function
+
         Public Shared Function ReadFieldTimeData(FieldsName As String, DataRow As DataRow, Optional defvalue As Date = Nothing) As Date
             If DataRow.Table.Columns.Contains(FieldsName) Then
                 If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then

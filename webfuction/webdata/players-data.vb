@@ -33,7 +33,6 @@ Namespace WebData
                 Dim dicNatCode As Dictionary(Of String, String) = Functions.GetDicNatCodeList(appSett.RootTorneiPath & "\code.txt")
                 Dim sqlink As New Dictionary(Of String, String)
                 Dim team As List(Of String) = GetTeamList()
-                Dim plist As New List(Of String)
                 Dim wpl As New Dictionary(Of String, WebData.Players.PlayerMatch)
                 Dim npla As Integer = 1
                 Dim nerr As Integer = 1
@@ -69,6 +68,10 @@ Namespace WebData
 
                                     If pdata.Length = 11 Then
 
+                                        If p.ToUpper().Contains("STROM") Then
+                                            Dim a As Integer = 0
+                                        End If
+
                                         Dim role As String = pdata(2).Replace("role:", "")
                                         Dim nat As String = ""
                                         Dim NatCode As String = Functions.GetNatCode(pdata(3).Replace("flag:", ""))
@@ -79,9 +82,7 @@ Namespace WebData
                                         Dim peso As String = pdata(7).Replace("weight:", "")
                                         Dim altezza As String = pdata(10).Replace("height:", "")
 
-                                        If name2.Contains("MARTINEZ") Then
-                                            name2 = name2
-                                        End If
+
                                         If birthdays <> "" Then
                                             Dim birthday As Date = CDate(birthdays)
                                             anni = Date.Now.Year - birthday.Year
@@ -107,15 +108,12 @@ Namespace WebData
                                         End If
 
                                         If role <> "" Then
-                                            Dim playerm As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(role, name1, sq, wpl, True)
-                                            'If playerm.Matched = False AndAlso name1 <> name2 Then
-                                            '    playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, True)
-                                            '    If playerm.Matched Then
-                                            '        wpl.Remove(name1)
-                                            '    Else
-                                            '        wpl.Remove(name2)
-                                            '    End If
-                                            'End If
+
+                                            Dim playerm As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(role, name1, sq, wpl, True, False)
+                                            If playerm.Matched = False Then playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, False)
+
+                                            If wpl.ContainsKey(name1) = False Then wpl.Add(name1, playerm)
+
                                             If playerm.Matched Then
                                                 Dim newname As String = playerm.GetName()
                                                 If dicname.Contains(newname) = False Then

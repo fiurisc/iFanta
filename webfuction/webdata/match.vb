@@ -357,7 +357,7 @@ Namespace WebData
                 If matchsevent.ContainsKey(d) = False Then matchsevent.Add(d, New Dictionary(Of String, Dictionary(Of String, List(Of Torneo.MatchsData.MatchEvent))))
 
                 For Each m As String In diclinkdaymatch(d).Keys
-                    Call GetMatchsPlayersDataByDayMatchId(d, m, diclinkdaymatch(d)(m))
+                    Call GetMatchsPlayersDataByDayMatchId(d, m, matchsplayers(d), diclinkdaymatch(d)(m))
                 Next
 
                 IO.File.WriteAllText(GetMatchPlayersDayFileName(appSett, d), WebData.Functions.SerializzaOggetto(matchsplayers(d), False))
@@ -368,14 +368,14 @@ Namespace WebData
             End Try
         End Sub
 
-        Private Sub GetMatchsPlayersDataByDayMatchId(day As String, MatchId As String, Link As String)
+        Private Sub GetMatchsPlayersDataByDayMatchId(day As String, MatchId As String, mp As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))), Link As String)
 
             Dim filet As String = dirt & "match-day-" & day & "-matchid-" & MatchId & ".txt"
             Dim str As New System.Text.StringBuilder
 
             Try
 
-                If matchsplayers(day).ContainsKey(MatchId) = False Then matchsplayers(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+                If mp.ContainsKey(MatchId) = False Then matchsplayers(day).Add(MatchId, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
                 If matchsevent(day).ContainsKey(MatchId) = False Then matchsevent(day).Add(MatchId, New Dictionary(Of String, List(Of Torneo.MatchsData.MatchEvent)))
 
                 Dim matchp As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)) = matchsplayers(day)(MatchId)
@@ -430,10 +430,10 @@ Namespace WebData
                                 team = Regex.Match(line(z).Trim, "(?<=squadre\/)\w+(?=\/)").Value.ToUpper
                                 Dim n As String = Regex.Match(line(z).Trim.Replace("-", " "), "(?<=\/)[\w\s\&\#\;]{1,}(?=\/\d+)").Value.ToUpper()
                                 n = Functions.NormalizeText(n)
-                                If n.Contains("STREFEZZA") Then
+                                If n = "" Then
                                     n = n
                                 End If
-                                p.Add(Players.Data.ResolveName("", n, team, False))
+                                If n <> "" Then p.Add(Players.Data.ResolveName("", n, team, False))
                             End If
 
                             If line(z).Contains("title=""") AndAlso Regex.Match(line(z).Trim, "title=""(Subentrato|Ammonizione|Gol segnato|Gol subito|Autorete|Espulsione|Rigore segnato|Rigore sbagliato)""></figure>").Success Then

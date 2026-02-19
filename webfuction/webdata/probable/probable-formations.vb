@@ -1,4 +1,8 @@
 ﻿
+Imports System.Data
+Imports webfuction.Torneo.Players
+Imports webfuction.Torneo.ProbablePlayers
+
 Namespace WebData
     Public Class ProbableFormations
 
@@ -160,6 +164,17 @@ Namespace WebData
 
             End If
 
+        End Sub
+
+        Public Sub WriteBackupProbableHtml(fileDestiNazione As String, filebackup As String)
+
+            Try
+                Dim dirback As String = IO.Path.GetDirectoryName(filebackup)
+                If IO.Directory.Exists(dirback) = False Then IO.Directory.CreateDirectory(dirback)
+                IO.File.Copy(fileDestiNazione, filebackup, True)
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
         End Sub
 
         Public Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String, filebackup As String) As String
