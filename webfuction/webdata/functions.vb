@@ -76,7 +76,7 @@ Namespace WebData
                 End If
 
             Catch ex As Exception
-                Debug.WriteLine(ex.Message)
+                System.Diagnostics.Debug.WriteLine(ex.Message)
             End Try
         End Sub
 

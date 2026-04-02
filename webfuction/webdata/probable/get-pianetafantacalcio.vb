@@ -3,6 +3,10 @@ Namespace WebData
     Partial Class ProbableFormations
 
         Public Function GetPianetaFantacalcio(ReturnData As Boolean) As String
+            Return GetPianetaFantacalcio(ReturnData, False)
+        End Function
+
+        Public Function GetPianetaFantacalcio(ReturnData As Boolean, FromBackup As Boolean, Optional Giornata As Integer = -1) As String
 
             Dim dirt As String = appSett.WebDataPath & "\temp"
             Dim dird As String = appSett.WebDataPath & "\data\pforma"
@@ -12,18 +16,25 @@ Namespace WebData
             Dim fileData As String = dirData & site.ToLower() & ".json"
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
+            Dim currgg As Integer = Giornata
+            Dim fileBakupHtml As String = GetBackupHtmlDataFileName(site.ToLower(), currgg)
 
-            Dim currgg As Integer = -1
 
             Try
 
                 Players.Data.LoadPlayers(appSett, False)
 
-                Dim html As String = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp", "UTF-8")
+                Dim html As String = ""
+
+                If FromBackup Then
+                    fileTemp = fileBakupHtml
+                    If IO.File.Exists(fileBakupHtml) Then html = "ok"
+                Else
+                    html = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp", "UTF-8")
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
+                End If
 
                 If html <> "" Then
-
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
                     Dim start As Boolean = False
                     Dim sq As New List(Of String)
@@ -119,9 +130,10 @@ Namespace WebData
 
                     If currgg <> -1 Then
                         wpd.Day = currgg
-                        If dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
-                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
-                        Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
+                        fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
+                        If dicMatchDays(currgg) > 0 AndAlso FromBackup = False Then WriteBackupProbableHtml(fileTemp, fileBakupHtml)
+                        Dim fileBackup As String =  dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0 OrElse Giornata <> -1, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)
                         Return out.Replace(System.Environment.NewLine, "</br>")
                     Else

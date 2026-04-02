@@ -1,5 +1,6 @@
 ﻿Imports System.IO
 Imports System.Net
+Imports System.Security.Policy
 Imports System.Text
 
 Namespace WebData
@@ -14,6 +15,10 @@ Namespace WebData
 
         Public Function GetDataFileName() As String
             Return appSett.WebDataPath & "data\players-quotes.json"
+        End Function
+
+        Public Function GetBakupDataFileName(Giornata As Integer) As String
+            Return appSett.WebDataPath & "data\pforma\" & Giornata & "\players-quotes.json"
         End Function
 
         Public Function GetPlayersQuotes(ReturnData As Boolean) As String
@@ -80,8 +85,6 @@ Namespace WebData
                     IO.File.WriteAllText(fileJson, strdata)
 
                 End If
-
-                'Players.Data.LoadPlayers(appSett, True)
 
                 If ReturnData Then
                     Return "</br><span style=color:red;font-size:bold;'>Players quotes (" & appSett.Year & "):</span></br>" & strdata.ToString.Replace(System.Environment.NewLine, "</br>") & "</br>"

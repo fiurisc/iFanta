@@ -2,7 +2,12 @@
     Partial Class ProbableFormations
 
         Public Function GetFantacalcio(ReturnData As Boolean) As String
+            Return GetFantacalcio(ReturnData, False)
+        End Function
 
+        Public Function GetFantacalcio(ReturnData As Boolean, FromBackup As Boolean, Optional Giornata As Integer = -1) As String
+
+            Dim currgg As Integer = Giornata
             Dim dirt As String = appSett.WebDataPath & "\temp"
             Dim dird As String = appSett.WebDataPath & "\data\pforma"
             Dim site As String = "Fantacalcio"
@@ -11,8 +16,8 @@
             Dim fileData As String = dirData & site.ToLower() & ".json"
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
+            Dim fileBakupHtml As String = GetBackupHtmlDataFileName(site.ToLower(), currgg)
 
-            Dim currgg As Integer = -1
             Dim sr As New IO.StreamWriter(fileLog)
             Dim rmsg As String = ""
 
@@ -31,14 +36,22 @@
 
                 'Determino i link delle varie partite'
                 sr.WriteLine("Get Html page")
-                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/probabili-formazioni-serie-A", "UTF-8")
+
+                Dim html As String = ""
+
+                If FromBackup Then
+                    fileTemp = fileBakupHtml
+                    If IO.File.Exists(fileBakupHtml) Then html = "ok"
+                Else
+                    html = Functions.GetPage(appSett, "https://www.fantacalcio.it/probabili-formazioni-serie-A", "UTF-8")
+                    IO.File.WriteAllText(fileTemp, html, New System.Text.UTF8Encoding(False))
+                End If
 
                 If html <> "" Then
 
                     sr.WriteLine("Reading html page")
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
-                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding(1252))
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, New System.Text.UTF8Encoding(False))
                     Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
                     Dim pstate As String = "Titolare"
@@ -48,6 +61,9 @@
                     Dim Ruolo As String = ""
                     Dim perc As Integer = 0
                     Dim info As String = ""
+                    Dim modTeam As String = ""
+                    Dim numLine As Integer = 1
+                    Dim indsq As Integer = 0
 
                     sr.WriteLine("lines => " & lines.Length)
 
@@ -60,9 +76,9 @@
                             If line.Contains("class=""ml-auto"">Giornata") Then
                                 currgg = CInt(System.Text.RegularExpressions.Regex.Match(lines(i), "\d+").Value)
                             End If
+
                             If line.Contains("match-info") OrElse line.Contains("player-list starters") Then
                                 pstate = "Titolare"
-                                sq.Clear()
                             ElseIf line.Contains(">Panchina") Then
                                 pstate = "Panchina"
                             ElseIf line.Contains(">Infortunati") Then
@@ -71,6 +87,27 @@
                                 pstate = "Squalificato"
                             ElseIf line.Contains("Dettaglio calciatori") Then
                                 pstate = ""
+                            ElseIf line.Contains("data-team-formation") Then
+                                modTeam = System.Text.RegularExpressions.Regex.Match(lines(i), "[\d\-]{2,}").Value.ToUpper()
+                                numLine = 1
+                                team = sq(indsq)
+                                indsq += 1
+                            ElseIf line.Contains("class=""team-away """) OrElse line.Contains("class=""team-home """) Then
+                                If line.Contains("class=""team-home """) Then
+                                    sq.Clear()
+                                    indsq = 0
+                                End If
+                                sq.Add(System.Text.RegularExpressions.Regex.Match(lines(i + 2), "(?<=content\=\"")(.*?)(?=\"")").Value.ToUpper().Trim())
+                            ElseIf line.Contains("Campioncino ") Then
+                                name = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=\""Campioncino\s+)(.*?)(?=\"")").Value.ToUpper().Trim()
+                                name = Functions.NormalizeText(name)
+                                name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
+                                If wpd.ModuleTeam.ContainsKey(team) = False Then wpd.ModuleTeam.Add(team, New Torneo.ProbablePlayers.Probable.ProbableModule())
+                                wpd.ModuleTeam(team).ModuleName = modTeam
+                                If wpd.ModuleTeam(team).Lines.ContainsKey(numLine.ToString()) = False Then wpd.ModuleTeam(team).Lines.Add(numLine.ToString(), New List(Of String)())
+                                wpd.ModuleTeam(team).Lines(numLine.ToString()).Add(name)
+                            ElseIf line.Contains("<li class=""separator""></li>") Then
+                                numLine += 1
                             End If
 
                             If pstate <> "" AndAlso line.Contains("href=""https://www.fantacalcio.it/serie-a/squadre/") AndAlso lines(i + 2).Contains("</span>") Then
@@ -103,9 +140,10 @@
 
                     If currgg <> -1 Then
                         wpd.Day = currgg
-                        If dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
+                        fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
+                        If dicMatchDays(currgg) > 0 AndAlso FromBackup = False Then WriteBackupProbableHtml(fileTemp, fileBakupHtml)
                         Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
-                        Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
+                        Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0 OrElse Giornata <> -1, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If

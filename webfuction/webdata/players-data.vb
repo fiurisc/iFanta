@@ -82,7 +82,6 @@ Namespace WebData
                                         Dim peso As String = pdata(7).Replace("weight:", "")
                                         Dim altezza As String = pdata(10).Replace("height:", "")
 
-
                                         If birthdays <> "" Then
                                             Dim birthday As Date = CDate(birthdays)
                                             anni = Date.Now.Year - birthday.Year

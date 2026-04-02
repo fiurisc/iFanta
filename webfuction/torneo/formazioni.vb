@@ -1,7 +1,4 @@
 ﻿Imports System.Data
-Imports System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder
-Imports System.Runtime.Remoting
-Imports webfuction.Torneo.ProbablePlayers
 
 Namespace Torneo
 
@@ -180,6 +177,9 @@ Namespace Torneo
             forma.Modulo.Difensori = 0
             forma.Modulo.Centrocampisti = 0
             forma.Modulo.Attaccanti = 0
+            forma.NewModulo.Difensori = 0
+            forma.NewModulo.Centrocampisti = 0
+            forma.NewModulo.Attaccanti = 0
             forma.PlayersInCampo = 0
 
             For Each p As PlayerFormazione In forma.Players
@@ -192,9 +192,17 @@ Namespace Torneo
                         Case "A" : forma.Modulo.Attaccanti += 1
                     End Select
                 End If
+                If p.InCampo = 1 AndAlso p.Punti > -200 Then
+                    Select Case p.Ruolo
+                        Case "D" : forma.NewModulo.Difensori += 1
+                        Case "C" : forma.NewModulo.Centrocampisti += 1
+                        Case "A" : forma.NewModulo.Attaccanti += 1
+                    End Select
+                End If
             Next
 
             forma.Modulo.Display = forma.Modulo.Difensori & "-" & forma.Modulo.Centrocampisti & "-" & forma.Modulo.Attaccanti
+            forma.NewModulo.Display = forma.NewModulo.Difensori & "-" & forma.NewModulo.Centrocampisti & "-" & forma.NewModulo.Attaccanti
 
             'Aggiungo punti provenieni dai bonus
             forma.Punti += forma.BonusDifesa
@@ -275,6 +283,7 @@ Namespace Torneo
             Public Property Giornata() As Integer = 1
             Public Property TeamId() As Integer = 0
             Public Property Modulo() As ModuloFormazione = New ModuloFormazione()
+            Public Property NewModulo() As ModuloFormazione = New ModuloFormazione()
             Public Property PlayersInCampo() As Integer = 0
             Public Property BonusDifesa() As Integer = 0
             Public Property BonusCentrocampo() As Integer = 0
@@ -307,6 +316,7 @@ Namespace Torneo
             Public Property FormaId() As Integer = 0
             Public Property InCampo() As Integer = 0
             Public Property Ruolo As String = ""
+            Public Property RuoloValue() As Integer = 0
             Public Property Nome As String = ""
             Public Property Squadra As String = ""
             Public Property Voto As Integer = 0
@@ -320,7 +330,7 @@ Namespace Torneo
             Public Property RigoriSbagliati() As Integer = 0
             Public Property RigoriParati() As Integer = 0
             Public Property Punti As Integer = 0
-
+            Public Property Rating As New AutoFormazioniData.PlayerAutoFormazione.Ratings
         End Class
 
     End Class

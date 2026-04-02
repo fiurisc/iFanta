@@ -75,37 +75,48 @@ Namespace Torneo
             Next
 
             For Each site As String In dicRuoliTeamBySite.Keys
+
+                Dim moduleList As New Dictionary(Of String, String)
+
                 For Each t As String In dicRuoliTeamBySite(site).Keys
+
+                    Dim nd As Integer = 0
+                    Dim nc As Integer = 0
+                    Dim na As Integer = 0
+
                     For Each r As String In dicRuoliTeamBySite(site)(t).Keys
                         If dicRuoliTeam.ContainsKey(t) = False Then dicRuoliTeam.Add(t, New Dictionary(Of String, List(Of Integer)))
                         If dicRuoliTeam(t).ContainsKey(r) = False Then dicRuoliTeam(t).Add(r, New List(Of Integer))
                         dicRuoliTeam(t)(r).Add(dicRuoliTeamBySite(site)(t)(r))
-                    Next
-                Next
-            Next
 
-            For Each t As String In dicRuoliTeam.Keys
+                        Dim np As Integer = dicRuoliTeamBySite(site)(t)(r)
 
-                Dim moduleList As New List(Of String)
-                Dim nd As Integer = 0
-                Dim nc As Integer = 0
-                Dim na As Integer = 0
-
-                For Each r As String In dicRuoliTeam(t).Keys
-                    For i As Integer = 0 To dicRuoliTeam(t)(r).Count - 1
-                        Dim np As Integer = dicRuoliTeam(t)(r)(i)
                         If r = "D" Then nd = np
                         If r = "C" Then nc = np
                         If r = "A" Then na = np
                     Next
+
+                    Dim mods As String = nd & "-" & nc & "-" & na
+
+                    If mods = "3-4-2" Then na += 1
+                    If mods = "4-5-2" Then na -= 1
+                    If mods = "5-2-2" Then nc += 1
+                    If mods = "4-4-3" Then nc -= 1
+                    If mods = "4-3-2" Then nc += 1
+                    If mods = "5-3-1" Then nc += 1
+                    If mods = "4-4-1" Then na += 1
+                    If mods = "5-4-2" Then na -= 1
+                    If mods = "3-5-3" Then na -= 1
+
+                    mods = nd & "-" & nc & "-" & na
+                    If nd + nc + na <> 10 Then
+                        mods = mods
+                    End If
+                    If nd + nc + na = 10 AndAlso na > 0 AndAlso dicModuleTeam.ContainsKey(t) = False Then
+                        dicModuleTeam.Add(t, mods)
+                    End If
+
                 Next
-
-                Dim mods As String = nd & "-" & nc & "-" & na
-                If nd + nc + na = 10 AndAlso na > 0 AndAlso moduleList.Contains(mods) = False Then moduleList.Add(mods)
-
-                If moduleList.Count > 0 Then
-                    dicModuleTeam.Add(t, moduleList(0))
-                End If
             Next
 
             Return dicModuleTeam
@@ -117,7 +128,7 @@ Namespace Torneo
             Try
                 Torneo.Functions.ExecuteSql(appSett, "CREATE TABLE tbteammodule (ID AUTOINCREMENT PRIMARY KEY,giornata INTEGER,squadra TEXT(50),modulo TEXT(10))")
             Catch ex As Exception
-                Debug.WriteLine(ex.Message)
+                System.Diagnostics.Debug.WriteLine(ex.Message)
             End Try
 
             Torneo.Functions.ExecuteSql(appSett, "DELETE FROM tbteammodule WHERE giornata=" & giornata)
@@ -135,6 +146,7 @@ Namespace Torneo
         Public Class Probable
             Public Property Day() As Integer = -1
             Public Property Players() As New Dictionary(Of String, Player)
+            Public Property ModuleTeam As New Dictionary(Of String, ProbableModule)
 
             Public Class Player
 
@@ -164,6 +176,12 @@ Namespace Torneo
                     Public Property Severity As Integer = 0
                 End Class
             End Class
+
+            Public Class ProbableModule
+                Public Property ModuleName() As String = ""
+                Public Property Lines As New Dictionary(Of String, List(Of String))
+            End Class
+
         End Class
     End Class
 End Namespace

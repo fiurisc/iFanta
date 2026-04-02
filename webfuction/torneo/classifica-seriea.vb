@@ -95,7 +95,7 @@ Namespace Torneo
 
             Try
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbrank WHERE gio = " & giornata)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbrank WHERE gio = " & giornata & " ORDER BY pos")
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1

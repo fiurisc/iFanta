@@ -7,14 +7,15 @@ Namespace WebData
 
         Public Function GetGazzetta(ReturnData As Boolean) As String
 
+            Dim currgg As Integer = -1
             Dim site As String = "Gazzetta"
             Dim fileJson As String = GetDataFileName(site)
             Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
             Dim fileData As String = dirData & site.ToLower() & ".json"
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
+            Dim fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
 
-            Dim currgg As Integer = -1
             Dim srLog As New IO.StreamWriter(fileLog)
             Dim rmsg As String = ""
 
@@ -154,7 +155,7 @@ Namespace WebData
                                                     Dim info As String = ""
                                                     Dim Nome As String = item.Trim()
                                                     If RegularExpressions.Regex.Match(Nome, "^\d+").Success Then
-                                                        Nome = Nome.Substring(Nome.IndexOf(" "))
+                                                        Nome = RegularExpressions.Regex.Replace(Nome, "\d+", "").Trim()
                                                     End If
                                                     If RegularExpressions.Regex.Match(Nome, "\(").Success Then
                                                         info = Nome.Substring(Nome.IndexOf("(") + 1).Replace(")", "").Trim()
@@ -168,7 +169,7 @@ Namespace WebData
                                                 End If
                                             End If
                                         Catch ex As Exception
-                                            Debug.WriteLine(ex.Message)
+                                            System.Diagnostics.Debug.WriteLine(ex.Message)
                                         End Try
                                     Next
                                 End If
@@ -177,11 +178,13 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
+                        fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
                         If dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
                         Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
                         Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
+                        BackupPlayerQuotes(currgg)
                     End If
                 End If
 
