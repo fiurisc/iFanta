@@ -727,7 +727,7 @@ Namespace Torneo
 
                             p.goodGrade = GetGoodGradePrabability(Functions.ReadFieldDoubleData("avg_ptn", row, 0) / 10, p.pGiocate, p.Ruolo)
 
-                            p.Rating.Rating3 = CInt((1 - Math.Exp(-p.FattoreSquadra * p.FattoreAvversaria * p.Gf)) * 25 + (1 - Math.Exp(-p.Ass)) * 18 + (1 - Math.Exp(-dicFactTeam("TOT")("AVG_GF") * p.FattoreSquadra * 3 * p.FattoreAvversaria)) * 2 - (1 - Math.Exp(-p.Amm)) * 1)
+                            p.Rating.Rating3 = CInt((1 - Math.Exp(-p.FattoreSquadra * p.FattoreAvversaria * p.Gf)) * 26 + (1 - Math.Exp(-p.Ass)) * 18 + (1 - Math.Exp(-dicFactTeam("TOT")("AVG_GF") * p.FattoreSquadra * 3 * p.FattoreAvversaria)) * 2 - (1 - Math.Exp(-p.Amm)) * 1)
                             If p.Rating.Rating3 < 0 Then p.Rating.Rating3 = 0
 
                             fc.Add(p)
@@ -1226,8 +1226,13 @@ Namespace Torneo
                                 val = 0.2
                             End If
                             If val > 0.9 Then
-                                If ntit > 0 AndAlso (p.Minuti > 200) Then
-                                    val = 1
+                                If ntit > 0 AndAlso p.Minuti > 200 Then
+                                    If p.Rating.Rating3 > 5 Then
+                                        val = 1
+                                    Else
+                                        val = 0.98
+                                    End If
+
                                 Else
                                     If p.Rating.Rating3 > 1 Then '60
                                         val = 0.9
