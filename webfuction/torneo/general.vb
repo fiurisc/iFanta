@@ -47,20 +47,46 @@ Namespace Torneo
 
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Get tornei associati all'account: " & acc.Id)
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT st.torneoid,tor.nome,st.anno as anno,st.teamid FROM stagioni AS st LEFT JOIN tornei AS tor ON tor.id=st.torneoid WHERE userid=" & acc.Id & ";", True)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT st.torneoid,tor.nome,st.anno as anno,st.teamid FROM stagioni AS st LEFT JOIN tornei AS tor ON tor.id=st.torneoid WHERE userid=1;", True)
+                Dim tlist As New List(Of Integer)
 
-                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Records found: " & ds.Tables(0).Rows.Count)
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim row As System.Data.DataRow = ds.Tables(0).Rows(i)
+                        Dim tid As Integer = Functions.ReadFieldIntegerData("torneoid", row, -1)
+                        Dim torneoNome As String = Functions.ReadFieldStringData("nome", row, "")
+                        If acc.Tornei.ContainsKey(torneoNome) = False Then acc.Tornei.Add(torneoNome, New Dictionary(Of String, Integer))
+                        tlist.Add(tid)
+                    Next
+                End If
+
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Get stagioni associate ai tornei")
+
+                ds = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT tornei.nome,anno FROM stagioni LEFT JOIN tornei ON tornei.id=stagioni.torneoid WHERE torneoid in (" & String.Join(",", tlist) & ") group by  tornei.nome,anno;", True)
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim row As System.Data.DataRow = ds.Tables(0).Rows(i)
+                        Dim torneoNome As String = Functions.ReadFieldStringData("nome", row, "")
+                        Dim anno As String = Functions.ReadFieldStringData("anno", row, "-1")
+                        If anno <> "-1" AndAlso acc.Tornei(torneoNome).ContainsKey(anno) = False Then acc.Tornei(torneoNome).Add(anno, -1)
+                    Next
+                End If
+
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Determino le squadre associate nelle varie stagioni")
+
+                ds = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT st.torneoid,tor.nome,st.anno as anno,st.teamid FROM stagioni AS st LEFT JOIN tornei AS tor ON tor.id=st.torneoid WHERE userid=" & acc.Id & ";", True)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As System.Data.DataRow = ds.Tables(0).Rows(i)
                         Dim torneoNome As String = Functions.ReadFieldStringData("nome", row, "")
-                        Dim anno As String = Functions.ReadFieldStringData("anno", row, "2000")
+                        Dim anno As String = Functions.ReadFieldStringData("anno", row, "-1")
                         Dim teamid As Integer = Functions.ReadFieldIntegerData("teamid", row, -1)
                         If acc.Tornei.ContainsKey(torneoNome) = False Then acc.Tornei.Add(torneoNome, New Dictionary(Of String, Integer))
-                        If acc.Tornei(torneoNome).ContainsKey(anno) = False Then acc.Tornei(torneoNome).Add(anno, teamid)
+                        If anno <> "-1" AndAlso acc.Tornei(torneoNome).ContainsKey(anno) Then acc.Tornei(torneoNome)(anno) = teamid
                     Next
                 End If
+
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try

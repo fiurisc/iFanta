@@ -26,7 +26,7 @@ Namespace Torneo
             Return WebData.Functions.SerializzaOggetto(mtxdata, True)
         End Function
 
-        Private Function GetPlayersQuotesData(Ruolo As String) As List(Of PlayerQuotesItem)
+        Public Function GetPlayersQuotesData(Ruolo As String) As List(Of PlayerQuotesItem)
             If Ruolo <> "" Then
                 Return GetPlayersQuotesData(New List(Of String) From {Ruolo})
             Else
@@ -47,6 +47,8 @@ Namespace Torneo
                         Dim p As New PlayerQuotesItem
                         p.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
                         p.Ruolo = Functions.ReadFieldStringData(row.Item("Ruolo").ToString())
+                        p.RuoloMantra = Functions.ReadFieldStringData(row.Item("Ruolomantra").ToString())
+                        p.RuoloMantraS = Functions.ReadFieldStringData(row.Item("Ruolomantras").ToString())
                         p.Nome = Functions.ReadFieldStringData(row.Item("Nome").ToString())
                         p.Squadra = Functions.ReadFieldStringData(row.Item("Squadra").ToString())
                         p.Qini = Functions.ReadFieldIntegerData(row.Item("Qini"), 0)
@@ -87,12 +89,30 @@ Namespace Torneo
                 For Each key In newdata.Keys
                     ckey = key
                     Dim p As PlayerQuotesItem = newdata(key)
+                    If p.Ruolo = "A" Then
+                        p.RuoloMantraS = "A"
+                    ElseIf p.Ruolo = "C" Then
+                        If p.RuoloMantra.Contains("T") Then
+                            p.RuoloMantraS = "T"
+                        ElseIf p.RuoloMantra.Contains("W") Then
+                            p.RuoloMantraS = "W"
+                        Else
+                            p.RuoloMantraS = "C"
+                        End If
+                    ElseIf p.Ruolo = "D" Then
+                        If p.RuoloMantra.Contains("E") Then
+                            p.RuoloMantraS = "E"
+                        Else
+                            p.RuoloMantraS = "DC"
+                        End If
+                    End If
+
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
+                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,ruolomantra,ruolomantraa,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.RuoloMantra & "','" & p.RuoloMantraS & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                            sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.Ruolo & "',squadra='" & p.Squadra & "',qini=" & p.Qini & ",qcur=" & p.Qcur & ",outofgame=" & p.OutOfGame & " WHERE Nome='" & p.Nome & "'")
+                            sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.Ruolo & "',ruolomantra='" & p.RuoloMantra & "',ruolomantras='" & p.RuoloMantraS & "',squadra='" & p.Squadra & "',qini=" & p.Qini & ",qcur=" & p.Qcur & ",outofgame=" & p.OutOfGame & " WHERE Nome='" & p.Nome & "'")
                         End If
                     End If
                 Next
@@ -176,7 +196,7 @@ Namespace Torneo
                 For Each key In newdata.Keys
                     Dim p As PlayerDataItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer_data (ruolo, nome, squadra, nat, natcode, anni, birthday, altezza, peso) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "'," & p.Anni & ",'" & p.Compleanno & "','" & p.Altezza & "','" & p.Peso & "')")
+                        sqlinsert.Add("INSERT INTO tbplayer_data (ruolo, nome, squadra, nat, natcode, anni, birthday, altezza, peso) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione.Replace("'", "''") & "','" & p.NatCode & "'," & p.Anni & ",'" & p.Compleanno & "','" & p.Altezza & "','" & p.Peso & "')")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
@@ -189,7 +209,7 @@ Namespace Torneo
 
                 For Each g In olddata.Keys
                     If olddata(g).RecordId <> -1 Then
-                        sqldelete.Add("DELETE FROM tbplayer WHERE id=" & olddata(g).RecordId)
+                        sqldelete.Add("DELETE FROM tbplayer_data WHERE id=" & olddata(g).RecordId)
                     End If
                 Next
 
@@ -209,6 +229,8 @@ Namespace Torneo
         Public Class PlayerQuotesItem
             Public Property RecordId As Integer = 0
             Public Property Ruolo As String = ""
+            Public Property RuoloMantra As String = ""
+            Public Property RuoloMantraS As String = ""
             Public Property Nome As String = ""
             Public Property Squadra As String = ""
             Public Property Qini As Integer = 0
@@ -219,8 +241,9 @@ Namespace Torneo
 
             End Sub
 
-            Sub New(Ruolo As String, Nome As String, Squadra As String, Qini As Integer, Qcur As Integer, OutOfGame As Integer)
+            Sub New(Ruolo As String, RuoloMantra As String, Nome As String, Squadra As String, Qini As Integer, Qcur As Integer, OutOfGame As Integer)
                 Me.Ruolo = Ruolo
+                Me.RuoloMantra = RuoloMantra
                 Me.Nome = Nome
                 Me.Squadra = Squadra
                 Me.Qini = Qini

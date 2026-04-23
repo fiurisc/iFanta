@@ -5,27 +5,33 @@ Imports System.Text
 Namespace WebData
     Partial Class ProbableFormations
 
-        Public Function GetGazzetta(ReturnData As Boolean) As String
+        Public Function GetGazzetta(ReturnData As Boolean, FromBackup As Boolean, Optional Giornata As Integer = -1) As String
 
+            Dim currgg As Integer = Giornata
             Dim site As String = "Gazzetta"
             Dim fileJson As String = GetDataFileName(site)
             Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
             Dim fileData As String = dirData & site.ToLower() & ".json"
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
+            Dim fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
 
-            Dim currgg As Integer = -1
             Dim srLog As New IO.StreamWriter(fileLog)
             Dim rmsg As String = ""
 
             Try
 
+                Dim html As String = ""
 
-                Dim html As String = Functions.GetPage(appSett, "http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
+                If FromBackup Then
+                    fileTemp = fileBakupHtml
+                    If IO.File.Exists(fileBakupHtml) Then html = "ok"
+                Else
+                    html = Functions.GetPage(appSett, "http://www.gazzetta.it/Calcio/prob_form/", "UTF-8")
+                    IO.File.WriteAllText(fileTemp, html, New System.Text.UTF8Encoding(False))
+                End If
 
                 If html <> "" Then
-
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
                     Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
                     Dim start As Boolean = False
@@ -117,28 +123,59 @@ Namespace WebData
                                 If value <> "" AndAlso value.Contains("Nessuno") = False Then
 
                                     If pstate <> "Infortunato" Then
-                                        value = value.Replace("<strong>Panchina: </strong>", "").Replace("<strong>Ballottaggio: </strong>", "").Replace("<strong>Squalificato: </strong>", "")
-                                        value = System.Text.RegularExpressions.Regex.Replace(value, "(?<=\w\s)(\d)", ",$1")
-                                    End If
-                                    Dim list() As String = value.Replace(" e ", ",").Replace(") ", "),").Trim().Split(CChar(","))
-                                    For Each Nome In list
-                                        Try
-                                            Dim info As String = ""
-                                            Nome = Nome.Trim()
-                                            If RegularExpressions.Regex.Match(Nome, "^\d+").Success Then
-                                                Nome = Nome.Substring(Nome.IndexOf(" "))
-                                            End If
-                                            If RegularExpressions.Regex.Match(Nome, "\(").Success Then
-                                                info = Nome.Substring(Nome.IndexOf("(") + 1).Replace(")", "").Trim()
-                                                Nome = Nome.Substring(0, Nome.IndexOf("("))
-                                            End If
-                                            Nome = Nome.Trim().ToUpper()
-                                            Nome = Functions.NormalizeText(Nome)
-                                            info = Functions.NormalizeText(info)
-                                            Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
-                                            Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData.Players)
-                                        Catch ex As Exception
 
+                                        If value.Contains("Pellegrini") Then
+                                            value = value
+                                        End If
+
+                                        value = value.Replace("<strong>Panchina: </strong>", "").Replace("<strong>Ballottaggio: </strong>", "").Replace("<strong>Squalificato: </strong>", "").Replace("<strong>Squalificati: </strong>", "")
+                                        If pstate = "Panchina" Then
+                                            value += line(i + 1).Replace("</p>", "")
+                                            value = System.Text.RegularExpressions.Regex.Replace(value.Trim(), "(?<=\w\s)(\d)", ",$1")
+                                        End If
+
+                                    End If
+                                    Dim items() As String = value.Replace(" e ", ",").Replace(") ", "),").Trim().Split(CChar(","))
+                                    For Each item In items
+                                        Try
+                                            If item.Trim() <> "" Then
+                                                If item.Contains("Brescianini-Ndour") Then
+                                                    item = item
+                                                End If
+                                                If pstate = "Ballottaggio" Then
+                                                    Dim subItems() As String = item.Replace("%", "").Split(CChar(" "))
+                                                    If subItems.Length = 2 Then
+                                                        Dim nomi() As String = RegularExpressions.Regex.Match(item.Trim(), "[a-zA-Z\s]{1,}-[a-zA-Z\s]{1,}").Value.Split(CChar("-"))
+                                                        Dim perc() As String = RegularExpressions.Regex.Match(item.Trim().Replace("%", ""), "\d+\s?-\s?\d+").Value.Split(CChar("-"))
+                                                        If nomi.Length = perc.Length Then
+                                                            For n As Integer = 0 To nomi.Length - 1
+                                                                If perc(n) <> "" Then
+                                                                    Dim nome = Functions.NormalizeText(nomi(n))
+                                                                    nome = Players.Data.ResolveName("", nome, sq(sqid), playersLog, False).GetName()
+                                                                    Call AddInfo(nome, sq(sqid), site, "", "", CInt(perc(n)), plaryersData.Players)
+                                                                End If
+                                                            Next
+                                                        End If
+                                                    End If
+                                                Else
+                                                    Dim info As String = ""
+                                                    Dim Nome As String = item.Trim()
+                                                    If RegularExpressions.Regex.Match(Nome, "^\d+").Success Then
+                                                        Nome = RegularExpressions.Regex.Replace(Nome, "\d+", "").Trim()
+                                                    End If
+                                                    If RegularExpressions.Regex.Match(Nome, "\(").Success Then
+                                                        info = Nome.Substring(Nome.IndexOf("(") + 1).Replace(")", "").Trim()
+                                                        Nome = Nome.Substring(0, Nome.IndexOf("("))
+                                                    End If
+                                                    Nome = Nome.Trim().ToUpper()
+                                                    Nome = Functions.NormalizeText(Nome)
+                                                    info = Functions.NormalizeText(info)
+                                                    Nome = Players.Data.ResolveName("", Nome, sq(sqid), playersLog, False).GetName()
+                                                    Call AddInfo(Nome, sq(sqid), site, pstate, info, 0, plaryersData.Players)
+                                                End If
+                                            End If
+                                        Catch ex As Exception
+                                            System.Diagnostics.Debug.WriteLine(ex.Message)
                                         End Try
                                     Next
                                 End If
@@ -147,11 +184,14 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(plaryersData, fileData)
+                        fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
+                        If dicMatchDays.ContainsKey(currgg) AndAlso dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays.ContainsKey(currgg) AndAlso dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
+                        BackupPlayerQuotesAndRose(currgg)
                     End If
-
                 End If
 
             Catch ex As Exception

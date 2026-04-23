@@ -38,6 +38,8 @@ Partial Class Form1
         Me.Button14 = New System.Windows.Forms.Button()
         Me.Button15 = New System.Windows.Forms.Button()
         Me.cmdcoppa = New System.Windows.Forms.Button()
+        Me.Button16 = New System.Windows.Forms.Button()
+        Me.Button17 = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Button1
@@ -195,11 +197,33 @@ Partial Class Form1
         Me.cmdcoppa.Text = "Get Coppa"
         Me.cmdcoppa.UseVisualStyleBackColor = True
         '
+        'Button16
+        '
+        Me.Button16.Location = New System.Drawing.Point(307, 19)
+        Me.Button16.Margin = New System.Windows.Forms.Padding(2)
+        Me.Button16.Name = "Button16"
+        Me.Button16.Size = New System.Drawing.Size(153, 36)
+        Me.Button16.TabIndex = 212
+        Me.Button16.Text = "get pform "
+        Me.Button16.UseVisualStyleBackColor = True
+        '
+        'Button17
+        '
+        Me.Button17.Location = New System.Drawing.Point(307, 55)
+        Me.Button17.Margin = New System.Windows.Forms.Padding(2)
+        Me.Button17.Name = "Button17"
+        Me.Button17.Size = New System.Drawing.Size(153, 36)
+        Me.Button17.TabIndex = 213
+        Me.Button17.Text = "elaborate html pform "
+        Me.Button17.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(328, 340)
+        Me.ClientSize = New System.Drawing.Size(605, 340)
+        Me.Controls.Add(Me.Button17)
+        Me.Controls.Add(Me.Button16)
         Me.Controls.Add(Me.cmdcoppa)
         Me.Controls.Add(Me.Button15)
         Me.Controls.Add(Me.Button14)
@@ -239,4 +263,6 @@ Partial Class Form1
     Friend WithEvents Button14 As Button
     Friend WithEvents Button15 As Button
     Friend WithEvents cmdcoppa As Button
+    Friend WithEvents Button16 As Button
+    Friend WithEvents Button17 As Button
 End Class

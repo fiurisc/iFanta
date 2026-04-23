@@ -33,7 +33,6 @@ Namespace WebData
                 Dim dicNatCode As Dictionary(Of String, String) = Functions.GetDicNatCodeList(appSett.RootTorneiPath & "\code.txt")
                 Dim sqlink As New Dictionary(Of String, String)
                 Dim team As List(Of String) = GetTeamList()
-                Dim plist As New List(Of String)
                 Dim wpl As New Dictionary(Of String, WebData.Players.PlayerMatch)
                 Dim npla As Integer = 1
                 Dim nerr As Integer = 1
@@ -69,13 +68,16 @@ Namespace WebData
 
                                     If pdata.Length = 11 Then
 
-                                        Console.WriteLine(pdata(6) & "-" & pdata(4))
+                                        If p.ToUpper().Contains("STROM") Then
+                                            Dim a As Integer = 0
+                                        End If
+
                                         Dim role As String = pdata(2).Replace("role:", "")
                                         Dim nat As String = ""
                                         Dim NatCode As String = Functions.GetNatCode(pdata(3).Replace("flag:", ""))
                                         Dim birthdays As String = System.Text.RegularExpressions.Regex.Match(pdata(4), "\d{1,}-\d{1,}-\d{1,}").Value
                                         Dim anni As Integer = 0
-                                        Dim name1 As String = Functions.NormalizeText(pdata(6).Replace("name:", "").ToUpper() & " " & pdata(5).Replace("surname:", "").ToUpper()).Trim()
+                                        Dim name1 As String = Functions.NormalizeText(pdata(5).Replace("surname:", "").ToUpper()).Trim() & " " & pdata(6).Replace("name:", "").ToUpper().Substring(0, 1)
                                         Dim name2 As String = Functions.NormalizeText(pdata(9).Replace("fullname:", "").ToUpper()).Replace(".", ". ").Replace("  ", " ").Trim()
                                         Dim peso As String = pdata(7).Replace("weight:", "")
                                         Dim altezza As String = pdata(10).Replace("height:", "")
@@ -89,8 +91,11 @@ Namespace WebData
                                         End If
 
                                         If NatCode = "SCT" Then NatCode = "GBR"
+                                        If NatCode = "CIV" Then NatCode = "CIV"
 
                                         If dicNatCode.ContainsKey(NatCode) Then nat = dicNatCode(NatCode) Else nat = ""
+
+                                        nat = Functions.NormalizeText(nat)
 
                                         If role = "Goalkeeper" Then
                                             role = "P"
@@ -105,15 +110,12 @@ Namespace WebData
                                         End If
 
                                         If role <> "" Then
-                                            Dim playerm As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(role, name1, sq, wpl, True)
-                                            If playerm.Matched = False AndAlso name1 <> name2 Then
-                                                playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, True)
-                                                If playerm.Matched Then
-                                                    wpl.Remove(name1)
-                                                Else
-                                                    wpl.Remove(name2)
-                                                End If
-                                            End If
+
+                                            Dim playerm As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(role, name1, sq, wpl, True, False)
+                                            If playerm.Matched = False Then playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, False)
+
+                                            If wpl.ContainsKey(name1) = False Then wpl.Add(name1, playerm)
+
                                             If playerm.Matched Then
                                                 Dim newname As String = playerm.GetName()
                                                 If dicname.Contains(newname) = False Then

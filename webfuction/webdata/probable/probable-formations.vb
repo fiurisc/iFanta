@@ -1,4 +1,9 @@
 ﻿
+Imports System.Data
+Imports System.IO
+Imports webfuction.Torneo.Players
+Imports webfuction.Torneo.ProbablePlayers
+
 Namespace WebData
     Public Class ProbableFormations
 
@@ -19,37 +24,59 @@ Namespace WebData
 
         Public Shared dicMatchDays As New Dictionary(Of Integer, Integer)
 
-        Public Function GetProbableFormation(site As String, show As Boolean) As String
+        Public Function GetProbableFormation(siteList As String, show As Boolean, Optional Giornata As Integer = -1) As String
 
             Dim str As New System.Text.StringBuilder
-            Dim matchs As List(Of Torneo.MatchsData.Match) = mdatat.GetMatchsData("-1")
+            Dim matchs As List(Of Torneo.MatchsData.Match) = mdatat.GetMatchsData(Giornata.ToString())
+            Dim sites() As String = siteList.Split(CChar(","))
 
             dicMatchDays.Clear()
 
             For Each m As Torneo.MatchsData.Match In matchs
                 Dim dt As Date = CDate(m.Time)
-                Dim ndays As Integer = CInt(dt.Subtract(Date.Now).TotalDays())
-                If dicMatchDays.ContainsKey(m.Giornata) = False Then dicMatchDays.Add(m.Giornata, 0)
-                If dicMatchDays(m.Giornata) < ndays Then dicMatchDays(m.Giornata) = ndays
+                Dim ndays As Integer = CInt(dt.Subtract(Date.Now).TotalHours())
+                If dicMatchDays.ContainsKey(m.Giornata) = False Then dicMatchDays.Add(m.Giornata, ndays)
+                If dicMatchDays(m.Giornata) > ndays Then dicMatchDays(m.Giornata) = ndays
             Next
 
             mdataw.ResetCacheData()
             mdataw.LoadWebMatchs()
             Players.Data.LoadPlayers(appSett, False)
 
-            If site = "gazzetta" OrElse site = "" Then str.Append(GetGazzetta(show))
-            If site = "fantacalcio" OrElse site = "" Then str.Append(GetFantacalcio(show))
-            If site = "pianetafantacalcio" OrElse site = "" Then str.Append(GetPianetaFantacalcio(show))
-            If site = "sky" OrElse site = "" Then str.Append(GetSky(show))
-            If site = "fantapazz" OrElse site = "" Then str.Append(GetFantaPazz(show))
-            ' If site = "cds" OrElse site = "" Then str.Append(GetCds(show))
+            For Each site As String In sites
+                If site = "gazzetta" OrElse site = "" Then str.Append(GetGazzetta(show, Giornata <> -1, Giornata))
+                If site = "fantacalcio" OrElse site = "" Then str.Append(GetFantacalcio(show, Giornata <> -1, Giornata))
+                If site = "pianetafantacalcio" OrElse site = "" Then str.Append(GetPianetaFantacalcio(show, Giornata <> -1, Giornata))
+                If site = "sky" OrElse site = "" Then str.Append(GetSky(show, Giornata <> -1, Giornata))
+                If site = "fantapazz" OrElse site = "" Then str.Append(GetFantaPazz(show))
+                ' If site = "cds" OrElse site = "" Then str.Append(GetCds(show))
+            Next
 
             Return str.ToString()
 
         End Function
 
-        Function GetDataFileName(site As String) As String
-            Return appSett.WebDataPath & "data\pforma\" & site.ToLower() & ".json"
+        Sub BackupPlayerQuotesAndRose(giornata As Integer)
+            Dim pquotes As New PlayersQuotes(appSett)
+            Dim fdatapq As String = pquotes.GetDataFileName()
+            Dim dirback As String = dirData & giornata
+            If IO.Directory.Exists(dirback) = False Then IO.Directory.CreateDirectory(dirback)
+            Dim fdatapqsback As String = dirback & "\" & Path.GetFileName(fdatapq)
+            IO.File.Copy(fdatapq, fdatapqsback, True)
+            Dim rose As New Torneo.RoseData(appSett)
+            rose.BackupRose(giornata)
+        End Sub
+
+        Function GetDataFileName(site As String, Optional giornata As Integer = -1) As String
+            If giornata = -1 Then
+                Return appSett.WebDataPath & "data\pforma\" & site.ToLower() & ".json"
+            Else
+                Return appSett.WebDataPath & "data\pforma\" & giornata & "\" & site.ToLower() & ".json"
+            End If
+        End Function
+
+        Function GetBackupHtmlDataFileName(site As String, giornata As Integer) As String
+            Return appSett.WebDataPath & "data\pforma\" & giornata & "\" & site.ToLower() & ".txt"
         End Function
 
         Shared Sub AddInfo(Name As String, Team As String, Site As String, State As String, Info As String, Percentage As Integer, wpList As Dictionary(Of String, Torneo.ProbablePlayers.Probable.Player))
@@ -61,13 +88,13 @@ Namespace WebData
 
                 Dim p As Torneo.ProbablePlayers.Probable.Player = wpList(Name & "/" & Team)
                 If p.Info <> "" Then Info = "," & Info
-                If State = "Ballottaggio" Then State = p.State
+                If p.State <> "" Then State = p.State
                 p.Info += Info
                 p.Percentage = Percentage
             End If
 
             Dim wp As Torneo.ProbablePlayers.Probable.Player = wpList(Name & "/" & Team)
-            Dim GiorniFineCampionato As Integer = dicMatchDays.Values.Last()
+            Dim GiorniFineCampionato As Integer = dicMatchDays.Values.Last() \ 24
 
             If Info <> "" AndAlso State = "Infortunato" Then
                 Dim m As System.Text.RegularExpressions.Match = System.Text.RegularExpressions.Regex.Match(Info, "\d+(?=\s+settiman[ea])")
@@ -82,7 +109,7 @@ Namespace WebData
                         If m.Success Then
                             Dim mday As Integer = CInt(m.Value)
                             If dicMatchDays.ContainsKey(mday) Then
-                                wp.Infortunio.Giorni = dicMatchDays(mday)
+                                wp.Infortunio.Giorni = dicMatchDays(mday) \ 24
                             End If
                         Else
                             m = System.Text.RegularExpressions.Regex.Match(Info, "agosto|settembre|ottobre|novembre|dicembre|gennaio|febbraio|marzo|aprile|maggio|giugno")
@@ -158,7 +185,18 @@ Namespace WebData
 
         End Sub
 
-        Public Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String) As String
+        Public Sub WriteBackupProbableHtml(fileDestiNazione As String, filebackup As String)
+
+            Try
+                Dim dirback As String = IO.Path.GetDirectoryName(filebackup)
+                If IO.Directory.Exists(dirback) = False Then IO.Directory.CreateDirectory(dirback)
+                IO.File.Copy(fileDestiNazione, filebackup, True)
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
+
+        Public Function WriteData(Data As Torneo.ProbablePlayers.Probable, fileDestiNazione As String, filebackup As String) As String
 
             Dim json As String = ""
             Try
@@ -167,6 +205,11 @@ Namespace WebData
                 Next
                 json = WebData.Functions.SerializzaOggetto(Data, False)
                 IO.File.WriteAllText(fileDestiNazione, json, System.Text.Encoding.Default)
+                If filebackup <> "" Then
+                    Dim dirback As String = IO.Path.GetDirectoryName(filebackup)
+                    If IO.Directory.Exists(dirback) = False Then IO.Directory.CreateDirectory(dirback)
+                    IO.File.WriteAllText(filebackup, json, System.Text.Encoding.Default)
+                End If
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try

@@ -1,4 +1,6 @@
 ﻿
+Imports System.Security.Policy
+
 Namespace Torneo
     Public Class ProbablePlayers
 
@@ -13,7 +15,7 @@ Namespace Torneo
             Return WebData.Functions.SerializzaOggetto(dicData, True)
         End Function
 
-        Public Function GetProbableFormation(state As String) As Dictionary(Of String, Probable)
+        Public Function GetProbableFormation(state As String, Optional Giornata As Integer = -1) As Dictionary(Of String, Probable)
 
             Dim dicData As New Dictionary(Of String, Probable) From {{"Gazzetta", New Probable}, {"Fantacalcio", New Probable}, {"PianetaFantacalcio", New Probable}, {"Sky", New Probable}, {"FantaPazz", New Probable}}
             Dim states() As String = state.Split(Convert.ToChar(","))
@@ -21,13 +23,13 @@ Namespace Torneo
 
             For Each site As String In dicData.Keys.ToList()
 
-
-                Dim fname As String = probData.GetDataFileName(site)
+                Dim fname As String = probData.GetDataFileName(site, Giornata)
 
                 If IO.File.Exists(fname) Then
 
-                    Dim json As String = IO.File.ReadAllText(fname)
+                    Dim json As String = IO.File.ReadAllText(fname, System.Text.Encoding.GetEncoding(1252))
                     Dim tmp = WebData.Functions.DeserializeJson(Of Probable)(json)
+                    Dim dicRuoliTeam As New Dictionary(Of String, Dictionary(Of String, Integer))
 
                     If state <> "" Then
                         For Each chiave In tmp.Players.Keys.ToList()
@@ -36,7 +38,9 @@ Namespace Torneo
                             End If
                         Next
                     End If
+
                     dicData(site) = tmp
+
                 End If
             Next
 
@@ -44,9 +48,105 @@ Namespace Torneo
 
         End Function
 
+        Public Function GetTeamModule(Probable As Dictionary(Of String, Probable)) As Dictionary(Of String, String)
+
+            Dim plist As New Torneo.Players(appSett)
+            Dim listPlayers As List(Of Torneo.Players.PlayerQuotesItem) = plist.GetPlayersQuotesData("")
+            Dim dicPlayers As Dictionary(Of String, Torneo.Players.PlayerQuotesItem) = listPlayers.ToDictionary(Function(x) x.Nome, Function(x) x)
+            Dim dicRuoliTeamBySite As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Integer)))
+            Dim dicRuoliTeam As New Dictionary(Of String, Dictionary(Of String, List(Of Integer)))
+            Dim dicModuleTeam As New Dictionary(Of String, String)
+
+            For Each site As String In Probable.Keys
+                dicRuoliTeamBySite.Add(site, New Dictionary(Of String, Dictionary(Of String, Integer)))
+                For Each chiave In Probable(site).Players.Keys.ToList()
+                    If Probable(site).Players(chiave).State = "Titolare" Then
+                        Dim s() As String = chiave.Split(CChar("/"))
+                        If s.Length = 2 Then
+                            If dicPlayers.ContainsKey(s(0)) Then
+                                Dim p As Torneo.Players.PlayerQuotesItem = dicPlayers(s(0))
+                                If dicRuoliTeamBySite(site).ContainsKey(p.Squadra) = False Then dicRuoliTeamBySite(site).Add(p.Squadra, New Dictionary(Of String, Integer))
+                                If dicRuoliTeamBySite(site)(p.Squadra).ContainsKey(p.Ruolo) = False Then dicRuoliTeamBySite(site)(p.Squadra).Add(p.Ruolo, 0)
+                                dicRuoliTeamBySite(site)(p.Squadra)(p.Ruolo) += 1
+                            End If
+                        End If
+                    End If
+                Next
+            Next
+
+            For Each site As String In dicRuoliTeamBySite.Keys
+
+                Dim moduleList As New Dictionary(Of String, String)
+
+                For Each t As String In dicRuoliTeamBySite(site).Keys
+
+                    Dim nd As Integer = 0
+                    Dim nc As Integer = 0
+                    Dim na As Integer = 0
+
+                    For Each r As String In dicRuoliTeamBySite(site)(t).Keys
+                        If dicRuoliTeam.ContainsKey(t) = False Then dicRuoliTeam.Add(t, New Dictionary(Of String, List(Of Integer)))
+                        If dicRuoliTeam(t).ContainsKey(r) = False Then dicRuoliTeam(t).Add(r, New List(Of Integer))
+                        dicRuoliTeam(t)(r).Add(dicRuoliTeamBySite(site)(t)(r))
+
+                        Dim np As Integer = dicRuoliTeamBySite(site)(t)(r)
+
+                        If r = "D" Then nd = np
+                        If r = "C" Then nc = np
+                        If r = "A" Then na = np
+                    Next
+
+                    Dim mods As String = nd & "-" & nc & "-" & na
+
+                    If mods = "3-4-2" Then na += 1
+                    If mods = "4-5-2" Then na -= 1
+                    If mods = "5-2-2" Then nc += 1
+                    If mods = "4-4-3" Then nc -= 1
+                    If mods = "4-3-2" Then nc += 1
+                    If mods = "5-3-1" Then nc += 1
+                    If mods = "4-4-1" Then na += 1
+                    If mods = "5-4-2" Then na -= 1
+                    If mods = "3-5-3" Then na -= 1
+
+                    mods = nd & "-" & nc & "-" & na
+                    If nd + nc + na <> 10 Then
+                        mods = mods
+                    End If
+                    If nd + nc + na = 10 AndAlso na > 0 AndAlso dicModuleTeam.ContainsKey(t) = False Then
+                        dicModuleTeam.Add(t, mods)
+                    End If
+
+                Next
+            Next
+
+            Return dicModuleTeam
+
+        End Function
+
+        Public Sub UpdateTeamModule(giornata As Integer, dicModuleTeam As Dictionary(Of String, String))
+
+            Try
+                Torneo.Functions.ExecuteSql(appSett, "CREATE TABLE tbteammodule (ID AUTOINCREMENT PRIMARY KEY,giornata INTEGER,squadra TEXT(50),modulo TEXT(10))")
+            Catch ex As Exception
+                System.Diagnostics.Debug.WriteLine(ex.Message)
+            End Try
+
+            Torneo.Functions.ExecuteSql(appSett, "DELETE FROM tbteammodule WHERE giornata=" & giornata)
+
+            Dim sqlinsert As New List(Of String)
+
+            For Each team As String In dicModuleTeam.Keys
+                sqlinsert.Add("INSERT INTO tbteammodule (giornata,squadra,modulo) values (" & giornata & ",'" & team & "','" & dicModuleTeam(team) & "')")
+            Next
+
+            Torneo.Functions.ExecuteSql(appSett, sqlinsert)
+
+        End Sub
+
         Public Class Probable
             Public Property Day() As Integer = -1
             Public Property Players() As New Dictionary(Of String, Player)
+            Public Property ModuleTeam As New Dictionary(Of String, ProbableModule)
 
             Public Class Player
 
@@ -76,6 +176,12 @@ Namespace Torneo
                     Public Property Severity As Integer = 0
                 End Class
             End Class
+
+            Public Class ProbableModule
+                Public Property ModuleName() As String = ""
+                Public Property Lines As New Dictionary(Of String, List(Of String))
+            End Class
+
         End Class
     End Class
 End Namespace

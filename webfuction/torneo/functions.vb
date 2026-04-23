@@ -1,10 +1,19 @@
-﻿Imports System.Data
+﻿Imports System.Collections.Concurrent
+Imports System.Data
 Imports System.Data.OleDb
 Imports System.IO
 Imports System.Reflection
+Imports System.Runtime.Serialization.Formatters.Binary
 
 Namespace Torneo
     Public Class Functions
+
+        Public Shared QueryCache As New ConcurrentDictionary(Of String, DataSet)
+        Public Shared EnableQueryCache As Boolean = False
+
+        Public Shared Sub ClearQueryCache()
+            QueryCache.Clear()
+        End Sub
 
         Public Shared Function ExecuteSqlReturnJSON(appSett As PublicVariables, ByVal SqlString As String, Optional DbUser As Boolean = False) As String
 
@@ -69,6 +78,15 @@ Namespace Torneo
             Return defvalue
         End Function
 
+        Public Shared Function ReadFieldDoubleData(FieldsName As String, DataRow As DataRow, Optional defvalue As Double = 0) As Double
+            If DataRow.Table.Columns.Contains(FieldsName) Then
+                If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then
+                    defvalue = CDbl(DataRow.Item(FieldsName))
+                End If
+            End If
+            Return defvalue
+        End Function
+
         Public Shared Function ReadFieldTimeData(FieldsName As String, DataRow As DataRow, Optional defvalue As Date = Nothing) As Date
             If DataRow.Table.Columns.Contains(FieldsName) Then
                 If DataRow.Item(FieldsName) IsNot System.DBNull.Value Then
@@ -103,6 +121,21 @@ Namespace Torneo
             ExecuteSql(appSett, New List(Of String) From {SqlString}, DbUser)
         End Sub
 
+        Public Shared Sub CloneTableStructure(appSett As PublicVariables, sourceTable As String, targetTable As String, Optional DbUser As Boolean = False)
+            Using cn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
+                cn.Open()
+                ' Elimina la destinazione se esiste già (facoltativo)
+                Using dropCmd As New OleDbCommand("DROP TABLE [" & targetTable & "]", cn)
+                    Try : dropCmd.ExecuteNonQuery() : Catch : End Try
+                End Using
+
+                Dim sql As String = "SELECT * INTO [" & targetTable & "] FROM [" & sourceTable & "] WHERE 1=0;"
+                Using cmd As New OleDbCommand(sql, cn)
+                    Try : cmd.ExecuteNonQuery() : Catch : End Try
+                End Using
+            End Using
+        End Sub
+
         Public Shared Sub ExecuteSql(appSett As PublicVariables, ByVal SqlString As List(Of String), Optional DbUser As Boolean = False)
             If SqlString.Count = 0 Then Exit Sub
             Using conn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
@@ -119,12 +152,18 @@ Namespace Torneo
 
             Dim ds As New System.Data.DataSet
 
-            Using conn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
-                conn.Open()
-                Using da As New OleDbDataAdapter(SqlString, conn)
-                    da.Fill(ds, "tabella")
+            If EnableQueryCache AndAlso QueryCache.ContainsKey(SqlString) Then
+                ds = QueryCache(SqlString)
+            Else
+                'Debug.WriteLine(SqlString)
+                Using conn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
+                    conn.Open()
+                    Using da As New OleDbDataAdapter(SqlString, conn)
+                        da.Fill(ds, "tabella")
+                    End Using
                 End Using
-            End Using
+                If EnableQueryCache Then QueryCache.TryAdd(SqlString, ds)
+            End If
 
             Return ds
 
@@ -158,6 +197,34 @@ Namespace Torneo
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
         End Sub
+
+        Public Shared Function Clone(Of T)(ByVal obj As T) As T
+
+            If obj Is Nothing Then
+                Return Nothing
+            End If
+
+            Using ms As New MemoryStream()
+                Dim formatter As New BinaryFormatter()
+                formatter.Serialize(ms, obj)
+                ms.Position = 0
+                Return CType(formatter.Deserialize(ms), T)
+            End Using
+
+        End Function
+
+        Public Shared Function PoissonProb(k As Integer, lambda As Double) As Double
+            Return (Math.Exp(-lambda) * Math.Pow(lambda, k)) / Factorial(k)
+        End Function
+
+        Public Shared Function PoissonProbNeg(k As Integer, lambda As Double) As Double
+            Return (Math.Exp(-lambda) * Math.Pow(-lambda, k)) / Factorial(k)
+        End Function
+
+        Public Shared Function Factorial(n As Integer) As Long
+            If n <= 1 Then Return 1
+            Return n * Factorial(n - 1)
+        End Function
 
     End Class
 End Namespace

@@ -1,5 +1,4 @@
 ﻿
-Imports System.Security.Cryptography
 
 Namespace Torneo
     Public Class RoseData
@@ -106,6 +105,21 @@ Namespace Torneo
 
             Return json
 
+        End Function
+
+        Public Function BackupRose(Giornata As Integer) As String
+            Dim json As String = ""
+            Try
+                Dim dicp As Dictionary(Of String, List(Of Player)) = GetPlayersFromDb("-1", "", "")
+                Dim jsonData As String = WebData.Functions.SerializzaOggetto(dicp, True)
+                Dim dirPath As String = appSett.TorneoPath & "\backup"
+                If System.IO.Directory.Exists(dirPath) = False Then System.IO.Directory.CreateDirectory(dirPath)
+                Dim filePath As String = dirPath & "\rose_" & Giornata & ".json"
+                IO.File.WriteAllText(filePath, jsonData)
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+            Return json
         End Function
 
         Public Function GetPlayersFromDb(TeamId As String, role As String, OutOfGame As String) As Dictionary(Of String, List(Of Player))

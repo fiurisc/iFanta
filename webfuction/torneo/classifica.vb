@@ -116,7 +116,7 @@ Namespace Torneo
             Dim oldv As Integer = -10000000
             Dim fm As New Dictionary(Of Integer, Integer)
 
-            curr.OrderByDescending(Function(x) x.DiffQ)
+            curr = curr.OrderByDescending(Function(x) x.DiffQ).ToList()
 
             For i As Integer = 0 To curr.Count - 1
                 If oldv <> curr(i).DiffQ Then
@@ -127,7 +127,7 @@ Namespace Torneo
                 fm(curr(i).IdTeam) = fm(curr(i).IdTeam) + p
             Next
 
-            curr.OrderBy(Function(x) x.NumeroGiocateIn10)
+            curr = curr.OrderBy(Function(x) x.NumeroGiocateIn10).ToList()
 
             p = 0
             oldv = -10000000
@@ -140,7 +140,7 @@ Namespace Torneo
                 fm(curr(i).IdTeam) = fm(curr(i).IdTeam) + p
             Next
 
-            curr.OrderBy(Function(x) x.SumAmmEsp)
+            curr = curr.OrderBy(Function(x) x.SumAmmEsp).ToList()
 
             p = 0
             oldv = -10000000
@@ -153,7 +153,7 @@ Namespace Torneo
                 fm(curr(i).IdTeam) = fm(curr(i).IdTeam) + p
             Next
 
-            curr.OrderByDescending(Function(x) x.Pt)
+            curr = curr.OrderByDescending(Function(x) x.Pt).ToList()
 
             For i As Integer = 0 To curr.Count - 1
                 If fm.ContainsKey(curr(i).IdTeam) Then
@@ -290,7 +290,7 @@ Namespace Torneo
                     Dim citem As New StoricoDatiItem
                     citem.Pt = CInt(ds.Tables(0).Rows(i).Item("pt")) / 10
                     citem.PuntiPersi = CInt(ds.Tables(0).Rows(i).Item("ptmax")) / 10 - citem.Pt
-                    citem.PercentualePuntiPersi = CInt(citem.PuntiPersi * 1000 / citem.Pt) / 10
+                    citem.PercentualePuntiPersi = If(citem.Pt > 0, CInt(citem.PuntiPersi * 1000 / citem.Pt) / 10, 0)
                     citem.Ammonizioni = CInt(ds.Tables(0).Rows(i).Item("amm"))
                     citem.Espulsioni = CInt(ds.Tables(0).Rows(i).Item("esp"))
                     citem.Assist = CInt(ds.Tables(0).Rows(i).Item("ass"))

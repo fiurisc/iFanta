@@ -1,32 +1,46 @@
 ﻿Imports System.Web.Script.Serialization
+Imports Newtonsoft.Json.Linq
 
 Namespace WebData
     Partial Class ProbableFormations
 
         Public Function GetSky(ReturnData As Boolean) As String
+            Return GetSky(ReturnData, False)
+        End Function
 
+        Public Function GetSky(ReturnData As Boolean, FromBackup As Boolean, Optional Giornata As Integer = -1) As String
+
+            Dim currgg As Integer = Giornata
             Dim site As String = "Sky"
             Dim fileJson As String = GetDataFileName(site)
             Dim fileTemp As String = dirTemp & site.ToLower() & ".txt"
             Dim fileData As String = dirData & site.ToLower() & ".json"
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
+            Dim fileBakupHtml As String = GetBackupHtmlDataFileName(site.ToLower(), currgg)
             Dim srLog As New IO.StreamWriter(fileLog)
             Dim rmsg As String = ""
-            Dim currgg As Integer = -1
+
             Dim enc As String = "UTF-8"
 
             Try
 
                 Players.Data.LoadPlayers(appSett, False)
 
-                Dim html As String = Functions.GetPage(appSett, "https://sport.sky.it/calcio/serie-a/probabili-formazioni", "UTF-8")
+                Dim html As String = ""
+
+                If FromBackup Then
+                    fileTemp = fileBakupHtml
+                    If IO.File.Exists(fileBakupHtml) Then html = "ok"
+                Else
+                    html = Functions.GetPage(appSett, "https://sport.sky.it/calcio/serie-a/probabili-formazioni", "UTF-8")
+                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.GetEncoding("UTF-8"))
+                End If
 
                 If html <> "" Then
 
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
 
-                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.GetEncoding("UTF-8"))
                     Dim plaryersData As New Torneo.ProbablePlayers.Probable
                     Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)
                     Dim team As String = ""
@@ -34,6 +48,8 @@ Namespace WebData
                     Dim sez As String = "header"
                     Dim sq As New List(Of String)
                     Dim sqid As Integer = 0
+                    Dim modf As String = ""
+                    Dim modp As New List(Of Integer)
 
                     srLog.WriteLine("Year -> " & appSett.Year)
                     srLog.WriteLine("Calendario match:")
@@ -69,17 +85,20 @@ Namespace WebData
                                     ElseIf (linej.EndsWith("],") OrElse linej.EndsWith("},") OrElse linej.EndsWith("}") OrElse linej.EndsWith("]")) Then
                                         If paths.Count > 0 Then paths.RemoveAt(paths.Count - 1)
                                     Else
-                                        If pname = "seoName" Then
+                                        If pname = "formation" Then
+                                            modf = String.Join("-", pvalue.Select(Function(c) c.ToString()))
+                                            modp = pvalue.Select(Function(c) CInt(Char.GetNumericValue(c))).ToList()
+                                        ElseIf pname = "seoName" Then
                                             team = Functions.CheckTeamName(pvalue.ToUpper())
                                         ElseIf pname = "fullname" AndAlso cpath.Contains("substitutes") Then
-                                            Dim plist() As String = pvalue.ToUpper().Split(Convert.ToChar(" "))
+                                            Dim plist() As String = System.Text.RegularExpressions.Regex.Replace(pvalue.ToUpper(), "(?<=\s\w{2})\s(?=\w+)", "-").Split(Convert.ToChar(" "))
                                             For Each p As String In plist
-                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", p, team, playersLog, False)
+                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", System.Text.RegularExpressions.Regex.Replace(p.Replace("-", " "), "(?<=\w)\.(?=\w+)", ". "), team, playersLog, False)
                                                 name = pm.GetName()
                                                 Call AddInfo(name, team, site, "Panchina", "", 0, plaryersData.Players)
                                             Next
                                         ElseIf pname = "fullname" AndAlso cpath.Contains("startingLineup") Then
-                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", pvalue.ToUpper(), team, playersLog, False)
+                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", System.Text.RegularExpressions.Regex.Replace(pvalue.ToUpper(), "(?<=\w)\.(?=\w+)", ". "), team, playersLog, False)
                                             name = pm.GetName()
                                             Call AddInfo(name, team, site, "Titolare", "", 0, plaryersData.Players)
                                         ElseIf pname = "round" Then
@@ -94,7 +113,10 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
-                        Dim out As String = WriteData(plaryersData, fileData)
+                        fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
+                        If dicMatchDays(currgg) > 0 AndAlso FromBackup = False Then WriteBackupProbableHtml(fileTemp, fileBakupHtml)
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If

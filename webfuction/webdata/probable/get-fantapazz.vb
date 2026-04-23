@@ -46,6 +46,7 @@ Namespace WebData
                             If lines(i).Contains("<div class=""text-center partita-header-xs"">") Then
                                 sq.Clear()
                             ElseIf lines(i).Contains("<div class=""nomeClub""><h2>") Then
+
                                 sq.Add(Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=h2>)\w+(?=\<\/h2)").Value.ToUpper()))
 
                                 'Cerco di determinare la giornata di riferimento'
@@ -70,6 +71,9 @@ Namespace WebData
                                     Dim sublines() As String = ms(l).Value.Replace("</li>", "|").Split(Convert.ToChar("|"))
                                     For Each sline As String In sublines
                                         Dim pname As String = System.Text.RegularExpressions.Regex.Match(sline, "(?<='calciatore'\>)(.*?)(?=\<\/span)").Value
+                                        If pname.Contains("artine") Then
+                                            pname = pname
+                                        End If
                                         pname = Players.Data.ResolveName("", pname, team, playersLog, False).GetName()
                                         Call AddInfo(pname, team, site, If(l = 0, "Titolare", "Panchina"), "", -1, plaryersData.Players)
                                     Next
@@ -104,7 +108,9 @@ Namespace WebData
 
                     If currgg <> -1 Then
                         plaryersData.Day = currgg
-                        Dim out As String = WriteData(plaryersData, fileData)
+                        If dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         Return out.Replace(System.Environment.NewLine, "</br>")
                     Else
