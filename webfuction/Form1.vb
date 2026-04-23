@@ -339,7 +339,7 @@ Public Class Form1
 
         Dim dt As Date = Date.Now
 
-        For g As Integer = 32 To 32
+        For g As Integer = 20 To 33
 
             Dim sr1 As New IO.StreamWriter(fileLog1, True)
             Dim sr2 As New IO.StreamWriter(fileLog2, True)
@@ -393,10 +393,12 @@ Public Class Form1
 
                     Dim dizVoto As New Dictionary(Of String, String)
                     Dim dizType As New Dictionary(Of String, Integer)
+                    Dim dizInCampo As New Dictionary(Of String, Integer)
 
                     For i As Integer = 0 To dicResult(id).Formazione.Players.Count - 1
                         dizVoto(dicResult(id).Formazione.Players(i).Nome) = If(dicResult(id).Formazione.Players(i).Punti > -100, dicResult(id).Formazione.Players(i).Punti.ToString(), "S.V.")
                         dizType(dicResult(id).Formazione.Players(i).Nome) = dicResult(id).Formazione.Players(i).Type
+                        dizInCampo(dicResult(id).Formazione.Players(i).Nome) = dicResult(id).Formazione.Players(i).InCampo
                     Next
 
                     Dim res As String = dicResult(id).Formazione.Giornata & vbTab & dicResult(id).Formazione.TeamId & vbTab & dicResult(id).Parameters.Points / 10 & vbTab & dicResult(id).Parameters.GetKey().Replace("|", vbTab)
@@ -406,7 +408,7 @@ Public Class Form1
                     sr3.WriteLine(dicResult(id).Parameters.Points / 10 & vbTab & dicResult(id).Parameters.GetKey().Replace("|", vbTab))
                     sr3.WriteLine("**** Rating giornata: " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
                     For k As Integer = 0 To dicResult(id).PlayerRating.Count - 1
-                        sr3.WriteLine(dicResult(id).PlayerRating(k).Ruolo & vbTab & dicResult(id).PlayerRating(k).Nome & vbTab & dicResult(id).PlayerRating(k).Squadra & vbTab & dicResult(id).PlayerRating(k).Rating.Total1 & vbTab & dicResult(id).PlayerRating(k).Rating.Total2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating1 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating3 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating4 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating5 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating6 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating7 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating8 & vbTab & dicResult(id).PlayerRating(k).Minuti & vbTab & dicResult(id).PlayerRating(k).Titolare & vbTab & dicResult(id).PlayerRating(k).Subentrato & vbTab & dizType(dicResult(id).PlayerRating(k).Nome) & vbTab & dizVoto(dicResult(id).PlayerRating(k).Nome))
+                        sr3.WriteLine(dicResult(id).PlayerRating(k).Ruolo & vbTab & dicResult(id).PlayerRating(k).Nome & vbTab & dicResult(id).PlayerRating(k).Squadra & vbTab & dicResult(id).PlayerRating(k).Rating.Total1 & vbTab & dicResult(id).PlayerRating(k).Rating.Total2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating1 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating3 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating4 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating5 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating6 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating7 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating8 & vbTab & dicResult(id).PlayerRating(k).Minuti & vbTab & dicResult(id).PlayerRating(k).Titolare & vbTab & dicResult(id).PlayerRating(k).Subentrato & vbTab & dizType(dicResult(id).PlayerRating(k).Nome) & vbTab & dizInCampo(dicResult(id).PlayerRating(k).Nome) & vbTab & dizVoto(dicResult(id).PlayerRating(k).Nome))
                     Next
                     sr3.WriteLine("**** Formazione giornata: " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
                     For k As Integer = 0 To dicResult(id).Formazione.Players.Count - 1

@@ -1097,14 +1097,28 @@ Namespace Torneo
 
             For Each p As PlayerAutoFormazione In plist
 
+                Dim pteam As Integer = CInt(Math.Floor(If(factTeam.Fact = 0, Parameters.TeamWidth, factTeam.Fact * (dicTeamRank("TOT")(p.Squadra) - factTeam.Min))))
+
+                If p.Ruolo = "P" Then
+                    p.Rating.Rating8 = CInt(pteam * 0.7)
+                ElseIf p.Ruolo = "D" Then
+                    p.Rating.Rating8 = CInt(pteam * 0.85)
+                ElseIf p.Ruolo = "C" Then
+                    p.Rating.Rating8 = CInt(pteam * 0.95)
+                Else
+                    p.Rating.Rating8 = CInt(pteam * 1.05)
+                End If
+
                 'calcolo rating 1'
                 p.Rating.Rating1 = CInt(p.goodGrade / 100 * Parameters.AvarangePointsWitdh)
                 If p.Ruolo = "P" Then
                     p.Rating.Rating1 = CInt(p.Rating.Rating1 * 0.97)
                 ElseIf p.Ruolo = "D" Then
                     p.Rating.Rating1 = CInt(p.Rating.Rating1 * 1.02)
+                ElseIf p.Ruolo = "C" Then
+                    p.Rating.Rating1 = CInt(p.Rating.Rating1 * 1.01)
                 ElseIf p.Ruolo = "A" Then
-                    p.Rating.Rating1 = CInt(p.Rating.Rating1 * 1.03) 'da eliminare se la giornata 33 peggiora
+                    p.Rating.Rating1 = CInt(p.Rating.Rating1 * 1.04) 'da eliminare se la giornata 33 peggiora
                 End If
                 'If p.LastPt > 60 Then p.Rating.Rating1 += 1
 
@@ -1132,21 +1146,10 @@ Namespace Torneo
                 ' calcolo rating 5'
                 p.Rating.Rating5 = GetRoleRating(p, Parameters.RuoloWidth, factRuolo.Min, factRuolo.Fact, dicRuoloRank)
 
-                Dim pteam As Integer = CInt(Math.Floor(If(factTeam.Fact = 0, Parameters.TeamWidth, factTeam.Fact * (dicTeamRank("TOT")(p.Squadra) - factTeam.Min))))
-
-                If p.Ruolo = "P" Then
-                    p.Rating.Rating8 = CInt(pteam * 0.7)
-                ElseIf p.Ruolo = "D" Then
-                    p.Rating.Rating8 = CInt(pteam * 0.85)
-                ElseIf p.Ruolo = "C" Then
-                    p.Rating.Rating8 = CInt(pteam * 0.95)
-                Else
-                    p.Rating.Rating8 = CInt(pteam * 1.05)
-                End If
-
                 p.Rating.Total2 = CInt(p.Rating.Rating1 + p.Rating.Rating2 + p.Rating.Rating3 + p.Rating.Rating4 + p.Rating.Rating5 + p.Rating.Rating7 + p.Rating.Rating8)
                 If p.Nome = "LEAO" Then p.Nome = p.Nome
 
+                'If p.pGiocate < 2 AndAlso p.qCur < 10 Then p.Rating.Total2 -= 3
 
                 If modules.ContainsKey(p.Squadra) Then
                     Dim moduleTeam As String = modules(p.Squadra)
@@ -1169,8 +1172,6 @@ Namespace Torneo
                     End If
                 End If
 
-                'If p.Rating.Total2 < 150 AndAlso p.Rating.Rating1 > 45 AndAlso p.Rating.Rating5 > 20 AndAlso p.Rating.Rating3 > 2 Then p.Rating.Total2 += 15
-
                 p.Rating.Total1 = p.Rating.Total2
 
                 If probable.Values.ToList().Where(Function(x) x.Day <> -1).Count > 0 Then
@@ -1184,14 +1185,6 @@ Namespace Torneo
                 End If
 
             Next
-
-            'Dim max As Integer = plist.Select(Function(x) x.Rating.Total2).Max()
-            'Dim min As Integer = plist.Select(Function(x) x.Rating.Total2).Min()
-            'If max - min > max / 2 Then
-            '    For Each p As PlayerAutoFormazione In plist
-
-            '    Next
-            'End If
 
             plist = SortPlayers(plist)
 
@@ -1241,6 +1234,8 @@ Namespace Torneo
                 Dim npanc As Double = 0
                 Dim ninf As Integer = 0
                 Dim nsq As Integer = 0
+                Dim maxVauePanc As Double = 0.76
+                Dim minVauePanc As Double = 0.35
 
                 For Each site As String In probable.Keys
 
@@ -1254,21 +1249,21 @@ Namespace Torneo
                         ElseIf probable(site).Players(keyp).State = "Panchina" Then
                             If site = "Fantacalcio" OrElse site = "PianetaFantacalcio" Then
                                 If probable(site).Players(keyp).Percentage > -1 Then
-                                    Dim valp As Double = probable(site).Players(keyp).Percentage / 100
-                                    If valp > 0.8 Then valp = 0.8
+                                    Dim valp As Double = probable(site).Players(keyp).Percentage / 70
+                                    If valp > maxVauePanc Then valp = maxVauePanc
                                     npanc += valp
                                 ElseIf probable(site).Players(keyp).Info = "" OrElse probable(site).Players(keyp).Info.Contains("allottag") Then
-                                    npanc += 0.8
+                                    npanc += maxVauePanc
                                 Else
-                                    npanc += 0.4
+                                    npanc += minVauePanc
                                 End If
                             Else
                                 If p.Ruolo = "P" Then
                                     npanc += 0.2
                                 ElseIf probable(site).Players(keyp).Info = "" OrElse probable(site).Players(keyp).Info.Contains("allottag") Then
-                                    npanc += 0.8
+                                    npanc += maxVauePanc
                                 Else
-                                    npanc += 0.4
+                                    npanc += minVauePanc
                                 End If
                             End If
                         ElseIf probable(site).Players(keyp).State = "Infortunato" Then
@@ -1281,16 +1276,16 @@ Namespace Torneo
 
                 If val > -10 Then
 
-                    val = (ntit * 1.39 + npanc) / nsitefound + 0.038
+                    val = (ntit * 1.34 + npanc) / nsitefound + 0.04
                     If val <= 0.1 AndAlso ninf < 2 AndAlso nsq < 2 AndAlso Giornata < 24 Then val = 0.5
 
                     If ninf > 2 OrElse (ninf >= nsitefound / 2 AndAlso Giornata > 24) Then
-                        val = 0.05
+                        val = 0.01
                     ElseIf nsq > 2 OrElse (nsq >= nsitefound / 2 AndAlso Giornata > 24) Then
-                        val = 0.05
+                        val = 0.01
                     End If
 
-                    If p.Nome = "BONNY" Then
+                    If p.Nome = "MORATA" Then
                         p.Nome = p.Nome
                     End If
 
@@ -1299,7 +1294,8 @@ Namespace Torneo
                             val = 1
                         Else
                             If p.Ruolo <> "P" Then
-                                val += p.Rating.Rating3 / 110 + p.Rating.Rating2 / 14000 + p.Minuti / 1800
+                                'val += p.Rating.Rating3 / 110 + p.Rating.Rating2 / 20000 + p.Minuti / 2400 + p.Titolare / 250
+                                val += p.Rating.Rating3 / 110 + p.Rating.Rating2 / 18000 + p.Minuti / 2000 + p.Titolare / 200
                             End If
                             If val > 0.98 Then
                                 If (p.Minuti > 220 AndAlso p.Rating.Rating3 > 10) Then
