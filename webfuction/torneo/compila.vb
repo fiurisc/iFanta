@@ -52,15 +52,18 @@ Namespace Torneo
                 Next
 
                 UpdateStatus("Salvataggio formazioni...", 5, max)
-                'forma.ApiDeleteFormazioni(giornata, "-1", False)
-                forma.SaveFormazioni(CInt(giornata), lst1, False)
+                forma.SaveFormazioni(CInt(giornata), lst1, Torneo.FormazioniData.TipoFormazioni.Regular)
 
                 'Compilazione dati top player'
                 UpdateStatus("Compilazione top formazioni...", 6, max)
-                Dim lst2 As List(Of FormazioniData.Formazione) = CompileTopFormazioni(giornata)
+                Dim lst2 As List(Of FormazioniData.Formazione) = CompileTopFlopFormazioni(giornata, True)
                 UpdateStatus("Salvataggio top formazioni...", 7, max)
-                'forma.ApiDeleteFormazioni(giornata, "-1", True)
-                forma.SaveFormazioni(CInt(giornata), lst2, True)
+                forma.SaveFormazioni(CInt(giornata), lst2, Torneo.FormazioniData.TipoFormazioni.Top)
+
+                UpdateStatus("Compilazione flop formazioni...", 6, max)
+                Dim lst3 As List(Of FormazioniData.Formazione) = CompileTopFlopFormazioni(giornata, False)
+                UpdateStatus("Salvataggio flop formazioni...", 7, max)
+                'forma.SaveFormazioni(CInt(giornata), lst3, Torneo.FormazioniData.TipoFormazioni.Flop)
 
                 ResetStatus()
 
@@ -159,7 +162,7 @@ Namespace Torneo
                                 Dim rigp As String = cell(28)
                                 Dim rigt As String = cell(29)
 
-                                If name.Contains("GIOVANE") Then
+                                If name.Contains("EDERSON") Then
                                     name = name
                                 End If
 
@@ -744,31 +747,30 @@ Namespace Torneo
 
         End Function
 
-        Public Sub CompileTopFormazioni(lst As List(Of FormazioniData.Formazione))
+        Public Sub CompileTopFlopFormazioni(lst As List(Of FormazioniData.Formazione), Optional Top As Boolean = True)
             For k As Integer = 0 To lst.Count - 1
                 lst(k).CambioModulo = 0
-                lst(k).Players = lst(k).Players.OrderByDescending(Function(x) x.Punti).ToList()
-                CompileTopFormazioni(lst(k))
+                'lst(k).Players = lst(k).Players.OrderByDescending(Function(x) x.Punti).ToList()
+                CompileTopFlopFormazioni(lst(k), Top)
             Next
         End Sub
 
-        Public Sub CompileTopFormazioni(forma As FormazioniData.Formazione, Optional ByRating As Boolean = False)
+        Public Sub CompileTopFlopFormazioni(forma As FormazioniData.Formazione, Optional Top As Boolean = True)
 
             Try
 
 
                 Dim modules As New List(Of String) From {"1-3-4-3", "1-3-5-2", "1-4-3-3", "1-4-4-2", "1-4-5-1", "1-5-3-2", "1-5-4-1"}
-                'Dim modules As New List(Of String) From {"1-4-4-2"}
                 Dim dicPuntiForma As New Dictionary(Of String, Integer)
                 Dim dicBonusForma As New Dictionary(Of String, Dictionary(Of String, Integer))
                 Dim dicRosaIdForma As New Dictionary(Of String, List(Of Integer))
 
                 For Each mudule As String In modules
 
-                    If ByRating Then
-                        forma.Players = forma.Players.OrderByDescending(Function(x) x.Voto).ToList()
-                    Else
+                    If Top Then
                         forma.Players = forma.Players.OrderByDescending(Function(x) x.Punti).ToList()
+                    Else
+                        forma.Players = forma.Players.Where(Function(x) x.Punti > -200).OrderBy(Function(x) x.Punti).ToList()
                     End If
 
                     dicPuntiForma.Add(mudule, 0)
@@ -797,31 +799,25 @@ Namespace Torneo
                         Dim n As Integer = 0
 
                         For Each p As FormazioniData.PlayerFormazione In forma.Players
-                            If p.Type <> -1 AndAlso p.Ruolo = r AndAlso (ByRating OrElse p.Punti > -100) Then
+                            If p.Type <> -1 AndAlso p.Ruolo = r AndAlso p.Punti > -200 Then
 
-                                If ByRating Then
-                                    dicPuntiForma(mudule) += p.Voto
-                                Else
-                                    dicPuntiForma(mudule) += p.Punti
-                                End If
+                                dicPuntiForma(mudule) += p.Punti
 
                                 dicRosaIdForma(mudule).Add(p.RosaId)
                                 n += 1
 
-                                If ByRating = False Then
-                                    Select Case p.Ruolo
-                                        Case "P" : np += 1
-                                        Case "D"
-                                            nd += 1
-                                            If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(p)
-                                        Case "C"
-                                            nc += 1
-                                            If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodc += GetGoodForBonus(p)
-                                        Case "A"
-                                            na += 1
-                                            If appSett.Settings.Bonus.EnableBonusDefense Then ndgooda += GetGoodForBonus(p)
-                                    End Select
-                                End If
+                                Select Case p.Ruolo
+                                    Case "P" : np += 1
+                                    Case "D"
+                                        nd += 1
+                                        If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodd += GetGoodForBonus(p)
+                                    Case "C"
+                                        nc += 1
+                                        If appSett.Settings.Bonus.EnableBonusDefense Then ndgoodc += GetGoodForBonus(p)
+                                    Case "A"
+                                        na += 1
+                                        If appSett.Settings.Bonus.EnableBonusDefense Then ndgooda += GetGoodForBonus(p)
+                                End Select
 
                                 If n = rdic(r) Then Exit For
                             End If
@@ -843,21 +839,18 @@ Namespace Torneo
                     dicPuntiForma(mudule) += (dicBonusForma(mudule)("D") + dicBonusForma(mudule)("C") + dicBonusForma(mudule)("A"))
                 Next
 
-                Dim maxpt As Integer = dicPuntiForma.Values.ToList().Max
-                Dim count As Integer = dicPuntiForma.Values.Where(Function(x) x = maxpt).Count
-
-                If count > 1 Then
-                    count = 0
-                End If
+                Dim maxp As Integer = dicRosaIdForma.Values.Max(Function(lst) lst.Count)
+                Dim goodmod As List(Of String) = dicRosaIdForma.Where(Function(x) x.Value.Count = maxp).Select(Function(x) x.Key).ToList()
+                Dim maxpt As Integer = If(Top, dicPuntiForma.Where(Function(kvp) goodmod.Contains(kvp.Key)).Max(Function(kvp) kvp.Value), dicPuntiForma.Where(Function(kvp) goodmod.Contains(kvp.Key)).Min(Function(kvp) kvp.Value))
 
                 For Each key As String In dicPuntiForma.Keys
-                    If dicPuntiForma(key) = maxpt Then
+                    If dicPuntiForma(key) = maxpt AndAlso dicRosaIdForma(key).Count = maxp Then
 
                         Dim np As Integer = 0
                         Dim indf As Integer = 1
 
                         forma.Players = forma.Players.OrderBy(Function(x) x.RosaId).ToList()
-
+                        forma.Punti = dicPuntiForma(key)
                         'Determino i titolari'
                         For Each p As FormazioniData.PlayerFormazione In forma.Players
                             If p.Type <> -1 Then p.Type = 0
@@ -890,9 +883,9 @@ Namespace Torneo
 
         End Sub
 
-        Private Function CompileTopFormazioni(giornata As String) As List(Of FormazioniData.Formazione)
-            Dim lst As List(Of FormazioniData.Formazione) = forma.GetFormazioni(giornata, "-1", False)
-            CompileTopFormazioni(lst)
+        Private Function CompileTopFlopFormazioni(giornata As String, Optional Top As Boolean = True) As List(Of FormazioniData.Formazione)
+            Dim lst As List(Of FormazioniData.Formazione) = forma.GetFormazioni(giornata, "-1", Torneo.FormazioniData.TipoFormazioni.Regular)
+            CompileTopFlopFormazioni(lst, Top)
             Return lst
         End Function
 

@@ -217,6 +217,10 @@ Namespace Torneo
             Return (Math.Exp(-lambda) * Math.Pow(lambda, k)) / Factorial(k)
         End Function
 
+        Public Shared Function PoissonProbNeg(k As Integer, lambda As Double) As Double
+            Return (Math.Exp(-lambda) * Math.Pow(-lambda, k)) / Factorial(k)
+        End Function
+
         Public Shared Function Factorial(n As Integer) As Long
             If n <= 1 Then Return 1
             Return n * Factorial(n - 1)

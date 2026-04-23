@@ -196,7 +196,7 @@ Namespace Torneo
                 For Each key In newdata.Keys
                     Dim p As PlayerDataItem = newdata(key)
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer_data (ruolo, nome, squadra, nat, natcode, anni, birthday, altezza, peso) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione & "','" & p.NatCode & "'," & p.Anni & ",'" & p.Compleanno & "','" & p.Altezza & "','" & p.Peso & "')")
+                        sqlinsert.Add("INSERT INTO tbplayer_data (ruolo, nome, squadra, nat, natcode, anni, birthday, altezza, peso) values ('" & p.Ruolo & "','" & p.Nome & "','" & p.Squadra & "','" & p.Nazione.Replace("'", "''") & "','" & p.NatCode & "'," & p.Anni & ",'" & p.Compleanno & "','" & p.Altezza & "','" & p.Peso & "')")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
@@ -209,7 +209,7 @@ Namespace Torneo
 
                 For Each g In olddata.Keys
                     If olddata(g).RecordId <> -1 Then
-                        sqldelete.Add("DELETE FROM tbplayer WHERE id=" & olddata(g).RecordId)
+                        sqldelete.Add("DELETE FROM tbplayer_data WHERE id=" & olddata(g).RecordId)
                     End If
                 Next
 

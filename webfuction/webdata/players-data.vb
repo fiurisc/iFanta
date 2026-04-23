@@ -91,8 +91,11 @@ Namespace WebData
                                         End If
 
                                         If NatCode = "SCT" Then NatCode = "GBR"
+                                        If NatCode = "CIV" Then NatCode = "CIV"
 
                                         If dicNatCode.ContainsKey(NatCode) Then nat = dicNatCode(NatCode) Else nat = ""
+
+                                        nat = Functions.NormalizeText(nat)
 
                                         If role = "Goalkeeper" Then
                                             role = "P"

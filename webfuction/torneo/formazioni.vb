@@ -1,4 +1,5 @@
 ﻿Imports System.Data
+Imports System.Windows.Forms.VisualStyles
 
 Namespace Torneo
 
@@ -6,31 +7,37 @@ Namespace Torneo
 
         Dim appSett As New PublicVariables
 
+        Enum TipoFormazioni As Integer
+            Regular = 0
+            Top = 1
+            Flop = 2
+        End Enum
+
         Sub New(appSett As PublicVariables)
             Me.appSett = appSett
         End Sub
 
-        Public Function ApiAddFormazioni(Day As String, TeamId As String, Top As Boolean, json As String) As String
+        Public Function ApiAddFormazioni(Day As String, TeamId As String, Type As TipoFormazioni, json As String) As String
 
             If json = "" Then Throw New Exception("Json not valid")
 
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Inserimento formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Inserimento formazione giornata: " & Day & " per il team: " & TeamId & " type: " & Type.ToString())
 
-            Dim tb As String = If(Top, "tbformazionitop", "tbformazioni")
+            Dim tb As String = GetTableName(Type)
             Dim mData As MetaData = WebData.Functions.DeserializeJson(Of MetaData)(json)
 
             If mData.teamId <> TeamId Then Throw New Exception("Json not related to right teamid")
 
             If mData IsNot Nothing AndAlso mData.data.Count > 0 Then
-                SaveFormazioni(CInt(Day), mData.data, False)
+                SaveFormazioni(CInt(Day), mData.data, Type)
             End If
 
             Return ""
 
         End Function
 
-        Public Sub ApiDeleteFormazioni(Day As String, TeamId As String, Top As Boolean)
-            DeleteFormazioni(Day, TeamId, If(Top, "tbformazionitop", "tbformazioni"))
+        Public Sub ApiDeleteFormazioni(Day As String, TeamId As String, Type As TipoFormazioni)
+            DeleteFormazioni(Day, TeamId, GetTableName(Type))
         End Sub
 
         Public Sub DeleteFormazioni(Day As String, TeamId As String, Table As String)
@@ -38,14 +45,14 @@ Namespace Torneo
             Functions.ExecuteSql(appSett, "DELETE FROM " & Table & " WHERE gio=" & Day & If(TeamId <> "-1", " AND idteam=" & TeamId, ""))
         End Sub
 
-        Public Function ApiGetFormazione(Day As String, TeamId As String, Top As Boolean) As String
+        Public Function ApiGetFormazione(Day As String, TeamId As String, Type As TipoFormazioni) As String
 
             Dim json As String = ""
 
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazione giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazione giornata: " & Day & " per il team: " & TeamId & " Type: " & Type.ToString())
 
             Try
-                Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Top)
+                Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Type)
                 If list.Count > 0 Then
                     Return WebData.Functions.SerializzaOggetto(list(0), True)
                 Else
@@ -59,14 +66,14 @@ Namespace Torneo
 
         End Function
 
-        Public Function ApiGetFormazioni(Day As String, TeamId As String, Top As Boolean) As String
+        Public Function ApiGetFormazioni(Day As String, TeamId As String, Type As TipoFormazioni) As String
 
             Dim json As String = ""
 
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazioni giornata: " & Day & " per il team: " & TeamId & " top: " & Top.ToString())
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazioni giornata: " & Day & " per il team: " & TeamId & " Type: " & Type.ToString())
 
             Try
-                Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Top)
+                Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Type)
                 Dim dicForma As Dictionary(Of String, Formazione) = list.ToDictionary(Function(x) x.TeamId.ToString(), Function(x) x)
                 Return WebData.Functions.SerializzaOggetto(dicForma, True)
             Catch ex As Exception
@@ -85,9 +92,8 @@ Namespace Torneo
             End Try
         End Sub
 
-        Public Sub SaveFormazioni(day As Integer, lst As List(Of Formazione), top As Boolean)
-            Dim tb As String = If(top, "tbformazionitop", "tbformazioni")
-            SaveFormazioni(day, lst, tb)
+        Public Sub SaveFormazioni(day As Integer, lst As List(Of Formazione), Type As TipoFormazioni)
+            SaveFormazioni(day, lst, GetTableName(Type))
         End Sub
 
         Public Sub SaveFormazioni(day As Integer, lst As List(Of Formazione), Table As String)
@@ -144,8 +150,8 @@ Namespace Torneo
 
         End Sub
 
-        Public Function GetFormazione(Day As String, TeamId As String, Top As Boolean) As Formazione
-            Dim list As List(Of Formazione) = GetFormazioniFromDb(Day, TeamId, If(Top, "formazioni_top", "formazioni"))
+        Public Function GetFormazione(Day As String, TeamId As String, Type As TipoFormazioni) As Formazione
+            Dim list As List(Of Formazione) = GetFormazioniFromDb(Day, TeamId, GetTableName(Type))
             If list.Count > 0 Then
                 Return list(0)
             Else
@@ -153,8 +159,8 @@ Namespace Torneo
             End If
         End Function
 
-        Public Function GetFormazioni(Day As String, TeamId As String, Top As Boolean) As List(Of Formazione)
-            Return GetFormazioni(Day, TeamId, If(Top, "formazioni_top", "formazioni"))
+        Public Function GetFormazioni(Day As String, TeamId As String, Type As TipoFormazioni) As List(Of Formazione)
+            Return GetFormazioni(Day, TeamId, GetTableName(Type))
         End Function
 
         Public Function GetFormazioni(Day As String, TeamId As String, Table As String) As List(Of Formazione)
@@ -210,6 +216,18 @@ Namespace Torneo
             forma.Punti += forma.BonusAttacco
 
         End Sub
+
+        Public Shared Function GetModule(pList As List(Of PlayerFormazione)) As ModuloFormazione
+            Dim modf As New ModuloFormazione
+            For Each p As PlayerFormazione In pList
+                Select Case p.Ruolo
+                    Case "D" : modf.Difensori += 1
+                    Case "C" : modf.Centrocampisti += 1
+                    Case "A" : modf.Attaccanti += 1
+                End Select
+            Next
+            Return modf
+        End Function
 
         Private Function GetFormazioniFromDb(Day As String, TeamId As String, Table As String) As List(Of Formazione)
 
@@ -267,6 +285,16 @@ Namespace Torneo
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
             Return list.Values.ToList()
+        End Function
+
+        Private Function GetTableName(Type As TipoFormazioni) As String
+            If Type = TipoFormazioni.Top Then
+                Return "tbformazionitop"
+            ElseIf Type = TipoFormazioni.Flop Then
+                Return "tbformazioniflop"
+            Else
+                Return "tbformazioni"
+            End If
         End Function
 
         <Serializable()>

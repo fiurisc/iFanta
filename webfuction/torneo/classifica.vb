@@ -290,7 +290,7 @@ Namespace Torneo
                     Dim citem As New StoricoDatiItem
                     citem.Pt = CInt(ds.Tables(0).Rows(i).Item("pt")) / 10
                     citem.PuntiPersi = CInt(ds.Tables(0).Rows(i).Item("ptmax")) / 10 - citem.Pt
-                    citem.PercentualePuntiPersi = CInt(citem.PuntiPersi * 1000 / citem.Pt) / 10
+                    citem.PercentualePuntiPersi = If(citem.Pt > 0, CInt(citem.PuntiPersi * 1000 / citem.Pt) / 10, 0)
                     citem.Ammonizioni = CInt(ds.Tables(0).Rows(i).Item("amm"))
                     citem.Espulsioni = CInt(ds.Tables(0).Rows(i).Item("esp"))
                     citem.Assist = CInt(ds.Tables(0).Rows(i).Item("ass"))

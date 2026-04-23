@@ -44,7 +44,7 @@ Namespace WebData
             Players.Data.LoadPlayers(appSett, False)
 
             For Each site As String In sites
-                If site = "gazzetta" OrElse site = "" Then str.Append(GetGazzetta(show))
+                If site = "gazzetta" OrElse site = "" Then str.Append(GetGazzetta(show, Giornata <> -1, Giornata))
                 If site = "fantacalcio" OrElse site = "" Then str.Append(GetFantacalcio(show, Giornata <> -1, Giornata))
                 If site = "pianetafantacalcio" OrElse site = "" Then str.Append(GetPianetaFantacalcio(show, Giornata <> -1, Giornata))
                 If site = "sky" OrElse site = "" Then str.Append(GetSky(show, Giornata <> -1, Giornata))
@@ -56,13 +56,15 @@ Namespace WebData
 
         End Function
 
-        Sub BackupPlayerQuotes(giornata As Integer)
+        Sub BackupPlayerQuotesAndRose(giornata As Integer)
             Dim pquotes As New PlayersQuotes(appSett)
             Dim fdatapq As String = pquotes.GetDataFileName()
             Dim dirback As String = dirData & giornata
             If IO.Directory.Exists(dirback) = False Then IO.Directory.CreateDirectory(dirback)
             Dim fdatapqsback As String = dirback & "\" & Path.GetFileName(fdatapq)
             IO.File.Copy(fdatapq, fdatapqsback, True)
+            Dim rose As New Torneo.RoseData(appSett)
+            rose.BackupRose(giornata)
         End Sub
 
         Function GetDataFileName(site As String, Optional giornata As Integer = -1) As String

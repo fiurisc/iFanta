@@ -12,6 +12,7 @@ Namespace WebData
             'Public Shared keyplayers As New Dictionary(Of String, WebPlayerKey)
             'squadra/ruolo/key/nome
             Public Shared keyplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, String)))
+            Public Shared keyplayersNew As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, String)))
 
             Public Shared Sub ResetCacheData()
                 players.Clear()
@@ -78,50 +79,52 @@ Namespace WebData
 
             Private Shared Function GetKeyWordList(Name As String, fromPlayer As Boolean) As List(Of String)
 
-                Dim keylist As New List(Of String)
-                Dim NameOptions As New List(Of String) From {Name}
+                Return New List(Of String) From {Name}
 
-                If Name.Contains("ANGUISSA") Then
-                    Name = Name
-                End If
-                If Name.Contains("’") Then
-                    NameOptions.Add(Name.Replace("’", ""))
-                End If
+                'Dim keylist As New List(Of String)
+                'Dim NameOptions As New List(Of String) From {Name}
 
-                For Each n As String In NameOptions
-                    If n.Contains(" ") Then
+                'If Name.Contains("ANGUISSA") Then
+                '    Name = Name
+                'End If
+                'If Name.Contains("’") Then
+                '    NameOptions.Add(Name.Replace("’", ""))
+                'End If
 
-                        Dim parts = n.Trim().Split({" "}, StringSplitOptions.RemoveEmptyEntries)
-                        Dim pattern As String = "^(.+)\s+(\S+)$"
-                        Dim m As Match = Regex.Match(n.ToUpper(), pattern)
+                'For Each n As String In NameOptions
+                '    If n.Contains(" ") Then
 
-                        If m.Success Then
+                '        Dim parts = n.Trim().Split({" "}, StringSplitOptions.RemoveEmptyEntries)
+                '        Dim pattern As String = "^(.+)\s+(\S+)$"
+                '        Dim m As Match = Regex.Match(n.ToUpper(), pattern)
 
-                            Dim cognome As String = m.Groups(1).Value.Trim()
-                            Dim nome As String = m.Groups(2).Value.Trim()
+                '        If m.Success Then
 
-                            Try
-                                keylist.Add(cognome)
-                                keylist.Add(cognome & "/" & nome)
-                                keylist.Add(cognome & "/" & nome.Substring(0, 1))
-                                If nome.Length > 3 Then
-                                    keylist.Add(nome)
-                                    keylist.Add(nome & "/" & cognome)
-                                    keylist.Add(nome & "/" & cognome.Substring(0, 1))
-                                End If
-                            Catch ex As Exception
-                                nome = Name
-                            End Try
+                '            Dim cognome As String = m.Groups(1).Value.Trim()
+                '            Dim nome As String = m.Groups(2).Value.Trim()
 
-                        End If
+                '            Try
+                '                keylist.Add(cognome)
+                '                keylist.Add(cognome & "/" & nome)
+                '                keylist.Add(cognome & "/" & nome.Substring(0, 1))
+                '                If nome.Length > 3 Then
+                '                    keylist.Add(nome)
+                '                    keylist.Add(nome & "/" & cognome)
+                '                    keylist.Add(nome & "/" & cognome.Substring(0, 1))
+                '                End If
+                '            Catch ex As Exception
+                '                nome = Name
+                '            End Try
 
-                    End If
+                '        End If
 
-                    If keylist.Contains(n) = False Then keylist.Add(n.Replace(".", ""))
+                '    End If
 
-                Next
+                '    If keylist.Contains(n) = False Then keylist.Add(n.Replace(".", ""))
 
-                Return keylist.Distinct().ToList()
+                'Next
+
+                'Return keylist.Distinct().ToList()
 
             End Function
 
@@ -133,7 +136,7 @@ Namespace WebData
                 Return ResolveName(Role, Name, Team, wp, FindAllTeam, True)
             End Function
 
-            Public Shared Function ResolveName(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
+            Public Shared Function ResolveName1(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
 
                 If Name.Contains("LAUTARO") Then
                     Name = Name
@@ -142,7 +145,7 @@ Namespace WebData
                 Name = Name.Replace("MILINKOVIC-SAVIC", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC").Replace("DEL PRATO", "DELPRATO").Replace("DEL PRATO", "DELPRATO")
                 Name = Name.Replace("P.ESPOSITO", "ESPOSITO F.P.")
                 Name = Name.Replace("ROBERTO S.", "SERGI ROBERTO.")
-                Name = Name.Replace("JESUS J.", "JUAN JESUS").Replace("LAUTARO MARTÍNEZ", "MARTINEZ L.")
+                Name = Name.Replace("JESUS J.", "JUAN JESUS").Replace("LAUTARO MARTÍNEZ", "MARTINEZ L.").Replace("LAUTARO", "MARTINEZ L.")
 
                 Name = Name.ToUpper().Trim()
                 Name = Functions.NormalizeText(Name)
@@ -194,43 +197,65 @@ Namespace WebData
                     End If
                 Next
 
-                'If keyplayers.ContainsKey(Team) Then
+                If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
 
+                Return pm
 
+            End Function
 
+            Public Shared Function ResolveName(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
 
-                '    Dim macthlist As New SortedDictionary(Of Integer, List(Of Players.WebPlayerKeyMatch))
-                '    Dim macth As New Players.WebPlayerKeyMatch
-                '    If Role <> "" Then macth = CheckName(keyplayers(Team)(Role), Team, keylist)
-                '    If macth Is Nothing OrElse macth.Name = "" Then
-                '        macth = CheckName(keyplayers(Team), Team, keylist)
-                '    End If
+                If Name.Contains("N’DRI K.") Then
+                    Name = Name
+                End If
 
-                '    If macth IsNot Nothing Then
-                '        If macthlist.ContainsKey(macth.KeyLength) = False Then macthlist.Add(macth.KeyLength, New List(Of Players.WebPlayerKeyMatch))
-                '        macthlist(macth.KeyLength).Add(macth)
-                '    ElseIf FindAllTeam Then
-                '        For Each t As String In keyplayers.Keys
-                '            macth = CheckName(keyplayers(t)(Role), t, keylist)
-                '            If macth IsNot Nothing Then
-                '                If macth.Name = Name Then macth.KeyLength = Name.Length
-                '                If macthlist.ContainsKey(macth.KeyLength) = False Then macthlist.Add(macth.KeyLength, New List(Of Players.WebPlayerKeyMatch))
-                '                macthlist(macth.KeyLength).Add(macth)
-                '            End If
-                '        Next
-                '    End If
+                Name = Name.Replace("MILINKOVIC-SAVIC", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC").Replace("DEL PRATO", "DELPRATO").Replace("DEL PRATO", "DELPRATO")
+                Name = Name.Replace("P.ESPOSITO", "ESPOSITO F.P.")
+                Name = Name.Replace("ROBERTO S.", "SERGI ROBERTO.").Replace("GABRIEL T.", "TIAGO GABRIEL")
+                Name = Name.Replace("CARLOS D.", "DIEGO CARLOS").Replace("ANGUISSA A.", "ZAMBO ANGUISSA")
+                Name = Name.Replace("JESUS J.", "JUAN JESUS").Replace("LAUTARO MARTÍNEZ", "MARTINEZ L.").Replace("LAUTARO", "MARTINEZ L.")
 
-                '    If macthlist.Keys.Count > 0 Then
-                '        Dim key(macthlist.Keys.Count - 1) As Integer
-                '        macthlist.Keys.CopyTo(key, 0)
-                '        If macthlist(key(key.Length - 1)).Count = 1 Then
-                '            pm.MatchedPlayer = New Players.WebPlayer(macthlist(key(key.Length - 1))(0).Role, macthlist(key(key.Length - 1))(0).Name, macthlist(key(key.Length - 1))(0).Team)
-                '        End If
-                '    End If
+                Name = Name.ToUpper().Trim()
+                Name = Functions.NormalizeText(Name)
 
-                'End If
+                Dim pm As New Players.PlayerMatch(Role, Name, Team)
+                Dim dicRes As SortedDictionary(Of Integer, List(Of WebPlayer)) = New SortedDictionary(Of Integer, List(Of WebPlayer))
+
+                Dim nameList As New List(Of String) From {Name.Replace("’", "")}
+
+                If Name.Contains(" ") Then
+                    nameList.AddRange(Name.Replace("’", "").Split(CChar(" ")).ToList())
+                End If
+                nameList.RemoveAll(Function(n) n.Length < 3)
+
+                For Each t As String In keyplayers.Keys
+                    If Team = "" OrElse t = Team Then
+                        For Each r As String In keyplayers(t).Keys
+                            If Role = "" OrElse r = Role Then
+                                For Each pname As String In keyplayers(t)(r).Keys
+
+                                    Dim pnameList As List(Of String) = pname.Replace("’", "").Split(CChar(" ")).ToList()
+                                    pnameList.RemoveAll(Function(n) n.Length < 3)
+
+                                    If nameList.Intersect(pnameList).ToList().Count > 0 Then
+                                        Dim res As Integer = LevenshteinDistance(Name, pname.Trim().Replace(".", ""))
+                                        If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
+                                        dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
+                                    End If
+
+                                Next
+                            End If
+                        Next
+                    End If
+                Next
+
+                If dicRes.Count > 0 Then
+                    pm.MatchedPlayer = dicRes(dicRes.Keys.First()).First()
+                End If
 
                 If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
+
+                dicRes.Clear()
 
                 Return pm
 
@@ -338,7 +363,52 @@ Namespace WebData
             '    End If
             '    Return Nothing
             'End Function
+
+            Public Shared Function LevenshteinDistance(ByVal s As String, ByVal t As String) As Integer
+
+                Dim n As Integer = s.Length
+                Dim m As Integer = t.Length
+                Dim d(n + 1, m + 1) As Integer
+
+                If n = 0 Then
+                    Return m
+                End If
+
+                If m = 0 Then
+                    Return n
+                End If
+
+                Dim i As Integer
+                Dim j As Integer
+
+                For i = 0 To n
+                    d(i, 0) = i
+                Next
+
+                For j = 0 To m
+                    d(0, j) = j
+                Next
+
+                For i = 1 To n
+                    For j = 1 To m
+
+                        Dim cost As Integer
+                        If t(j - 1) = s(i - 1) Then
+                            cost = 0
+                        Else
+                            cost = 1
+                        End If
+
+                        d(i, j) = Math.Min(Math.Min(d(i - 1, j) + 1, d(i, j - 1) + 1),
+                                   d(i - 1, j - 1) + cost)
+                    Next
+                Next
+
+                Return d(n, m)
+            End Function
+
         End Class
+
 
         Public Class WebPlayer
 

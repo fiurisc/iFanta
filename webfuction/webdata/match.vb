@@ -248,6 +248,46 @@ Namespace WebData
             End Try
         End Sub
 
+        Public Sub UpdateDataFromFile(Giornata As String)
+
+            Dim mdata As New Torneo.MatchsData(appSett)
+
+            Dim fpday As String = GetMatchPlayersDayFileName(appSett, Giornata)
+            Dim feday As String = GetMatchEventsDayFileName(appSett, Giornata)
+
+            If IO.File.Exists(fpday) Then
+                Dim pdata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
+                Dim dicdata As Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))) = Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))(IO.File.ReadAllText(fpday))
+                pdata.Add(Giornata, New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer))))
+                For Each mid As String In dicdata.Keys
+                    pdata(Giornata).Add(mid, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchPlayer)))
+                    For Each t As String In dicdata(mid).Keys
+                        pdata(Giornata)(mid).Add(t, New Dictionary(Of String, Torneo.MatchsData.MatchPlayer))
+                        For Each n As String In dicdata(mid)(t).Keys
+                            pdata(Giornata)(mid)(t).Add(n, dicdata(mid)(t)(n))
+                        Next
+                    Next
+                Next
+                mdata.UpdateMatchsDataPlayers(pdata)
+            End If
+
+            'If IO.File.Exists(feday) Then
+            '    Dim edata As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
+            '    Dim dicdata As Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)) = Functions.DeserializeJson(Of Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)))(IO.File.ReadAllText(feday))
+            '    edata.Add(Giornata, New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent))))
+            '    For Each mid As String In dicdata.Keys
+            '        edata(Giornata).Add(mid, New Dictionary(Of String, Dictionary(Of String, Torneo.MatchsData.MatchEvent)))
+            '        For Each t As String In dicdata(mid).Keys
+            '            If edata(Giornata)(mid).ContainsKey(t) = False Then edata(Giornata)(mid).Add(t, New Dictionary(Of String, Torneo.MatchsData.MatchEvent))
+            '            'edata(Giornata)(mid)(t).Add(dicdata(mid)(t).Nome, dicdata(mid)(t))
+            '        Next
+            '    Next
+            '    'mdata.UpdateMatchsDataPlayers(pdata)
+            'End If
+
+            'mdata.UpdateMatchsDataEvents(matchsevent)
+        End Sub
+
         Private Sub GetMatchsDay()
             Try
                 'Determino la giornata di riferimento'

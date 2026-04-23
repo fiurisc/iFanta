@@ -162,7 +162,7 @@ Namespace Torneo
             Dim m As New Match
 
             Try
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbmatch WHERE gio=" & day & " AND idmatch=" & MatchId)
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbmatch WHERE (gio=" & day & " OR " & day & "=-2 AND idmatch=" & MatchId)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
