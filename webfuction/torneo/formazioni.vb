@@ -7,7 +7,7 @@ Namespace Torneo
 
         Dim appSett As New PublicVariables
 
-        Enum TipoFormazioni As Integer
+        Public Enum TipoFormazioni As Integer
             Regular = 0
             Top = 1
             Flop = 2
@@ -357,6 +357,7 @@ Namespace Torneo
             Public Property RigoriTirati() As Integer = 0
             Public Property RigoriSbagliati() As Integer = 0
             Public Property RigoriParati() As Integer = 0
+            Public Property qIni() As Integer = 0
             Public Property Punti As Integer = 0
             Public Property Rating As New AutoFormazioniData.PlayerAutoFormazione.Ratings
         End Class

@@ -14,7 +14,7 @@
 '            Dim enc As String = "utf-8"
 '            Dim currgg As Integer = -1
 '            Dim sr As New IO.StreamWriter(filel)
-'            Dim rmsg As String = ""
+'            Dim rmsg As String = ""    
 '            Try
 
 '                Players.Data.LoadPlayers(False)

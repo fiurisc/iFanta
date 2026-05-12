@@ -108,7 +108,7 @@ Namespace Torneo
                     End If
 
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,ruolomantra,ruolomantraa,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.RuoloMantra & "','" & p.RuoloMantraS & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
+                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,ruolomantra,ruolomantras,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.RuoloMantra & "','" & p.RuoloMantraS & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
