@@ -283,7 +283,7 @@ Public Class Form1
         Dim comp As New Torneo.CompilaData(appSett)
 
         Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        'Dim team As List(Of Integer) = Enumerable.Range(6, 1).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(4, 1).ToList()
 
         Dim histData As New Dictionary(Of Integer, List(Of Torneo.AutoFormazioniData.AutoFormazione))
 

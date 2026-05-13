@@ -692,7 +692,7 @@ Namespace Torneo
                 Dim sqf As String = If(Giornata > MaxDayInArchive, "tb.sqp", "tb.sqf")
                 Dim tbwhere As String = If(Giornata > MaxDayInArchive, "tb.idteam=" & IdTeam, "tb.idteam=" & IdTeam & " And tb.gio=" & GetLastFormationDay(Giornata, IdTeam) & " And tb.type<3")
                 'Dim dec As String = "exp(-0.1*(" & daydata & "-tbd.gio))"
-                'Dim dec As String = "0.7^(" & daydata & "-tbd.gio)"
+                'Dim dec As String = "0.999995^(" & daydata & "-tbd.gio)"
                 Dim dec As String = "1"
 
                 If daydata = 0 Then
@@ -751,8 +751,8 @@ Namespace Torneo
                     sqlstr.AppendLine("SELECT tb.*,tbd.pt as lastpt FROM (")
                     sqlstr.AppendLine("  SELECT tb.*,tbm.teama,teamb,iif(tb.sqp=teama,1,0) as home,timem,iif(CDate(timem)>Now(),1,0) as available,DateDiff('h', Now(), CDate(timem)) AS tleft FROM (")
                     sqlstr.AppendLine("   SELECT tb.*,tbp.ruolomantras,tbp.qini,tbp.qcur,iif(tb.sqf is null or tb.sqf='',tbp.squadra,tb.sqf) as sqp FROM (")
-                    sqlstr.AppendLine("    SELECT tb.idrosa,tb.ruolo, tb.nome,tb.sqf,sum(tb.amm) as amm,sum(tb.esp) as esp,sum(tb.gf) as gf,sum(tb.gs) as gs,sum(tb.ass) as ass,sum(tb.rigt) as rigt,IIf(Sum(tb.pt)>0,CInt(avg(tb.pt)),0) AS avg_pt,sum(tb.ptn) as ptn,IIf(Sum(tb.ptn)>0,sum(tb.ptn)/sum(tb.pgio),0) AS avg_ptn, IIf(Sum(tb.voto)>0,CInt(Avg(tb.voto)),0) AS avg_vt, Count(*) AS pgio, Sum(tbt.tit) AS tit, Sum(tbt.sos) AS sos, Sum(tbt.sub) AS sub, Sum(tbt.mm*" & varp & ") AS mm, iif(Sum(tbt.mm) > 0,CInt (Sum(tbt.mm)) / " & var0 & ",0 ) AS avg_mm FROM (")
-                    sqlstr.AppendLine("     SELECT tb.idrosa,tb.ruolo,tb.nome," & If(tbref = "tbrose", "null", "tb.squadra") & " as sqf,tbd.gio,tbd.amm as amm,tbd.esp as esp,tbd.gf as gf,tbd.gs as gs,tbd.ass as ass,tbd.rigt as rigt,tbd.pt," & dec & "*(tbd.voto+tbd.gf*30+tbd.ass*10) as ptn,iif(tbd.voto > -200," & dec & ",0) as pgio,tbd.voto")
+                    sqlstr.AppendLine("    SELECT tb.idrosa,tb.ruolo, tb.nome,tb.sqf,sum(tb.amm) as amm,sum(tb.esp) as esp,sum(tb.gf) as gf,sum(tb.gs) as gs,sum(tb.ass) as ass,sum(tb.rigt) as rigt,IIf(Sum(tb.pt)>0,CInt(avg(tb.pt)),0) AS avg_pt,sum(tb.ptn) as ptn,IIf(Sum(tb.ptn)>0,cint(sum(tb.ptn)/sum(tb.pgio)),0) AS avg_ptn, IIf(Sum(tb.voto)>0,CInt(Avg(tb.voto)),0) AS avg_vt, Count(*) AS pgio, Sum(tbt.tit) AS tit, Sum(tbt.sos) AS sos, Sum(tbt.sub) AS sub, Sum(tbt.mm*" & varp & ") AS mm, iif(Sum(tbt.mm) > 0,CInt(Sum(tbt.mm)) / " & var0 & ",0 ) AS avg_mm FROM (")
+                    sqlstr.AppendLine("     SELECT tb.idrosa,tb.ruolo,tb.nome," & If(tbref = "tbrose", "null", "tb.squadra") & " as sqf,tbd.gio,tbd.amm as amm,tbd.esp as esp,tbd.gf as gf,tbd.gs as gs,tbd.ass as ass,tbd.rigt as rigt,tbd.pt," & dec & "*(tbd.voto+tbd.gf*30+tbd.ass*10) as ptn," & dec & " as pgio,tbd.voto")
                     sqlstr.AppendLine("     FROM " & tbref & " as tb")
                     sqlstr.AppendLine("     LEFT JOIN tbdati as tbd on (tbd.nome=tb.nome AND tbd.pt > -100 AND tbd.gio >" & minData2 & " and tbd.gio<=" & daydata & ")")
                     sqlstr.AppendLine("     WHERE " & tbwhere & ") as tb")
@@ -1516,51 +1516,59 @@ Namespace Torneo
                                     val = 0.976
                                 End If
                             End If
-                            If p.Nome = "BONNY" Then
+                            If p.Nome = "GUEYE" Then
                                 p.Nome = p.Nome
                             End If
 
-                            If p.Minuti > 220 OrElse p.qIni > 15 Then
-                                If val < 0.92 Then val = 0.92
-                                If p.qIni > 20 AndAlso p.Rating.Rating2 > Parameters.MatchWidth * 0.65 AndAlso p.Rating.Rating3 >= 2 Then
-                                    If val < 0.93 Then val = 0.93
-                                Else
+                            If val < 94 Then
+                                If p.Minuti > 220 OrElse (p.qIni > 15 OrElse p.qCur > 15) Then
                                     If val < 0.92 Then val = 0.92
-                                End If
-                            ElseIf p.Minuti > 110 Then ' OrElse (p.Rating.Rating2 >= 60 AndAlso p.Rating.Rating3 >= 1)
-                                If p.qIni > 12 AndAlso p.Rating.Rating2 > Parameters.MatchWidth * 0.55 AndAlso p.Rating.Rating3 >= 2 Then
-                                    If val < 0.93 Then val = 0.93
-                                Else
-                                    If val < 0.89 Then val = 0.89
-                                End If
-                            Else
-                                If p.Ruolo = "A" Then
-                                    If val < 0.83 Then
-                                        If p.Rating.Rating2 > Parameters.MatchWidth * 0.65 Then
-                                            val = 0.85
-                                        Else
-                                            val = 0.83
-                                        End If
+                                    If p.qIni > 20 AndAlso p.Rating.Rating2 > Parameters.MatchWidth * 0.65 AndAlso p.Rating.Rating3 >= 2 Then
+                                        If val < 0.93 Then val = 0.93
+                                    Else
+                                        If val < 0.92 Then val = 0.92
                                     End If
-                                    'If val < 0.83 Then val = 0.83
-                                ElseIf p.Ruolo = "C" Then
-                                    If val < 0.85 Then
-                                        If p.Rating.Rating2 > Parameters.MatchWidth * 0.65 Then
-                                            val = 0.87
-                                        Else
-                                            val = 0.85
+                                ElseIf p.Minuti > 110 Then ' OrElse (p.Rating.Rating2 >= 60 AndAlso p.Rating.Rating3 >= 1)
+                                    If (p.qIni > 12 OrElse p.qCur > 12) AndAlso p.Rating.Rating2 > Parameters.MatchWidth * 0.55 AndAlso p.Rating.Rating3 >= 2 Then
+                                        If val < 0.93 Then val = 0.93
+                                    ElseIf p.Rating.Rating2 > Parameters.MatchWidth * 0.75 Then
+                                        If val < 0.9 Then
+                                            val = 0.9
+                                            val += p.Rating.Rating2 / Parameters.MatchWidth * 0.03
                                         End If
+                                    Else
+                                        If val < 0.89 Then val = 0.89
                                     End If
                                 Else
-                                    If val < 0.85 Then
-                                        If p.Rating.Rating2 > Parameters.MatchWidth * 0.65 Then
-                                            val = 0.89
-                                        Else
-                                            val = 0.85
+                                    If p.Ruolo = "A" Then
+                                        If val < 0.83 Then
+                                            If p.Rating.Rating2 > Parameters.MatchWidth * 0.65 Then
+                                                val = 0.85
+                                            Else
+                                                val = 0.83
+                                            End If
+                                        End If
+                                        'If val < 0.83 Then val = 0.83
+                                    ElseIf p.Ruolo = "C" Then
+                                        If val < 0.85 Then
+                                            If p.Rating.Rating2 > Parameters.MatchWidth * 0.65 Then
+                                                val = 0.87
+                                            Else
+                                                val = 0.85
+                                            End If
+                                        End If
+                                    Else
+                                        If val < 0.85 Then
+                                            If p.Rating.Rating2 > Parameters.MatchWidth * 0.65 Then
+                                                val = 0.89
+                                            Else
+                                                val = 0.85
+                                            End If
                                         End If
                                     End If
                                 End If
                             End If
+
                         End If
 
                     ElseIf val < 0.5 Then
@@ -1739,14 +1747,11 @@ Namespace Torneo
                 End If
             Next
             'If dicPlayersForRole.ContainsKey("A") AndAlso dicPlayersForRole("A").Count > 1 Then
-            '    'dicPlayersForRole("A")(0).Rating.Total1 = CInt(dicPlayersForRole("A")(0).Rating.Total1 * 0.8)
-            '    'recalculate = True
             '    dicPlayersForRole("A") = dicPlayersForRole("A").OrderByDescending(Function(x) x.Rating.Rating6).ThenBy(Function(x) x.Rating.Total1).ToList()
             '    For i As Integer = 1 To dicPlayersForRole("A").Count - 1
             '        dicp(dicPlayersForRole("A")(i).RosaId).Rating.Total1 = CInt(dicp(dicPlayersForRole("A")(i).RosaId).Rating.Total1 * 0.8)
             '        recalculate = True
             '    Next
-
             'End If
 
             Dim modf As FormazioniData.ModuloFormazione = FormazioniData.GetModule(pforma.Where(Function(x) x.Type = 1).ToList())
@@ -1795,6 +1800,7 @@ Namespace Torneo
                 pf.Type = 0
                 pf.Rating = Functions.Clone(p.Rating)
                 pf.qIni = p.qIni
+                'pf.Punti = CInt(p.AvgPt + p.Rating.Rating3 + p.AvgVt / 10)
                 pf.Punti = CInt(p.goodGrade + p.Rating.Rating3)
                 If p.Rating.Total1 < 20 AndAlso p.Ruolo <> "P" Then
                     pf.Type = -1
