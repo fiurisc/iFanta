@@ -1,6 +1,4 @@
-﻿Imports System.IO
-Imports System.Runtime.InteropServices.ComTypes
-Imports System.Text
+﻿Imports System.Text
 
 Namespace WebData
     Partial Class ProbableFormations
@@ -184,10 +182,11 @@ Namespace WebData
                     Next
 
                     If currgg <> -1 Then
+                        plaryersData.Day = currgg
                         fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
-                        If dicMatchDays.ContainsKey(currgg) AndAlso dicMatchDays(currgg) > 0 Then WriteBackupProbableHtml(fileTemp, dirData & currgg & "\" & site.ToLower() & ".txt")
+                        If dicMatchDays(currgg) > 0 AndAlso FromBackup = False Then WriteBackupProbableHtml(fileTemp, fileBakupHtml)
                         Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
-                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays.ContainsKey(currgg) AndAlso dicMatchDays(currgg) > 0, fileBackup, ""))
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0 OrElse Giornata <> -1, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                         BackupPlayerQuotesAndRose(currgg)

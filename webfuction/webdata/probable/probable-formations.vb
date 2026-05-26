@@ -27,7 +27,7 @@ Namespace WebData
         Public Function GetProbableFormation(siteList As String, show As Boolean, Optional Giornata As Integer = -1) As String
 
             Dim str As New System.Text.StringBuilder
-            Dim matchs As List(Of Torneo.MatchsData.Match) = mdatat.GetMatchsData(Giornata.ToString())
+            Dim matchs As List(Of Torneo.MatchsData.Match) = mdatat.GetMatchsData("-1")
             Dim sites() As String = siteList.Split(CChar(","))
 
             dicMatchDays.Clear()
@@ -161,7 +161,7 @@ Namespace WebData
                             Else
                                 If Info.Contains("out contro") Then
                                     wp.Infortunio.Giorni = 7
-                                ElseIf Info.Contains("stagione finita") Then
+                                ElseIf Info.Contains("stagione finita") OrElse Info.Contains("campionato finito") Then
                                     wp.Infortunio.Giorni = GiorniFineCampionato
                                 End If
                             End If
@@ -171,11 +171,14 @@ Namespace WebData
 
                 If wp.Infortunio.Giorni > 0 Then
                     If GiorniFineCampionato > 0 Then
+                        If wp.Name = "ZANIOLO" Then
+                            wp.Name = wp.Name
+                        End If
                         wp.Infortunio.Severity = CInt(wp.Infortunio.Giorni * 100 / GiorniFineCampionato)
-                        wp.Infortunio.Severity = wp.Infortunio.Giorni
+                        If wp.Infortunio.Severity < 100 Then wp.Infortunio.Severity = wp.Infortunio.Giorni
                         If wp.Infortunio.Severity > 100 Then wp.Infortunio.Severity = 100
-                    Else
-                        wp.Infortunio.Severity = 0
+                        Else
+                            wp.Infortunio.Severity = 0
                     End If
                 Else
                     wp.Infortunio.Severity = 0

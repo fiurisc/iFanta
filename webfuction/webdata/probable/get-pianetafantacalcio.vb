@@ -8,6 +8,7 @@ Namespace WebData
 
         Public Function GetPianetaFantacalcio(ReturnData As Boolean, FromBackup As Boolean, Optional Giornata As Integer = -1) As String
 
+            Dim currgg As Integer = Giornata
             Dim dirt As String = appSett.WebDataPath & "\temp"
             Dim dird As String = appSett.WebDataPath & "\data\pforma"
             Dim site As String = "PianetaFantacalcio"
@@ -16,13 +17,25 @@ Namespace WebData
             Dim fileData As String = dirData & site.ToLower() & ".json"
             Dim filePlayers As String = dirData & site.ToLower() & "-players.txt"
             Dim fileLog As String = dirData & site.ToLower() & ".log"
-            Dim currgg As Integer = Giornata
             Dim fileBakupHtml As String = GetBackupHtmlDataFileName(site.ToLower(), currgg)
-
+            Dim rmsg As String = ""
+            Dim sr As New IO.StreamWriter(fileLog)
 
             Try
 
+                sr.WriteLine("Loading web player and matchs")
                 Players.Data.LoadPlayers(appSett, False)
+
+                sr.WriteLine("Year -> " & appSett.Year)
+                sr.WriteLine("Calendario match:")
+                sr.WriteLine("---------------------------")
+                For Each t As String In mdataw.KeyMatchs.Keys
+                    sr.WriteLine(mdataw.KeyMatchs(t).Giornata & " -> " & t)
+                Next
+                sr.WriteLine("")
+
+                'Determino i link delle varie partite'
+                sr.WriteLine("Get Html page")
 
                 Dim html As String = ""
 
@@ -36,55 +49,59 @@ Namespace WebData
 
                 If html <> "" Then
 
+                    sr.WriteLine("Reading html page")
+
                     Dim start As Boolean = False
                     Dim sq As New List(Of String)
                     Dim sqid As Integer = 0
                     Dim pstate As String = "Titolare"
                     Dim team As String = ""
 
-                    Dim line() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
+                    Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
                     Dim wpd As New Torneo.ProbablePlayers.Probable
                     Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
 
-                    For i As Integer = 0 To line.Length - 1
+                    sr.WriteLine("lines => " & lines.Length)
 
-                        line(i) = line(i).Replace(vbTab, "")
+                    For i As Integer = 0 To lines.Length - 1
 
-                        If line(i) <> "" Then
+                        lines(i) = lines(i).Replace(vbTab, "")
 
-                            If line(i).Contains("><h4><strong>") Then
-                                currgg = Convert.ToInt32(System.Text.RegularExpressions.Regex.Match(line(i), "(?<=\>)\d+(?=\s+Giornata)").Value)
-                            ElseIf line(i).Contains("top-squadre-selezionate") Then
+                        If lines(i) <> "" Then
+
+                            If lines(i).Contains("><h4><strong>") Then
+                                currgg = Convert.ToInt32(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=\>)\d+(?=\s+Giornata)").Value)
+                            ElseIf lines(i).Contains("top-squadre-selezionate") Then
                                 sq.Clear()
-                            ElseIf line(i).Contains("<h2 class=""TeamNome"">") Then
-                                sq.Add(Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(line(i), "(?<=\>)\w+(?=\<\/h)").Value.ToUpper()))
-                            ElseIf line(i).Contains("style=""text-align:center"">TITOLARI</th>") Then
+                            ElseIf lines(i).Contains("<h2 class=""TeamNome"">") Then
+                                sq.Add(Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=\>)\w+(?=\<\/h)").Value.ToUpper()))
+                            ElseIf lines(i).Contains("style=""text-align:center"">TITOLARI</th>") Then
                                 start = True
                                 pstate = "Titolare"
-                            ElseIf line(i).Contains("th colspan=""2"">PANCHINA</th>") Then
+                            ElseIf lines(i).Contains("th colspan=""2"">PANCHINA</th>") Then
                                 start = True
                                 pstate = "Panchina"
-                            ElseIf line(i).Contains("<td style=""text-align:left""") OrElse line(i).Contains("<td class=""left"">") Then
+                            ElseIf lines(i).Contains("<td style=""text-align:left""") OrElse lines(i).Contains("<td class=""left"">") Then
                                 team = sq(1)
-                            ElseIf line(i).Contains("<td style=""text-align:right""") Then
+                            ElseIf lines(i).Contains("<td style=""text-align:right""") Then
                                 team = sq(0)
-                            ElseIf line(i).Contains("<span class=""team-probabili"">") Then
-                                team = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=team-probabili"">).*(?=\<\/span)").Value.Replace("'", "’").Trim()
-                            ElseIf System.Text.RegularExpressions.Regex.Match(line(i), "href=""giocatori-statistiche-personali.asp?").Success Then
+                            ElseIf lines(i).Contains("<span class=""team-probabili"">") Then
+                                team = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=team-probabili"">).*(?=\<\/span)").Value.Replace("'", "’").Trim()
+                            ElseIf System.Text.RegularExpressions.Regex.Match(lines(i), "href=""giocatori-statistiche-personali.asp?").Success Then
 
-                                line(i) = line(i).Replace(vbTab, "").Trim()
+                                lines(i) = lines(i).Replace(vbTab, "").Trim()
 
-                                Dim name As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=nomegio=)(.*?)(?="")").Value.Replace("'", "’")
-                                Dim Ruolo As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Ruolo=)\w{1}").Value
+                                Dim name As String = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=nomegio=)(.*?)(?="")").Value.Replace("'", "’")
+                                Dim Ruolo As String = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=Ruolo=)\w{1}").Value
                                 Dim info As String = ""
 
-                                If line(i).Contains("BAKKER") Then
-                                    line(i) = line(i)
+                                If lines(i).Contains("BAKKER") Then
+                                    lines(i) = lines(i)
                                 End If
 
-                                If line(i).Contains("title=""Ballottaggio") Then
+                                If lines(i).Contains("title=""Ballottaggio") Then
 
-                                    Dim s() As String = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=Ballottaggio\s+)(.*?)(?=\"")").Value.Replace("(", "|").Replace(")", "").Replace("/", "|").Split(CChar("|"))
+                                    Dim s() As String = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=Ballottaggio\s+)(.*?)(?=\"")").Value.Replace("(", "|").Replace(")", "").Replace("/", "|").Split(CChar("|"))
                                     If s.Length = 4 Then
                                         name = Players.Data.ResolveName(Ruolo, s(0), team, wpl, False).GetName()
                                         info = "In ballottagio con " & s(2).Trim() & " [" & s(1).Trim() & "]"
@@ -98,10 +115,10 @@ Namespace WebData
                                     Call AddInfo(name, team, site, pstate, info, -1, wpd.Players)
                                 End If
 
-                            ElseIf line(i).Contains("<div class=""giocatori-indisponibili"">") Then
+                            ElseIf lines(i).Contains("<div class=""giocatori-indisponibili"">") Then
 
-                                Dim name As String = System.Text.RegularExpressions.Regex.Match(line(i + 1), "(?<=\<a.*\>).*(?=\<\/a\>)").Value.Trim
-                                Dim info As String = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(line(i + 2), "(?<=strong\>).*(?=\<\/div\>)").Value.Trim)
+                                Dim name As String = System.Text.RegularExpressions.Regex.Match(lines(i + 1), "(?<=\<a.*\>).*(?=\<\/a\>)").Value.Trim
+                                Dim info As String = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(lines(i + 2), "(?<=strong\>).*(?=\<\/div\>)").Value.Trim)
 
                                 If name.Contains("LUVU") Then
                                     name = name
@@ -113,10 +130,10 @@ Namespace WebData
                                     Call AddInfo(name, team, site, pstate, info, -1, wpd.Players)
                                 End If
 
-                            ElseIf line(i).Contains("<div class=""giocatori-squalificati"">") Then
+                            ElseIf lines(i).Contains("<div class=""giocatori-squalificati"">") Then
 
-                                Dim name As String = System.Text.RegularExpressions.Regex.Match(line(i + 2), ".*(?=\<\/a\>)").Value.Trim
-                                Dim info As String = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(line(i + 3), ".*(?=\<\/div\>)").Value.Trim.Replace("(", "").Replace(")", ""))
+                                Dim name As String = System.Text.RegularExpressions.Regex.Match(lines(i + 2), ".*(?=\<\/a\>)").Value.Trim
+                                Dim info As String = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(lines(i + 3), ".*(?=\<\/div\>)").Value.Trim.Replace("(", "").Replace(")", ""))
 
                                 If name <> "" Then
                                     pstate = "Squalificato"
@@ -132,21 +149,21 @@ Namespace WebData
                         wpd.Day = currgg
                         fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
                         If dicMatchDays(currgg) > 0 AndAlso FromBackup = False Then WriteBackupProbableHtml(fileTemp, fileBakupHtml)
-                        Dim fileBackup As String =  dirData & currgg & "\" & site.ToLower() & ".json"
+                        Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
                         Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0 OrElse Giornata <> -1, fileBackup, ""))
                         If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)
-                        Return out.Replace(System.Environment.NewLine, "</br>")
-                    Else
-                        Return ""
+                        rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
-                Else
-                    Return ""
                 End If
 
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
-                Return ex.Message
+                rmsg = ex.Message
             End Try
+
+            sr.Close()
+
+            Return rmsg
 
         End Function
     End Class

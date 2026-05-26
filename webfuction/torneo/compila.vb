@@ -23,7 +23,7 @@ Namespace Torneo
 
                 Dim fname As String = appSett.WebDataPath & "temp\WD" & giornata.PadLeft(2, CChar("0")) & ".txt"
                 Dim fdata As String = appSett.WebDataPath & "temp\DD" & giornata.PadLeft(2, CChar("0")) & ".txt"
-                Dim max As Integer = 7
+                Dim max As Integer = 8
 
                 WebData.Players.Data.LoadPlayers(appSett, True)
 
@@ -57,13 +57,15 @@ Namespace Torneo
                 'Compilazione dati top player'
                 UpdateStatus("Compilazione top formazioni...", 6, max)
                 Dim lst2 As List(Of FormazioniData.Formazione) = CompileTopFlopFormazioni(giornata, True)
+
+                'Compilazione dati flop player'
                 UpdateStatus("Salvataggio top formazioni...", 7, max)
                 forma.SaveFormazioni(CInt(giornata), lst2, Torneo.FormazioniData.TipoFormazioni.Top)
 
                 UpdateStatus("Compilazione flop formazioni...", 6, max)
                 Dim lst3 As List(Of FormazioniData.Formazione) = CompileTopFlopFormazioni(giornata, False)
                 UpdateStatus("Salvataggio flop formazioni...", 7, max)
-                'forma.SaveFormazioni(CInt(giornata), lst3, Torneo.FormazioniData.TipoFormazioni.Flop)
+                forma.SaveFormazioni(CInt(giornata), lst3, Torneo.FormazioniData.TipoFormazioni.Flop)
 
                 ResetStatus()
 

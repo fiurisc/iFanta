@@ -126,7 +126,10 @@ Public Class Form1
         Dim data As New Torneo.FormazioniData(appSett)
         Dim dataauto As New Torneo.AutoFormazioniData(appSett)
         Dim comp As New Torneo.CompilaData(appSett)
-        comp.ApiCompila("33")
+        For i As Integer = 3 To 35
+            comp.ApiCompila(i.ToString())
+        Next
+        'comp.ApiCompila("36")
         'Dim mdata As New WebData.MatchsData(appSett)
         'mdata.UpdateDataFromFile("18")
     End Sub
@@ -168,10 +171,10 @@ Public Class Form1
         'Next
 
         'IO.File.WriteAllText(AppContext.BaseDirectory & "test.txt", strout.ToString())
-        Dim comp As New Torneo.CompilaData(appSett)
-        For i As Integer = 29 To 29
-            comp.ApiCompila(CStr(i))
-        Next
+        'Dim comp As New Torneo.CompilaData(appSett)
+        'For i As Integer = 29 To 29
+        '    comp.ApiCompila(CStr(i))
+        'Next
 
         For i As Integer = 1 To 6
             'Torneo.CompilaData.ApiCompila(CStr(i))
@@ -180,6 +183,10 @@ Public Class Form1
         'Dim data As String = Torneo.CompilaData.ApiCompila("4")
         'IO.File.WriteAllText(AppContext.BaseDirectory & "test.json", data)
         'data = ""
+
+        Dim data As New Torneo.FormazioniData(appSett)
+        data.ApiGetFormazione("38", "0", Torneo.FormazioniData.TipoFormazioni.Regular)
+
     End Sub
 
     Private Sub Button13_Click(sender As Object, e As EventArgs) Handles Button13.Click
@@ -215,7 +222,7 @@ Public Class Form1
 
     Private Sub Button14_Click(sender As Object, e As EventArgs) Handles Button14.Click
         Dim pdata As New Torneo.ClassificaData(appSett)
-        pdata.ApiGetStoricoClassifica()
+        pdata.ApiGetClassifica("36", False)
     End Sub
 
     Private Sub cmdcoppa_Click(sender As Object, e As EventArgs) Handles cmdcoppa.Click
@@ -283,7 +290,7 @@ Public Class Form1
         Dim comp As New Torneo.CompilaData(appSett)
 
         Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        'Dim team As List(Of Integer) = Enumerable.Range(4, 1).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(9, 1).ToList()
 
         Dim histData As New Dictionary(Of Integer, List(Of Torneo.AutoFormazioniData.AutoFormazione))
 
@@ -300,12 +307,12 @@ Public Class Form1
         Torneo.Functions.EnableQueryCache = True
         Torneo.Functions.ClearQueryCache()
 
-        'For gio As Integer = 22 To 32
-        '    Dim dicBest As Dictionary(Of Integer, Dictionary(Of String, Integer)) = dataauto.BestHistoricalParamenters(gio)
+        'For gio As Integer = 36 To 36
+        '    Dim dicBest As Dictionary(Of String, Integer) = dataauto.BestHistoricalParamenters(gio)
         '    If dicBest.Count > 0 Then
-        '        For Each id As Integer In dicBest.Keys
-        '            Dim pt As Integer = Auto(id, gio, maxday, dicBest(id))
-        '            Debug.WriteLine(gio & vbTab & id & vbTab & pt)
+        '        For id As Integer = 0 To 9
+        '            Dim pt As Integer = Auto(id, gio, maxday, dicBest)
+        '            Debug.WriteLine(gio & vbTab & id & vbTab & dicBest("avg") & vbTab & pt)
         '            If dicptgio.ContainsKey(id) = False Then dicptgio.Add(id, New List(Of Double))
         '            dicptgio(id).Add(pt / 10)
         '        Next
@@ -320,12 +327,34 @@ Public Class Form1
         '    End If
         'Next
 
-        'For g As Integer = 20 To 30
-        '    dataauto.SetDayDataForce(g)
-        '    dataauto.CheckMatchResult(g)
-        'Next
+        ''For gio As Integer = 36 To 36
+        ''    Dim dicBest As Dictionary(Of Integer, Dictionary(Of String, Integer)) = dataauto.BestHistoricalParamentersByTeam(gio)
+        ''    If dicBest.Count > 0 Then
+        ''        For Each id As Integer In dicBest.Keys
+        ''            Dim pt As Integer = Auto(id, gio, maxday, dicBest(id))
+        ''            Debug.WriteLine(gio & vbTab & id & vbTab & dicBest(id)("avg") & vbTab & pt)
+        ''            If dicptgio.ContainsKey(id) = False Then dicptgio.Add(id, New List(Of Double))
+        ''            dicptgio(id).Add(pt / 10)
+        ''        Next
+        ''        For Each id As Integer In team
+        ''            Dim strout As New System.Text.StringBuilder
+        ''            For g As Integer = 0 To dicptgio(id).Count - 1
+        ''                If g > 0 Then strout.Append(vbTab)
+        ''                strout.Append(dicptgio(id)(g))
+        ''            Next
+        ''            Debug.WriteLine(strout.ToString())
+        ''        Next
+        ''    End If
+        ''Next
 
         'Exit Sub
+
+        ''For g As Integer = 20 To 30
+        ''    dataauto.SetDayDataForce(g)
+        ''    dataauto.CheckMatchResult(g)
+        ''Next
+
+        ''Exit Sub
 
         dataauto.SetDayDataForce(35)
         Dim mt As Dictionary(Of String, Double) = dataauto.GetMatchResult(35, 20)
@@ -342,7 +371,7 @@ Public Class Form1
 
         Dim dt As Date = Date.Now
 
-        For g As Integer = 36 To 36
+        For g As Integer = 20 To 38
 
             Dim sr1 As New IO.StreamWriter(fileLog1, True)
             Dim sr2 As New IO.StreamWriter(fileLog2, True)
@@ -356,8 +385,6 @@ Public Class Form1
 
                 Dim probdata As New Torneo.ProbablePlayers(appSett)
                 Dim probable As New Dictionary(Of Integer, Dictionary(Of String, Probable))
-                'Dim probableOld As Dictionary(Of String, Probable) = probdata.GetProbableFormation("", g - 1)
-                Dim probableModule As New Dictionary(Of String, String)
                 Dim result As New ConcurrentBag(Of Torneo.AutoFormazioniData.AutoFormazione)
                 Dim dicPlayers As New Dictionary(Of String, Torneo.Players.PlayerQuotesItem)
                 Dim gio As Integer = g
@@ -371,8 +398,6 @@ Public Class Form1
                     End If
                 Next
 
-                probableModule = probdata.GetTeamModule(probable(g))
-
                 If IO.File.Exists(fname) = False Then fname = pq.GetDataFileName()
                 If IO.File.Exists(fname) Then
                     Dim playersq As List(Of Torneo.Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Torneo.Players.PlayerQuotesItem))(System.IO.File.ReadAllText(fname))
@@ -381,10 +406,15 @@ Public Class Form1
                     Next
                 End If
 
+                'dataauto.SetDayDataForce(g)
+                'Dim dicFactTeam = dataauto.GetMatchResult(g, 20)
+                'Dim startAvgPtRank = CInt((1500 - dicFactTeam.Values.Sum()) / 100 + 80)
+                'Console.WriteLine(dicFactTeam.Values.Sum())
+
                 Parallel.ForEach(team, Sub(teamid)
                                            Dim id As Integer = teamid
                                            Dim dataautoTeam As New Torneo.AutoFormazioniData(appSett)
-                                           dataautoTeam.SetProbable(g, probable, probableModule, dicPlayers)
+                                           dataautoTeam.SetProbable(g, probable, dicPlayers)
                                            dataautoTeam.MaxDayInArchive = maxday
                                            result.Add(dataautoTeam.GetFormazioneAutomatica(gio, id, True))
                                        End Sub)
@@ -508,50 +538,52 @@ Public Class Form1
 
     Function Auto(idTeam As Integer, Giornata As Integer, maxday As Integer, Value As Dictionary(Of String, Integer)) As Integer
 
-        'Dim data As New Torneo.FormazioniData(appSett)
-        'Dim comp As New Torneo.CompilaData(appSett)
-        'Dim probdata As New Torneo.ProbablePlayers(appSett)
-        'Dim probable As Dictionary(Of String, Probable) = probdata.GetProbableFormation("", Giornata)
-        'Dim probableOld As Dictionary(Of String, Probable) = probdata.GetProbableFormation("", Giornata - 1)
-        'Dim probableModule As Dictionary(Of String, String) = probdata.GetTeamModule(probable)
-        'Dim result As New Torneo.AutoFormazioniData.AutoFormazione
-        'Dim dicPlayers As New Dictionary(Of String, Torneo.Players.PlayerQuotesItem)
+        Dim data As New Torneo.FormazioniData(appSett)
+        Dim comp As New Torneo.CompilaData(appSett)
+        Dim probdata As New Torneo.ProbablePlayers(appSett)
+        Dim probable As New Dictionary(Of Integer, Dictionary(Of String, Probable))
+        Dim result As New Torneo.AutoFormazioniData.AutoFormazione
+        Dim dicPlayers As New Dictionary(Of String, Torneo.Players.PlayerQuotesItem)
 
-        'Dim pq As New WebData.PlayersQuotes(appSett)
-        'Dim fname As String = pq.GetBakupDataFileName(Giornata)
+        Dim pq As New WebData.PlayersQuotes(appSett)
+        Dim fname As String = pq.GetBakupDataFileName(Giornata)
 
-        'If IO.File.Exists(fname) = False Then fname = pq.GetDataFileName()
-        'If IO.File.Exists(fname) Then
-        '    Dim playersq As List(Of Torneo.Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Torneo.Players.PlayerQuotesItem))(System.IO.File.ReadAllText(fname))
-        '    For Each p As Torneo.Players.PlayerQuotesItem In playersq
-        '        If dicPlayers.ContainsKey(p.Nome) = False Then dicPlayers.Add(p.Nome, p)
-        '    Next
-        'End If
+        For i As Integer = Giornata - 3 To Giornata
+            If i > 0 Then
+                probable.Add(i, probdata.GetProbableFormation("", i))
+            End If
+        Next
 
-        'Dim autoForma As New Torneo.AutoFormazioniData(appSett)
-        'If Value.ContainsKey("match") Then autoForma.startMatchRank = Value("match")
-        'If Value.ContainsKey("avg") Then autoForma.startAvgPtRank = Value("avg")
-        'If Value.ContainsKey("role") Then autoForma.startRouleRank = Value("role")
-        'If Value.ContainsKey("hp") Then autoForma.defPlayerHistory = Value("hp")
-        'If Value.ContainsKey("both") Then
-        '    autoForma.startAvgPtRank = Value("both")
-        '    autoForma.startMatchRank = Value("both")
-        'End If
-        'autoForma.SetProbable(probable, probableOld, probableModule, dicPlayers)
-        'autoForma.MaxDayInArchive = maxday
-        'result = autoForma.GetFormazioneAutomatica(Giornata, idTeam, False)
+        If IO.File.Exists(fname) = False Then fname = pq.GetDataFileName()
+        If IO.File.Exists(fname) Then
+            Dim playersq As List(Of Torneo.Players.PlayerQuotesItem) = WebData.Functions.DeserializeJson(Of List(Of Torneo.Players.PlayerQuotesItem))(System.IO.File.ReadAllText(fname))
+            For Each p As Torneo.Players.PlayerQuotesItem In playersq
+                If dicPlayers.ContainsKey(p.Nome) = False Then dicPlayers.Add(p.Nome, p)
+            Next
+        End If
 
-        'Dim dicpt As Dictionary(Of String, Integer) = autoForma.GetPlayerPuntiData(Giornata, idTeam)
+        Dim autoForma As New Torneo.AutoFormazioniData(appSett)
+        If Value.ContainsKey("match") Then autoForma.startMatchRank = Value("match")
+        If Value.ContainsKey("avg") Then autoForma.startAvgPtRank = Value("avg")
+        If Value.ContainsKey("role") Then autoForma.startRouleRank = Value("role")
+        If Value.ContainsKey("hp") Then autoForma.defPlayerHistory = Value("hp")
+        If Value.ContainsKey("both") Then
+            autoForma.startAvgPtRank = Value("both")
+            autoForma.startMatchRank = Value("both")
+        End If
+        autoForma.SetProbable(Giornata, probable, dicPlayers)
+        autoForma.MaxDayInArchive = maxday
+        result = autoForma.GetFormazioneAutomatica(Giornata, idTeam, False)
 
-        'For Each p As Torneo.FormazioniData.PlayerFormazione In result.Formazione.Players
-        '    If dicpt.ContainsKey(p.Nome) Then p.Punti = dicpt(p.Nome)
-        'Next
-        'result.Formazione = comp.CompileDataForma(result.Formazione, False)
-        'data.CalculatePuntiFormazione(result.Formazione)
+        Dim dicpt As Dictionary(Of String, Integer) = autoForma.GetPlayerPuntiData(Giornata, idTeam)
 
-        ' Return result.Formazione.Punti
+        For Each p As Torneo.FormazioniData.PlayerFormazione In result.Formazione.Players
+            If dicpt.ContainsKey(p.Nome) Then p.Punti = dicpt(p.Nome)
+        Next
+        result.Formazione = comp.CompileDataForma(result.Formazione, False)
+        data.CalculatePuntiFormazione(result.Formazione)
 
-        Return -1
+        Return result.Formazione.Punti
 
     End Function
 
@@ -594,6 +626,6 @@ Public Class Form1
 
     Private Sub Button17_Click(sender As Object, e As EventArgs) Handles Button17.Click
         Dim prob As New WebData.ProbableFormations(appSett)
-        prob.GetProbableFormation("gazzetta", False, 32)
+        prob.GetProbableFormation("", False, 37)
     End Sub
 End Class

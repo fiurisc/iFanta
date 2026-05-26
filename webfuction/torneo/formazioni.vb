@@ -47,16 +47,14 @@ Namespace Torneo
 
         Public Function ApiGetFormazione(Day As String, TeamId As String, Type As TipoFormazioni) As String
 
-            Dim json As String = ""
+            Dim json As String = "{}"
 
             WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Richiesta formazione giornata: " & Day & " per il team: " & TeamId & " Type: " & Type.ToString())
 
             Try
                 Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Type)
                 If list.Count > 0 Then
-                    Return WebData.Functions.SerializzaOggetto(list(0), True)
-                Else
-                    Return "{}"
+                    json = WebData.Functions.SerializzaOggetto(list(0), True)
                 End If
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -358,6 +356,7 @@ Namespace Torneo
             Public Property RigoriSbagliati() As Integer = 0
             Public Property RigoriParati() As Integer = 0
             Public Property qIni() As Integer = 0
+            Public Property qCur() As Integer = 0
             Public Property Punti As Integer = 0
             Public Property Rating As New AutoFormazioniData.PlayerAutoFormazione.Ratings
         End Class

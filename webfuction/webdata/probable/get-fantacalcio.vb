@@ -52,8 +52,8 @@
                     sr.WriteLine("Reading html page")
 
                     Dim lines() As String = IO.File.ReadAllLines(fileTemp, New System.Text.UTF8Encoding(False))
-                    Dim wpd As New Torneo.ProbablePlayers.Probable
-                    Dim wpl As New Dictionary(Of String, Players.PlayerMatch)
+                    Dim plaryersData As New Torneo.ProbablePlayers.Probable
+                    Dim playersLog As New Dictionary(Of String, Players.PlayerMatch)
                     Dim pstate As String = "Titolare"
                     Dim sq As New List(Of String)
                     Dim team As String = ""
@@ -83,6 +83,8 @@
                                 pstate = "Panchina"
                             ElseIf line.Contains(">Infortunati") Then
                                 pstate = "Infortunato"
+                            ElseIf line.Contains(">Diffidati") Then
+                                pstate = ""
                             ElseIf line.Contains(">Squalificati") Then
                                 pstate = "Squalificato"
                             ElseIf line.Contains("Dettaglio calciatori") Then
@@ -101,11 +103,11 @@
                             ElseIf line.Contains("Campioncino ") Then
                                 name = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=\""Campioncino\s+)(.*?)(?=\"")").Value.ToUpper().Trim()
                                 name = Functions.NormalizeText(name)
-                                name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
-                                If wpd.ModuleTeam.ContainsKey(team) = False Then wpd.ModuleTeam.Add(team, New Torneo.ProbablePlayers.Probable.ProbableModule())
-                                wpd.ModuleTeam(team).ModuleName = modTeam
-                                If wpd.ModuleTeam(team).Lines.ContainsKey(numLine.ToString()) = False Then wpd.ModuleTeam(team).Lines.Add(numLine.ToString(), New List(Of String)())
-                                wpd.ModuleTeam(team).Lines(numLine.ToString()).Add(name)
+                                name = Players.Data.ResolveName("", name, team, playersLog, False).GetName()
+                                If plaryersData.ModuleTeam.ContainsKey(team) = False Then plaryersData.ModuleTeam.Add(team, New Torneo.ProbablePlayers.Probable.ProbableModule())
+                                plaryersData.ModuleTeam(team).ModuleName = modTeam
+                                If plaryersData.ModuleTeam(team).Lines.ContainsKey(numLine.ToString()) = False Then plaryersData.ModuleTeam(team).Lines.Add(numLine.ToString(), New List(Of String)())
+                                plaryersData.ModuleTeam(team).Lines(numLine.ToString()).Add(name)
                             ElseIf line.Contains("<li class=""separator""></li>") Then
                                 numLine += 1
                             End If
@@ -115,6 +117,9 @@
                                 name = lines(i + 2).Replace("<span>", "").Replace("</span>", "").Trim().ToUpper().Replace("'", "’").Replace("&#X27;", "’")
                                 name = Functions.NormalizeText(name)
                                 If name.Contains("&#XE8;") Then
+                                    name = name
+                                End If
+                                If name = "MODRIC" Then
                                     name = name
                                 End If
                                 If pstate = "Titolare" OrElse pstate = "Panchina" Then
@@ -127,11 +132,11 @@
                                 ElseIf pstate = "Infortunato" Then
                                     info = Functions.NormalizeText(lines(i + 5).Trim())
                                 End If
-                                name = Players.Data.ResolveName("", name, team, wpl, False).GetName()
+                                name = Players.Data.ResolveName("", name, team, playersLog, False).GetName()
                                 If name.Contains("CANDE") Then
                                     name = name
                                 End If
-                                Call AddInfo(name, team, site, pstate, info, perc, wpd.Players)
+                                Call AddInfo(name, team, site, pstate, info, perc, plaryersData.Players)
                                 If sq.Contains(team) = False Then sq.Add(team)
                                 perc = 0
                             End If
@@ -139,12 +144,12 @@
                     Next
 
                     If currgg <> -1 Then
-                        wpd.Day = currgg
+                        plaryersData.Day = currgg
                         fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
                         If dicMatchDays(currgg) > 0 AndAlso FromBackup = False Then WriteBackupProbableHtml(fileTemp, fileBakupHtml)
                         Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
-                        Dim out As String = WriteData(wpd, fileData, If(dicMatchDays(currgg) > 0 OrElse Giornata <> -1, fileBackup, ""))
-                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, wpl, filePlayers)
+                        Dim out As String = WriteData(plaryersData, fileData, If(dicMatchDays(currgg) > 0 OrElse Giornata <> -1, fileBackup, ""))
+                        If Functions.makefileplayer Then Functions.WriteDataPlayerMatch(appSett, playersLog, filePlayers)
                         rmsg = out.Replace(System.Environment.NewLine, "</br>")
                     End If
                 End If
