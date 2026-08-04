@@ -175,6 +175,48 @@ Namespace Torneo
 
         End Function
 
+        Public Function ApiGetPlayersStatistic(nome As String, typeOfData As String) As String
+
+            Dim dicData As Dictionary(Of String, String) = Enumerable.Range(1, 38).ToDictionary(Function(i) i.ToString(), Function(i) "-1")
+
+            Try
+
+                Dim sqlstring = "SELECT gio,nome," & typeOfData & " as data FROM tbdati where nome='" & nome & "'"
+                If typeOfData = "mm" OrElse typeOfData = "tit" Then
+                    sqlstring = "SELECT gio,nome," & typeOfData & " as data FROM tbtabellini where nome='" & nome & "'"
+                ElseIf typeOfData = "pgio" OrElse typeOfData = "tit" Then
+                    sqlstring = "SELECT gio,nome,iif(tit+sos+sub>0,1,0) as data FROM tbtabellini where nome='" & nome & "'"
+                End If
+
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, sqlstring)
+
+                If ds.Tables.Count > 0 Then
+                    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
+                        Dim row As DataRow = ds.Tables(0).Rows(i)
+                        Dim gio As String = Functions.ReadFieldStringData(row.Item("gio"), "1")
+                        Dim value As Integer = Functions.ReadFieldIntegerData(row.Item("data"), 0)
+                        If dicData.ContainsKey(gio) AndAlso value <> -200 Then
+                            If typeOfData = "pt" Then
+                                If value = -100 Then
+                                    dicData(gio) = "s.v."
+                                Else
+                                    dicData(gio) = (value / 10).ToString()
+                                End If
+                            Else
+                                dicData(gio) = value.ToString()
+                            End If
+
+                        End If
+                    Next
+                End If
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+
+            Return WebData.Functions.SerializzaOggetto(dicData, True)
+
+        End Function
+
         Public Sub UpdatePlayersData(newmtxdata As List(Of PlayerDataItem))
             Try
 
@@ -220,6 +262,31 @@ Namespace Torneo
                 'Cancello gli eventuali duplicati'
                 Dim sql As String = "DELETE FROM tbplayer_data WHERE ID NOT IN (SELECT MIN(ID) FROM tbplayer_data GROUP BY Nome);"
                 Functions.ExecuteSql(appSett, sql)
+
+            Catch ex As Exception
+                WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+            End Try
+        End Sub
+
+        Public Sub UpdatePlayersRanking(data As Dictionary(Of String, Double), giornata As Integer)
+
+            Try
+
+                Try
+                    Torneo.Functions.ExecuteSql(appSett, "CREATE TABLE tbplayerraking (ID AUTOINCREMENT PRIMARY KEY,gio INTEGER,nome TEXT(50),rank INTEGER)")
+                Catch ex As Exception
+                    System.Diagnostics.Debug.WriteLine(ex.Message)
+                End Try
+
+                Dim sqlinsert As New List(Of String)
+                Dim sqlupdate As New List(Of String)
+
+                For Each key In data.Keys
+                    sqlinsert.Add("INSERT INTO tbplayerraking (gio,nome,rank) values (" & giornata & ",'" & key & "'," & data(key) & ")")
+                Next
+
+                Functions.ExecuteSql(appSett, "DELETE FROM tbplayerraking WHERE gio=" & giornata)
+                Functions.ExecuteSql(appSett, sqlinsert)
 
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)

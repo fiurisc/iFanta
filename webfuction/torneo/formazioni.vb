@@ -212,7 +212,6 @@ Namespace Torneo
             forma.Punti += forma.BonusDifesa
             forma.Punti += forma.BonusCentrocampo
             forma.Punti += forma.BonusAttacco
-
         End Sub
 
         Public Shared Function GetModule(pList As List(Of PlayerFormazione)) As ModuloFormazione

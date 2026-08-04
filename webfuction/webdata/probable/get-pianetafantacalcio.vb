@@ -120,7 +120,7 @@ Namespace WebData
                                 Dim name As String = System.Text.RegularExpressions.Regex.Match(lines(i + 1), "(?<=\<a.*\>).*(?=\<\/a\>)").Value.Trim
                                 Dim info As String = Functions.NormalizeText(System.Text.RegularExpressions.Regex.Match(lines(i + 2), "(?<=strong\>).*(?=\<\/div\>)").Value.Trim)
 
-                                If name.Contains("LUVU") Then
+                                If name.Contains("RAMON") Then
                                     name = name
                                 End If
 

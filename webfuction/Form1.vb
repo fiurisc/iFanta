@@ -10,7 +10,7 @@ Imports webfuction.WebData.Players
 
 Public Class Form1
 
-    Dim year As String = "2025"
+    Dim year As String = "2026"
     Dim appSett As New Torneo.PublicVariables
 
     Public Class ArubaSmtpTest
@@ -48,11 +48,14 @@ Public Class Form1
         Dim gen As New Torneo.General(appSett)
         gen.ReadSettings()
 
+        Dim t As New Torneo.PlayersRanking(appSett)
+        t.MiglioriGiocatori("D", True, 10)
+
         'UpdateProbableModuleTeam()
         'GetAutomaticBestHistoricalParameters()
-        GetAutomaticFormation()
+        'GetAutomaticFormation()
 
-        End
+        'End
 
     End Sub
 
@@ -75,8 +78,10 @@ Public Class Form1
     End Sub
 
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        Dim dclasa As New WebData.Classifica(appSett)
-        dclasa.GetClassifica(False)
+        'Dim dclasa As New WebData.Classifica(appSett)
+        'dclasa.GetClassifica(False)
+        Dim dclasa As New Torneo.ClassificaData(appSett)
+        dclasa.ApiGetStoricoClassifica(False)
     End Sub
 
     Private Sub Button5_Click(sender As Object, e As EventArgs) Handles Button5.Click
@@ -227,7 +232,7 @@ Public Class Form1
 
     Private Sub cmdcoppa_Click(sender As Object, e As EventArgs) Handles cmdcoppa.Click
         Dim pdata As New Torneo.CoppaData(appSett)
-        pdata.ApiGetCoppa()
+        Console.WriteLine(pdata.ApiGetCoppa())
     End Sub
 
     Private Sub GetAutomaticBestHistoricalParameters()
@@ -290,7 +295,7 @@ Public Class Form1
         Dim comp As New Torneo.CompilaData(appSett)
 
         Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        'Dim team As List(Of Integer) = Enumerable.Range(9, 1).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(0, 1).ToList()
 
         Dim histData As New Dictionary(Of Integer, List(Of Torneo.AutoFormazioniData.AutoFormazione))
 
@@ -307,7 +312,7 @@ Public Class Form1
         Torneo.Functions.EnableQueryCache = True
         Torneo.Functions.ClearQueryCache()
 
-        'For gio As Integer = 36 To 36
+        'For gio As Integer = 20 To 38
         '    Dim dicBest As Dictionary(Of String, Integer) = dataauto.BestHistoricalParamenters(gio)
         '    If dicBest.Count > 0 Then
         '        For id As Integer = 0 To 9
@@ -356,8 +361,8 @@ Public Class Form1
 
         ''Exit Sub
 
-        dataauto.SetDayDataForce(35)
-        Dim mt As Dictionary(Of String, Double) = dataauto.GetMatchResult(35, 20)
+        'dataauto.SetDayDataForce(35)
+        'Dim mt As Dictionary(Of String, Double) = dataauto.GetMatchResult(35, 20)
 
         Dim fileLog1 As String = appSett.WebDataPath & "temp\autoformaresult1.log"
         Dim fileLog2 As String = appSett.WebDataPath & "temp\autoformaresult2.log"
@@ -406,11 +411,6 @@ Public Class Form1
                     Next
                 End If
 
-                'dataauto.SetDayDataForce(g)
-                'Dim dicFactTeam = dataauto.GetMatchResult(g, 20)
-                'Dim startAvgPtRank = CInt((1500 - dicFactTeam.Values.Sum()) / 100 + 80)
-                'Console.WriteLine(dicFactTeam.Values.Sum())
-
                 Parallel.ForEach(team, Sub(teamid)
                                            Dim id As Integer = teamid
                                            Dim dataautoTeam As New Torneo.AutoFormazioniData(appSett)
@@ -445,11 +445,13 @@ Public Class Form1
                     Dim res As String = dicResult(id).Formazione.Giornata & vbTab & dicResult(id).Formazione.TeamId & vbTab & dicResult(id).Parameters.Points / 10 & vbTab & dicResult(id).Parameters.GetKey().Replace("|", vbTab)
                     sr2.WriteLine(res)
 
-                    sr3.WriteLine("**** Paramentri rating giornata : " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
+                    sr3.WriteLine("**** Parametri rating giornata : " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
                     sr3.WriteLine(dicResult(id).Parameters.Points / 10 & vbTab & dicResult(id).Parameters.GetKey().Replace("|", vbTab))
-                    sr3.WriteLine("**** Rating giornata: " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
+                    sr3.WriteLine("R" & vbTab & "RM" & vbTab & "NOME" & vbTab & "SQUADRA" & vbTab & "RTOT1" & vbTab & "RTOT2" & vbTab & "RT1" & vbTab & "RT2" & vbTab & "RT3" & vbTab & "RT4" & vbTab & "RT5" & vbTab & "RT6" & vbTab & "RT7" & vbTab & "RT8" & vbTab & "MIN" & vbTab & "TIT" & vbTab & "SUB" & vbTab & "TYPE" & vbTab & "CAMPO" & vbTab & "PT")
                     For k As Integer = 0 To dicResult(id).PlayerRating.Count - 1
-                        sr3.WriteLine(dicResult(id).PlayerRating(k).Ruolo & vbTab & dicResult(id).PlayerRating(k).RuoloInt & vbTab & dicResult(id).PlayerRating(k).Nome & vbTab & dicResult(id).PlayerRating(k).Squadra & vbTab & dicResult(id).PlayerRating(k).Rating.Total1 & vbTab & dicResult(id).PlayerRating(k).Rating.Total2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating1 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating3 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating4 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating5 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating6 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating7 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating8 & vbTab & dicResult(id).PlayerRating(k).Minuti & vbTab & dicResult(id).PlayerRating(k).Titolare & vbTab & dicResult(id).PlayerRating(k).Subentrato & vbTab & dizType(dicResult(id).PlayerRating(k).Nome) & vbTab & dizInCampo(dicResult(id).PlayerRating(k).Nome) & vbTab & dizVoto(dicResult(id).PlayerRating(k).Nome))
+                        If dizType.ContainsKey(dicResult(id).PlayerRating(k).Nome) Then
+                            sr3.WriteLine(dicResult(id).PlayerRating(k).Ruolo & vbTab & dicResult(id).PlayerRating(k).RuoloInt & vbTab & dicResult(id).PlayerRating(k).Nome & vbTab & dicResult(id).PlayerRating(k).Squadra & vbTab & dicResult(id).PlayerRating(k).Rating.Total1 & vbTab & dicResult(id).PlayerRating(k).Rating.Total2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating1 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating2 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating3 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating4 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating5 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating6 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating7 & vbTab & dicResult(id).PlayerRating(k).Rating.Rating8 & vbTab & dicResult(id).PlayerRating(k).Minuti & vbTab & dicResult(id).PlayerRating(k).Titolare & vbTab & dicResult(id).PlayerRating(k).Subentrato & vbTab & dizType(dicResult(id).PlayerRating(k).Nome) & vbTab & dizInCampo(dicResult(id).PlayerRating(k).Nome) & vbTab & dizVoto(dicResult(id).PlayerRating(k).Nome) & vbTab & If(dizVoto(dicResult(id).PlayerRating(k).Nome) <> "S.V." AndAlso CInt(dizVoto(dicResult(id).PlayerRating(k).Nome)) > 65 AndAlso k < 20 AndAlso dizInCampo(dicResult(id).PlayerRating(k).Nome) = 0, "tocheck", ""))
+                        End If
                     Next
                     sr3.WriteLine("**** Formazione giornata: " & dicResult(id).Formazione.Giornata & " team:" & dicResult(id).Formazione.TeamId)
                     For k As Integer = 0 To dicResult(id).Formazione.Players.Count - 1
@@ -465,31 +467,38 @@ Public Class Form1
                     Next
                 Next
 
-                Dim lstUser As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Regular)
-                Dim lstTop As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Top)
+                If dicResult.ContainsKey(-1) Then
+                    Debug.WriteLine("Punteggi giornata: " & g & " pt:" & dicResult(-1).Formazione.Punti / 10)
+                Else
+                    Dim lstUser As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Regular)
+                    Dim lstTop As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Top)
 
-                If lstUser.Count > 0 Then
+                    If lstUser.Count > 0 Then
 
-                    Dim tit As String = "Punteggi giornata: " & g
+                        Dim sout As New System.Text.StringBuilder
+                        Dim difftot As Double = 0
 
-                    Debug.WriteLine(tit)
-                    sr1.WriteLine(tit)
+                        For i As Integer = 0 To lstUser.Count - 1
 
-                    For i As Integer = 0 To lstUser.Count - 1
+                            If dicResult.ContainsKey(lstUser(i).TeamId) = False Then Continue For
 
-                        If dicResult.ContainsKey(lstUser(i).TeamId) = False Then Continue For
+                            Dim lstAuto As Torneo.FormazioniData.Formazione = dicResult(lstUser(i).TeamId).Formazione
+                            Dim bestAuto As Integer = PercentageBestPlayer(dicResult(lstUser(i).TeamId).Formazione.Players)
+                            Dim bestUser As Integer = PercentageBestPlayer(lstUser(i).Players)
 
-                        Dim lstAuto As Torneo.FormazioniData.Formazione = dicResult(lstUser(i).TeamId).Formazione
-                        Dim bestAuto As Integer = PercentageBestPlayer(dicResult(lstUser(i).TeamId).Formazione.Players)
-                        Dim bestUser As Integer = PercentageBestPlayer(lstUser(i).Players)
+                            difftot += (lstAuto.Punti - lstUser(i).Punti) / 10
+                            Dim res As String = lstAuto.Punti / 10 & vbTab & lstUser(i).Punti / 10 & vbTab & lstTop(i).Punti / 10 & vbTab & lstAuto.PlayersInCampo & vbTab & bestAuto / 10 & vbTab & bestUser / 10 & vbTab & lstAuto.BonusDifesa / 10 & vbTab & lstUser(i).BonusDifesa / 10 & vbTab & lstTop(i).BonusDifesa / 10
+                            sout.AppendLine(res)
+                            diff += (lstAuto.Punti - lstUser(i).Punti) / 10
+                        Next
 
-                        Dim res As String = lstAuto.Punti / 10 & vbTab & lstUser(i).Punti / 10 & vbTab & lstTop(i).Punti / 10 & vbTab & lstAuto.PlayersInCampo & vbTab & bestAuto / 10 & vbTab & bestUser / 10 & vbTab & lstAuto.BonusDifesa / 10 & vbTab & lstUser(i).BonusDifesa / 10 & vbTab & lstTop(i).BonusDifesa / 10
-                        sr1.WriteLine(res)
-                        Debug.WriteLine(res)
-                        diff += (lstAuto.Punti - lstUser(i).Punti) / 10
-                    Next
+                        sout.Insert(0, "Punteggi giornata: " & g & " diff:" & difftot & Environment.NewLine)
 
+                        sr1.WriteLine(sout.ToString())
+                        Debug.WriteLine(sout.ToString())
+                    End If
                 End If
+
             Catch ex As Exception
                 Debug.WriteLine(ex.Message)
             End Try
@@ -626,6 +635,17 @@ Public Class Form1
 
     Private Sub Button17_Click(sender As Object, e As EventArgs) Handles Button17.Click
         Dim prob As New WebData.ProbableFormations(appSett)
-        prob.GetProbableFormation("", False, 37)
+        For i As Integer = 31 To 38
+            prob.GetProbableFormation("pianetafantacalcio", False, i)
+        Next
+
+    End Sub
+
+    Private Sub Button18_Click(sender As Object, e As EventArgs) Handles Button18.Click
+        Dim prob As New WebData.PlayersRanking(appSett)
+        For i As Integer = 22 To 38
+            prob.GetPlayersRankingData(False, i)
+        Next
+        'prob.GetPlayersRankingData(False, 3)
     End Sub
 End Class

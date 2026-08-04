@@ -33,7 +33,7 @@ Namespace WebData
 
             Try
 
-                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/quotazioni-fantacalcio")
+                Dim html As String = Functions.GetPage(appSett, "https://www.fantacalcio.it/quotazioni-fantacalcio/" & appSett.Year & "-" & CInt(appSett.Year) - 1999)
 
                 If html <> "" Then
 

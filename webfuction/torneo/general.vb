@@ -209,6 +209,17 @@ Namespace Torneo
             Return WebData.Functions.SerializzaOggetto(appSett.Settings, True)
         End Function
 
+        Public Function ApiSaveSettings(json As String) As String
+
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Salvataggio impostazioni")
+
+            appSett.Settings = WebData.Functions.DeserializeJson(Of TorneoSettings)(json)
+            SaveSettings()
+
+            Return "{""result"":""ok""}"
+
+        End Function
+
         Public Sub ReadSettings()
             If appSett.SettingsLoaded Then Exit Sub
             appSett.Settings = GetSettings()
@@ -252,6 +263,7 @@ Namespace Torneo
                         If para <> "" AndAlso value <> "" Then
                             Try
                                 Select Case para
+                                    Case "Mail Admin" : sett.MailAdmin = value
                                     Case "Number teams" : sett.NumberOfTeams = CInt(value)
                                     Case "Number days" : sett.NumberOfDays = CInt(value)
                                     Case "Enable trace reconfirmations" : sett.EnableTraceReconfirmations = CBool(value)
@@ -379,6 +391,8 @@ Namespace Torneo
             Try
                 Dim str As New System.Text.StringBuilder
                 str.AppendLine("[Lega]")
+                str.AppendLine("Active = '" & appSett.Settings.Admin & "'")
+                str.AppendLine("Mail Admin = '" & appSett.Settings.MailAdmin & "'")
                 str.AppendLine("Number teams = '" & appSett.Settings.NumberOfTeams & "'")
                 str.AppendLine("Number days = '" & appSett.Settings.NumberOfDays & "'")
                 str.AppendLine("Enable trace reconfirmations = '" & appSett.Settings.EnableTraceReconfirmations & "'")

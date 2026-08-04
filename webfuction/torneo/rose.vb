@@ -9,7 +9,7 @@ Namespace Torneo
             Me.appSett = appSett
         End Sub
 
-        Public Sub ApiAddRosa(TeamId As String, json As String)
+        Public Function ApiAddRosa(TeamId As String, json As String) As String
 
             If json = "" Then Throw New Exception("Json not valid")
 
@@ -36,7 +36,9 @@ Namespace Torneo
                 Next
             End If
 
-        End Sub
+            Return "{""result"":""ok""}"
+
+        End Function
 
         Public Sub ApiDeleteRose(TeamId As String)
             Functions.ExecuteSql(appSett, "DELETE FROM tbrose" & If(TeamId <> "-1", " WHERE idteam=" & TeamId, ""))
@@ -151,6 +153,9 @@ Namespace Torneo
                         p.TeamId = CInt(tid)
                         p.RosaId = Functions.ReadFieldIntegerData("idrosa", row, 0)
                         p.Ruolo = Functions.ReadFieldStringData("ruolo", row, "D")
+                        p.RuoloMantra = Functions.ReadFieldStringData("ruolomantra", row, "P")
+                        p.RuoloMantraS = Functions.ReadFieldStringData("ruolomantras", row, "P")
+                        p.Nat = Functions.ReadFieldStringData("nat", row, "")
                         p.NatCode = Functions.ReadFieldStringData("natcode", row, "")
                         p.Nome = Functions.ReadFieldStringData("nome", row, "D")
                         p.Squadra = Functions.ReadFieldStringData("squadra", row, "D")
@@ -188,7 +193,10 @@ Namespace Torneo
                         p.StatisticLast.Sostituito = Functions.ReadFieldIntegerData("sos_last", row, 0)
                         p.StatisticLast.Subentrato = Functions.ReadFieldIntegerData("sub_last", row, 0)
                         p.StatisticLast.Minuti = Functions.ReadFieldIntegerData("mm_last", row, 0)
-
+                        If p.Ruolo = "P" Then
+                            p.RuoloMantra = p.Ruolo
+                            p.RuoloMantraS = p.Ruolo
+                        End If
                         list(key).Add(p)
 
                     Next
@@ -247,6 +255,8 @@ Namespace Torneo
             Public Property TeamId() As Integer = 0
             Public Property RosaId() As Integer = 0
             Public Property Ruolo() As String = ""
+            Public Property RuoloMantra() As String = ""
+            Public Property RuoloMantraS() As String = ""
             Public Property Nome() As String = ""
             Public Property Squadra() As String = ""
             Public Property Nat() As String = ""

@@ -40,6 +40,7 @@ Partial Class Form1
         Me.cmdcoppa = New System.Windows.Forms.Button()
         Me.Button16 = New System.Windows.Forms.Button()
         Me.Button17 = New System.Windows.Forms.Button()
+        Me.Button18 = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Button1
@@ -217,11 +218,22 @@ Partial Class Form1
         Me.Button17.Text = "elaborate html pform "
         Me.Button17.UseVisualStyleBackColor = True
         '
+        'Button18
+        '
+        Me.Button18.Location = New System.Drawing.Point(307, 91)
+        Me.Button18.Margin = New System.Windows.Forms.Padding(2)
+        Me.Button18.Name = "Button18"
+        Me.Button18.Size = New System.Drawing.Size(153, 36)
+        Me.Button18.TabIndex = 214
+        Me.Button18.Text = "get players ranking"
+        Me.Button18.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(605, 340)
+        Me.Controls.Add(Me.Button18)
         Me.Controls.Add(Me.Button17)
         Me.Controls.Add(Me.Button16)
         Me.Controls.Add(Me.cmdcoppa)
@@ -265,4 +277,5 @@ Partial Class Form1
     Friend WithEvents cmdcoppa As Button
     Friend WithEvents Button16 As Button
     Friend WithEvents Button17 As Button
+    Friend WithEvents Button18 As Button
 End Class

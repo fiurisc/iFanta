@@ -9,6 +9,7 @@
 
         Public Property Nome() As String = "TORNEO"
         Public Property Year As String = ""
+        Public Property MailAdmin() As String = ""
         Public Property NumberOfTeams() As Integer = 10
         Public Property NumberOfDays() As Integer = 38
         Public Property Points As PointsSettings = New PointsSettings

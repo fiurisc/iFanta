@@ -184,9 +184,11 @@
     <Compile Include="torneo\general.vb" />
     <Compile Include="torneo\make_version.vb" />
     <Compile Include="torneo\matchs.vb" />
+    <Compile Include="torneo\player-ranking.vb" />
     <Compile Include="torneo\players.vb" />
     <Compile Include="torneo\probable.vb" />
     <Compile Include="torneo\public_variables.vb" />
+    <Compile Include="torneo\push.vb" />
     <Compile Include="torneo\rose.vb" />
     <Compile Include="torneo\settings\bonus_settings.vb" />
     <Compile Include="torneo\settings\coppa_settings.vb" />
@@ -196,6 +198,7 @@
     <Compile Include="webdata\dbcopy.vb" />
     <Compile Include="webdata\functions.vb" />
     <Compile Include="webdata\match.vb" />
+    <Compile Include="webdata\players-ranking.vb" />
     <Compile Include="webdata\players-data.vb" />
     <Compile Include="webdata\players-quotes.vb" />
     <Compile Include="webdata\players.vb" />

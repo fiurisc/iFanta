@@ -1,7 +1,6 @@
 ﻿Imports System.Collections.Concurrent
 Imports System.Data
-Imports System.Data.Entity.Migrations
-Imports System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar
+Imports System.Security.Cryptography
 
 
 Namespace Torneo
@@ -193,6 +192,11 @@ Namespace Torneo
             Dim LastPresenzeWidthList As New List(Of Integer) From {0, 10}
             Dim ruolorankList As New List(Of Integer) From {startRouleRank, startRouleRank + 5, startRouleRank + 10, startRouleRank + 15}
             Dim goalrankList As New List(Of Double) From {25, 26}
+
+            If daydata < 35 Then
+                matchWidthList.Add(startMatchRank + 30)
+                matchWidthList.Add(startMatchRank + 40)
+            End If
 
             For Each tr As Integer In teamrankList
                 For Each rr As Integer In ruolorankList
@@ -581,13 +585,6 @@ Namespace Torneo
             Dim data As New Torneo.FormazioniData(appSett)
 
             Dim mt As Dictionary(Of String, Double) = GetMatchResult(Giornata, 20)
-
-            Dim f As Double = mt.Values.Sum()
-            'startAvgPtRank = CInt((1500 - mt.Values.Sum()) / 100 + 80)
-            'If startAvgPtRank > 85 Then startAvgPtRank = 85
-            'If startAvgPtRank < 80 Then startAvgPtRank = 80
-            'startAvgPtRank = 85
-
             Dim results As New System.Collections.Concurrent.ConcurrentBag(Of AutoFormazione)
             Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList()
 
@@ -728,11 +725,11 @@ Namespace Torneo
         End Function
 
         Private Function GetLastFormationDay(Giornata As Integer, IdTeam As Integer) As Integer
-            Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "Select max(gio) As maxgio FROM tbformazioni WHERE idteam=" & IdTeam & " And gio<=" & Giornata)
+            Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, If(IdTeam <> -1, "Select max(gio) As maxgio FROM tbformazioni WHERE idteam=" & IdTeam & " And gio<=" & Giornata, "Select max(gio) As maxgio FROM tbformazioni WHERE gio<=" & Giornata))
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
                 Return CInt(ds.Tables(0).Rows(0)("maxgio"))
             Else
-                Return 0
+                Return 1
             End If
         End Function
 
@@ -770,7 +767,8 @@ Namespace Torneo
                 '************************************************************************************************
                 Dim tbref As String = If(Giornata > MaxDayInArchive, "tbrose", "tbformazioni")
                 Dim sqf As String = If(Giornata > MaxDayInArchive, "tb.sqp", "tb.sqf")
-                Dim tbwhere As String = If(Giornata > MaxDayInArchive, "tb.idteam=" & IdTeam, "tb.idteam=" & IdTeam & " And tb.gio=" & GetLastFormationDay(Giornata, IdTeam) & " And tb.type<3")
+                Dim whereidTeam As String = If(IdTeam <> -1, "tb.idteam=" & IdTeam, "tb.idteam>=0")
+                Dim tbwhere As String = If(Giornata > MaxDayInArchive, whereidTeam, whereidTeam & " And tb.gio=" & GetLastFormationDay(Giornata, IdTeam) & " And tb.type<3")
                 'Dim dec As String = "exp(-0.1*(" & daydata & "-tbd.gio))"
                 'Dim dec As String = "0.999995^(" & daydata & "-tbd.gio)"
                 Dim dec As String = "1"
@@ -778,7 +776,7 @@ Namespace Torneo
                 If daydata = 0 Then
 
                     Dim sqlstr As New Text.StringBuilder
-                    sqlstr.AppendLine("   Select tb.*,tbp.ruolomantras,iif(tb.sqf Is null Or tb.sqf='',tbp.squadra,tb.sqf) as sqp FROM (")
+                    sqlstr.AppendLine("   Select tb.*,tbp.ruolomantra,tbp.ruolomantras,iif(tb.sqf Is null Or tb.sqf='',tbp.squadra,tb.sqf) as sqp FROM (")
                     sqlstr.AppendLine("     SELECT tb.idrosa,tb.ruolo,tb.nome," & If(tbref = "tbrose", "null", "tb.squadra") & " as sqf")
                     sqlstr.AppendLine("     FROM " & tbref & " as tb")
                     sqlstr.AppendLine("     WHERE " & tbwhere & ") as tb")
@@ -795,6 +793,7 @@ Namespace Torneo
                             p.RosaId = Functions.ReadFieldIntegerData("idrosa", row, 0)
                             p.Ruolo = Functions.ReadFieldStringData("ruolo", row, "")
                             p.RuoloMantra = Functions.ReadFieldStringData("ruolomantras", row, "")
+                            p.RuoloMantraAdvance = Functions.ReadFieldStringData("ruolomantra", row, "")
                             p.Nome = Functions.ReadFieldStringData("nome", row, "")
                             p.Squadra = Functions.ReadFieldStringData("sqp", row, "")
                             fc.Add(p)
@@ -825,14 +824,13 @@ Namespace Torneo
                     Next
 
                     sqlstr = New Text.StringBuilder
-                    sqlstr.AppendLine("SELECT max(gio) as gio from tbformazioni where idteam=" & IdTeam & "")
-
-                    sqlstr = New Text.StringBuilder
-                    sqlstr.AppendLine("SELECT tb.*,tbd.pt as lastpt FROM (")
+                    sqlstr.AppendLine("SELECT tb.*,tbd.pt as lastpt1 FROM (")
+                    sqlstr.AppendLine("SELECT tb.*,tbd.pt as lastpt2 FROM (")
+                    sqlstr.AppendLine("SELECT tb.*,tbd.pt as lastpt3 FROM (")
                     sqlstr.AppendLine("  SELECT tb.*,tbm.teama,teamb,iif(tb.sqp=teama,1,0) as home,timem,iif(CDate(timem)>Now(),1,0) as available,DateDiff('h', Now(), CDate(timem)) AS tleft FROM (")
-                    sqlstr.AppendLine("   SELECT tb.*,tbp.ruolomantras,tbp.qini,tbp.qcur,iif(tb.sqf is null or tb.sqf='',tbp.squadra,tb.sqf) as sqp FROM (")
-                    sqlstr.AppendLine("    SELECT tb.idrosa,tb.ruolo, tb.nome,tb.sqf,sum(tb.amm) as amm,sum(tb.esp) as esp,sum(tb.gf) as gf,sum(tb.gs) as gs,sum(tb.ass) as ass,sum(tb.rigt) as rigt,IIf(Sum(tb.pt)>0,CInt(avg(tb.pt)),0) AS avg_pt,sum(tb.ptn) as ptn,IIf(Sum(tb.ptn)>0,cint(sum(tb.ptn)/sum(tb.pgio)),0) AS avg_ptn, IIf(Sum(tb.voto)>0,CInt(Avg(tb.voto)),0) AS avg_vt, Count(*) AS pgio, Sum(tbt.tit) AS tit, Sum(tbt.sos) AS sos, Sum(tbt.sub) AS sub, Sum(tbt.mm*" & varp & ") AS mm, iif(Sum(tbt.mm) > 0,CInt(Sum(tbt.mm)) / " & var0 & ",0 ) AS avg_mm FROM (")
-                    sqlstr.AppendLine("     SELECT tb.idrosa,tb.ruolo,tb.nome," & If(tbref = "tbrose", "null", "tb.squadra") & " as sqf,tbd.gio,tbd.amm as amm,tbd.esp as esp,tbd.gf as gf,tbd.gs as gs,tbd.ass as ass,tbd.rigt as rigt,tbd.pt," & dec & "*(tbd.voto+tbd.gf*30+tbd.ass*10) as ptn," & dec & " as pgio,tbd.voto")
+                    sqlstr.AppendLine("   SELECT tb.*,tbp.ruolomantra,tbp.ruolomantras,tbp.qini,tbp.qcur,iif(tb.sqf is null or tb.sqf='',tbp.squadra,tb.sqf) as sqp FROM (")
+                    sqlstr.AppendLine("    SELECT tb.idrosa,tb.ruolo, tb.nome,tb.sqf,sum(tb.amm) as amm,sum(tb.esp) as esp,sum(tb.gf) as gf,sum(tb.gs) as gs,sum(tb.ass) as ass,sum(tb.rigt) as rigt,IIf(Sum(tb.pt)>0,CInt(avg(tb.pt)),0) AS avg_pt,sum(tb.ptn) as ptn,IIf(Sum(tb.ptn)>0,cint(sum(tb.ptn)/sum(tb.pgio)),0) AS avg_ptn, IIf(Sum(tb.voto)>0,CInt(Avg(tb.voto)),0) AS avg_vt,sum(n6) as sn6, Count(*) AS pgio, Sum(tbt.tit) AS tit, Sum(tbt.sos) AS sos, Sum(tbt.sub) AS sub, Sum(tbt.mm*" & varp & ") AS mm, iif(Sum(tbt.mm) > 0,CInt(Sum(tbt.mm)) / " & var0 & ",0 ) AS avg_mm FROM (")
+                    sqlstr.AppendLine("     SELECT tb.idrosa,tb.ruolo,tb.nome," & If(tbref = "tbrose", "null", "tb.squadra") & " as sqf,tbd.gio,tbd.amm as amm,tbd.esp as esp,tbd.gf as gf,tbd.gs as gs,tbd.ass as ass,tbd.rigt as rigt,tbd.pt," & dec & "*(tbd.voto+tbd.gf*30+tbd.ass*10) as ptn," & dec & " as pgio,tbd.voto,IIf(tbd.voto>=60,1,0) AS n6")
                     sqlstr.AppendLine("     FROM " & tbref & " as tb")
                     sqlstr.AppendLine("     LEFT JOIN tbdati as tbd on (tbd.nome=tb.nome AND tbd.pt > -100 AND tbd.gio >" & minData2 & " and tbd.gio<=" & daydata & ")")
                     sqlstr.AppendLine("     WHERE " & tbwhere & ") as tb")
@@ -840,6 +838,8 @@ Namespace Torneo
                     sqlstr.AppendLine("    GROUP BY tb.idrosa,tb.ruolo,tb.nome,tb.sqf) as tb")
                     sqlstr.AppendLine("   LEFT JOIN tbplayer as tbp on tbp.nome=tb.nome) as tb")
                     sqlstr.AppendLine("  LEFT JOIN tbmatch as tbm ON (tbm.gio = " & Giornata & " AND (tb.sqp = tbm.teama OR tb.sqp = tbm.teamb))) as tb")
+                    sqlstr.AppendLine("LEFT JOIN tbdati as tbd on (tbd.nome=tb.nome AND tbd.gio=" & daydata - 3 & ")) as tb")
+                    sqlstr.AppendLine("LEFT JOIN tbdati as tbd on (tbd.nome=tb.nome AND tbd.gio=" & daydata - 2 & ")) as tb")
                     sqlstr.AppendLine("LEFT JOIN tbdati as tbd on (tbd.nome=tb.nome AND tbd.gio=" & daydata - 1 & ")")
 
                     a = sqlstr.ToString()
@@ -854,6 +854,7 @@ Namespace Torneo
                             p.Ruolo = Functions.ReadFieldStringData("ruolo", row, "")
                             p.RuoloValue = CInt(p.Ruolo.Replace("A", "1").Replace("C", "2").Replace("D", "3").Replace("P", "4"))
                             p.RuoloMantra = Functions.ReadFieldStringData("ruolomantras", row, "")
+                            p.RuoloMantraAdvance = Functions.ReadFieldStringData("ruolomantra", row, "")
                             p.qIni = Functions.ReadFieldIntegerData("qini", row, 0)
                             p.qCur = Functions.ReadFieldIntegerData("qcur", row, 0)
                             p.Nome = Functions.ReadFieldStringData("nome", row, "")
@@ -866,6 +867,7 @@ Namespace Torneo
                             p.RigT = Functions.ReadFieldDoubleData("rigt", row, 0)
                             p.AvgPt = Functions.ReadFieldIntegerData("avg_pt", row, 0)
                             p.AvgVt = Functions.ReadFieldIntegerData("avg_vt", row, 0)
+                            p.nVt6 = Functions.ReadFieldIntegerData("sn6", row, 0)
                             p.pGiocate = Functions.ReadFieldIntegerData("pgio", row, 0)
                             p.Titolare = Functions.ReadFieldIntegerData("tit", row, 0)
                             p.Sostituito = Functions.ReadFieldIntegerData("sos", row, 0)
@@ -876,7 +878,24 @@ Namespace Torneo
                             p.Available = Functions.ReadFieldIntegerData("available", row, 0)
                             p.TeamA = Functions.ReadFieldStringData("teama", row, "")
                             p.TeamB = Functions.ReadFieldStringData("teamb", row, "")
-                            p.LastPt = Functions.ReadFieldIntegerData("lastpt", row, -200)
+                            p.LastPt1 = Functions.ReadFieldIntegerData("lastpt1", row, -200)
+                            p.LastPt2 = Functions.ReadFieldIntegerData("lastpt2", row, -200)
+                            p.LastPt3 = Functions.ReadFieldIntegerData("lastpt3", row, -200)
+
+                            Dim lstpt As Integer = 0
+                            Dim lstpgio As Integer = 0
+                            If p.LastPt1 > -200 Then
+                                lstpt += p.LastPt1
+                                lstpgio += 1
+                            End If
+                            If p.LastPt2 > -200 Then
+                                lstpt += p.LastPt2
+                                lstpgio += 1
+                            End If
+                            If p.LastPt3 > -200 Then
+                                lstpt += p.LastPt3
+                                lstpgio += 1
+                            End If
 
                             If pextra.ContainsKey(p.Nome) Then
                                 p.Amm = pextra(p.Nome).Amm / (daydata - minData1)
@@ -898,6 +917,12 @@ Namespace Torneo
 
                             p.FattoreSquadra = dicFactTeam(p.Squadra)("GF")
                             p.FattoreAvversaria = dicFactTeam(avv)("GS")
+                            p.PosTeamA = dicFactTeam(p.TeamA)("POS")
+                            p.PosTeamB = dicFactTeam(p.TeamB)("POS")
+
+                            If p.Nome = "ZANIOLO" Then
+                                p.Nome = p.Nome
+                            End If
 
                             If dicMatchRank.ContainsKey(p.Squadra) Then p.PropGolFattiMatch = dicMatchRank(p.Squadra)
                             p.PropGolSubitiMatch = p.PropGolFattiMatch
@@ -912,27 +937,39 @@ Namespace Torneo
                                     p.PropGolFattiMatch *= 1.025
                             End Select
                             p.goodGrade = GetGoodGradePrabability(Functions.ReadFieldDoubleData("avg_ptn", row, 0) / 10, p.pGiocate, p.Ruolo, p.qIni)
+                            'If lstpgio > 1 AndAlso (lstpt / lstpgio) > 70 AndAlso p.goodGrade < 40 AndAlso p.qIni > 10 Then
+                            '    p.goodGrade = 50
+                            'End If
+
+                            'If p.LastPt1 < 60 AndAlso p.LastPt2 < 60 AndAlso p.LastPt3 < 60 AndAlso p.goodGrade < 50 AndAlso p.LastPt1 > -200 AndAlso p.LastPt2 > -200 AndAlso p.LastPt3 > -200 Then p.goodGrade = p.goodGrade * 0.9
+
                             If p.Ruolo = "P" Then p.goodGrade = p.AvgVt
-                            If p.LastPt = -200 AndAlso p.Ruolo <> "P" AndAlso p.goodGrade < 35 AndAlso p.Squadra = p.TeamA AndAlso infortunatiOld.Contains(p.Nome) = False Then p.goodGrade += 4
+                            If p.LastPt1 = -200 AndAlso p.Ruolo <> "P" AndAlso p.goodGrade < 35 AndAlso p.Squadra = p.TeamA AndAlso infortunatiOld.Contains(p.Nome) = False Then p.goodGrade += 3
+
                             If infortunatiOld.Contains(p.Nome) Then p.goodGrade -= 5
 
                             If p.Ruolo = "P" Then
-                                If p.Nome = "MOTTA" Then
-                                    p.Nome = p.Nome
-                                End If
                                 If p.Squadra = p.TeamA AndAlso p.PropGolSubitiMatch > 50 Then
-                                    'p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * (p.pGiocate * 3 + 2.5))
                                     p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * 55)
                                 Else
-                                    'p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * (p.pGiocate * 3 + 1))
                                     p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * 40)
                                 End If
-                                'p.Rating.Rating3 = 0
                             Else
-                                p.Rating.Rating3 = CInt((1 - Math.Exp(-p.FattoreSquadra * p.FattoreAvversaria * p.Gf)) * Parameters.GoalWidth + (1 - Math.Exp(-p.Ass)) * Parameters.AssistWidth + (1 - Math.Exp(-p.RigT)) * 0 + (1 - Math.Exp(-dicFactTeam("TOT")("GF") * p.FattoreSquadra * 3 * p.FattoreAvversaria)) * 1.6 - (1 - Math.Exp(-p.Amm)) * Parameters.AmmonitionWidth)
+                                Dim factavv As Double = If(Giornata > 30, 1.5, 1.6)
+
+                                'Dim rat As Double = (1 - Math.Exp(-p.FattoreSquadra * p.FattoreAvversaria * p.Gf)) * Parameters.GoalWidth + (1 - Math.Exp(-p.Ass)) * Parameters.AssistWidth + (1 - Math.Exp(-p.RigT)) * 0 + (1 - Math.Exp(-dicFactTeam("TOT")("GF") * p.FattoreSquadra * 3 * p.FattoreAvversaria)) * factavv - (1 - Math.Exp(-p.Amm)) * Parameters.AmmonitionWidth
+                                'If p.Ruolo = "D" Then
+                                '    p.Rating.Rating3 = CInt(rat * 1.15)
+                                'ElseIf p.Ruolo = "C" Then
+                                '    p.Rating.Rating3 = CInt(rat * 1.01)
+                                'Else
+                                '    p.Rating.Rating3 = CInt(rat)
+                                'End If
+
+                                p.Rating.Rating3 = CInt((1 - Math.Exp(-p.FattoreSquadra * p.FattoreAvversaria * p.Gf)) * Parameters.GoalWidth + (1 - Math.Exp(-p.Ass)) * Parameters.AssistWidth + (1 - Math.Exp(-p.RigT)) * 0 + (1 - Math.Exp(-dicFactTeam("TOT")("GF") * p.FattoreSquadra * 3 * p.FattoreAvversaria)) * factavv - (1 - Math.Exp(-p.Amm)) * Parameters.AmmonitionWidth)
 
                                 If p.Ruolo = "D" Then
-                                    p.Rating.Rating3 = CInt(p.Rating.Rating3 * 1.25)
+                                    p.Rating.Rating3 = CInt(p.Rating.Rating3 * 1.2)
                                 ElseIf p.Ruolo = "C" Then
                                     p.Rating.Rating3 = CInt(p.Rating.Rating3 * 1.09)
                                 End If
@@ -987,8 +1024,6 @@ Namespace Torneo
 
             Return Fsoft
 
-            'Return scoreHome / scoreAway
-
         End Function
 
         Private Function GetLambaTeamMatch(squadra As String, avv As String, getAvv As Boolean, dicFactTeam As Dictionary(Of String, Dictionary(Of String, Double))) As Double
@@ -1018,22 +1053,6 @@ Namespace Torneo
             ' λ attesi
             Dim lambdaSquadra = forzaAttSquadra * forzaDifAvv * dicFactTeam("TOT")("GF")
             Dim lambdaAvv = forzaAttAvv * forzaDifSquadra * dicFactTeam("TOT")("GF")
-
-            'If giornata > 35 Then
-            '    lambdaSquadra = lambdaSquadra + dicFactTeam(Squadra)("POS") / 40
-            '    lambdaAvv = lambdaAvv + dicFactTeam(Avv)("POS") / 40
-            'End If
-            Dim d As Double = 2
-
-            'If giornata > 35 AndAlso dicFactTeam(Squadra)("POS") > 17 Then
-            '    d = dicFactTeam(Squadra)("POS") / (50 - giornata)
-            '    lambdaSquadra = lambdaSquadra * d
-            '    lambdaAvv = lambdaAvv * (1 / d)
-            'ElseIf giornata > 35 AndAlso dicFactTeam(Avv)("POS") > 17 Then
-            '    d = dicFactTeam(Avv)("POS") / (50 - giornata)
-            '    lambdaSquadra = lambdaSquadra * (1 / d)
-            '    lambdaAvv = lambdaAvv * d
-            'End If
 
             ' Limite massimo gol considerati
             Dim maxGol As Integer = 10
@@ -1074,7 +1093,7 @@ Namespace Torneo
                 Dim vect As New List(Of Double) From {-4, -2.5, -1.5, 0, 0.2, 1, 1, 0.4, 0.1, 0, 0, 0, 0, 3, 10, 18, 23, 25, 23, 20}
                 Dim fact As Double = 0
                 If giornata = 35 Then
-                    fact = 0
+
                 ElseIf giornata = 36 Then
                     fact = 1.5
                 ElseIf giornata = 37 Then
@@ -1141,9 +1160,11 @@ Namespace Torneo
             'Elimino eventuali risultati estremi'
             Dim removeExtreme As Func(Of List(Of Integer), List(Of Integer)) = Function(lst As List(Of Integer))
                                                                                    If lst.Count > 5 Then
-                                                                                       lst.Sort()
-                                                                                       If lst(lst.Count - 1) < lst(lst.Count - 2) - 1 Then lst.RemoveAt(lst.Count - 1)
-                                                                                       If lst(0) < lst(1) - 1 Then lst.RemoveAt(0)
+                                                                                       Dim av As Double = lst.Average()
+                                                                                       lst = lst.Where(Function(x) Math.Abs(x - av) < 5).ToList()
+                                                                                       'lst.Sort()
+                                                                                       'If lst(lst.Count - 1) < lst(lst.Count - 2) - 0.5 Then lst.RemoveAt(lst.Count - 1)
+                                                                                       'If lst(0) < lst(1) - 0.5 Then lst.RemoveAt(0)
                                                                                    End If
                                                                                    Return lst
                                                                                End Function
@@ -1177,114 +1198,24 @@ Namespace Torneo
 
             End If
 
-
-            'Dim sqlstr As New Text.StringBuilder
-            'sqlstr.AppendLine("SELECT gio,teama,teamb,goala,goalb FROM tbmatch WHERE gio>" & daydata - HistoricalMatchData & " AND gio<=" & daydata & " and goala<>'' and goalb<>''")
-
-            'Dim a As String = sqlstr.ToString()
-            'Dim ds As Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, sqlstr.ToString())
-
-            'Dim dataOut As New Dictionary(Of String, Dictionary(Of String, Double))
-            'Dim dataTmp As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of Integer, Double)))
-
-            'dataTmp.Add("TOT", New Dictionary(Of String, Dictionary(Of Integer, Double)) From {{"GF", New Dictionary(Of Integer, Double)}, {"GS", New Dictionary(Of Integer, Double)}})
-            'For g As Integer = daydata - HistoricalMatchData + 1 To daydata
-            '    dataTmp("TOT")("GF").Add(g, 0)
-            '    dataTmp("TOT")("GS").Add(g, 0)
-            'Next
-            'dataOut.Add("TOT", New Dictionary(Of String, Double) From {{"GF", 0}, {"GS", 0}})
-
-            ''Elimino eventuali risultati estremi'
-            'Dim removeExtreme As Func(Of List(Of Integer), List(Of Integer)) = Function(lst As List(Of Integer))
-            '                                                                       If lst.Count > 5 Then
-            '                                                                           lst.Sort()
-            '                                                                           If lst(lst.Count - 1) < lst(lst.Count - 2) - 1 Then lst.RemoveAt(lst.Count - 1)
-            '                                                                           If lst(0) < lst(1) - 1 Then lst.RemoveAt(0)
-            '                                                                       End If
-            '                                                                       Return lst
-            '                                                                   End Function
-
-            'If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
-
-            '    Dim coef As Double = 1
-
-            '    For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
-
-            '        Dim sqa As String = ds.Tables(0).Rows(i)("teama").ToString()
-            '        Dim sqb As String = ds.Tables(0).Rows(i)("teamb").ToString()
-            '        Dim ga As Integer = CInt(ds.Tables(0).Rows(i)("goala"))
-            '        Dim gb As Integer = CInt(ds.Tables(0).Rows(i)("goalb"))
-            '        Dim gio As Integer = CInt(ds.Tables(0).Rows(i)("gio"))
-
-            '        If dataTmp.ContainsKey(sqa) = False Then
-            '            dataTmp.Add(sqa, New Dictionary(Of String, Dictionary(Of Integer, Double)) From {{"GF", New Dictionary(Of Integer, Double)}, {"GS", New Dictionary(Of Integer, Double)}})
-            '            For g As Integer = daydata - HistoricalMatchData To daydata
-            '                dataTmp(sqa)("GF").Add(g, 0)
-            '                dataTmp(sqa)("GS").Add(g, 0)
-            '            Next
-            '        End If
-            '        If dataTmp.ContainsKey(sqb) = False Then
-            '            dataTmp.Add(sqb, New Dictionary(Of String, Dictionary(Of Integer, Double)) From {{"GF", New Dictionary(Of Integer, Double)}, {"GS", New Dictionary(Of Integer, Double)}})
-            '            For g As Integer = daydata - HistoricalMatchData + 1 To daydata
-            '                dataTmp(sqb)("GF").Add(g, 0)
-            '                dataTmp(sqb)("GS").Add(g, 0)
-            '            Next
-            '        End If
-
-            '        dataTmp(sqa)("GF")(gio) = ga
-            '        dataTmp(sqa)("GS")(gio) = gb
-
-            '        dataTmp(sqb)("GF")(gio) = gb
-            '        dataTmp(sqb)("GS")(gio) = ga
-
-            '        dataTmp("TOT")("GF")(gio) += (ga + gb) / 20
-            '        dataTmp("TOT")("GS")(gio) += (ga + gb) / 20
-
-            '    Next
-
-            '    dataOut("TOT")("GF") = MediaPesata(dataTmp("TOT")("GF").Values.ToList())
-            '    dataOut("TOT")("GS") = MediaPesata(dataTmp("TOT")("GS").Values.ToList())
-
-            '    For Each sq As String In dataTmp.Keys
-            '        If sq = "TOT" Then Continue For
-            '        dataOut.Add(sq, New Dictionary(Of String, Double) From {{"GF", MediaPesata(dataTmp(sq)("GF").Values.ToList()) / dataOut("TOT")("GF")}, {"GS", MediaPesata(dataTmp(sq)("GS").Values.ToList()) / dataOut("TOT")("GF")}})
-            '    Next
-
-            'End If
-
-            ds = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT squadra,pt,pos FROM tbrank WHERE gio=" & daydata)
+            ds = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT squadra,pt,pos,vitt FROM tbrank WHERE gio=" & daydata)
             If ds.Tables.Count > 0 Then
                 For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
 
                     Dim sq As String = ds.Tables(0).Rows(i)("squadra").ToString()
                     Dim pt As Integer = CInt(ds.Tables(0).Rows(i)("pt"))
                     Dim pos As Integer = CInt(ds.Tables(0).Rows(i)("pos"))
+                    Dim vitt As Integer = CInt(ds.Tables(0).Rows(i)("vitt"))
 
                     dataOut(sq)("PT") = pt
                     dataOut(sq)("POS") = pos
+                    dataOut(sq)("VITT") = vitt
 
                 Next
             End If
 
             Return dataOut
 
-        End Function
-
-        Function MediaPesata(valori As List(Of Double)) As Double
-            If valori Is Nothing OrElse valori.Count = 0 Then Return 0
-
-            Dim ultimi = valori.Skip(Math.Max(0, valori.Count - 20)).ToList()
-
-            Dim sommaPesi As Double = 0
-            Dim sommaValori As Double = 0
-
-            For i As Integer = 0 To ultimi.Count - 1
-                Dim peso = Math.Log(i + 2) ' log(1) = 0 → evitiamo
-                sommaPesi += peso
-                sommaValori += ultimi(i) * peso
-            Next
-
-            Return sommaValori / sommaPesi
         End Function
 
         Private Function GetMatchRankData1(HistoricalMatchData As Integer) As Dictionary(Of String, Dictionary(Of String, Double))
@@ -1478,7 +1409,8 @@ Namespace Torneo
 
             For Each p As PlayerAutoFormazione In plist
 
-                Dim pteam As Integer = CInt(Math.Floor(If(factTeam.Fact = 0, Parameters.TeamWidth, factTeam.Fact * (dicTeamRank("TOT")(p.Squadra) - factTeam.Min))))
+                'calcolo rating 8 team di appartenenza'
+                Dim pteam As Double = Math.Floor(If(factTeam.Fact = 0, Parameters.TeamWidth, factTeam.Fact * (dicTeamRank("TOT")(p.Squadra) - factTeam.Min)))
 
                 If p.Ruolo = "P" Then
                     p.Rating.Rating8 = CInt(pteam * 1)
@@ -1502,7 +1434,19 @@ Namespace Torneo
                     p.Rating.Rating1 = CInt(p.Rating.Rating1 * 1.04) 'da eliminare se la giornata 33 peggiora
                 End If
 
+                If p.Rating.Rating1 < Parameters.AvarangePointsWitdh * 0.3 AndAlso (p.pGiocate < 5 OrElse Giornata > 10) Then p.Rating.Rating1 = CInt(Parameters.AvarangePointsWitdh * 0.3)
+
+                'gestione derby'
+                If (p.TeamA = "MILAN" AndAlso p.TeamB = "INTER") OrElse (p.TeamA = "INTER" AndAlso p.TeamB = "MILAN") OrElse (p.TeamA = "JUVENTUS" AndAlso p.TeamB = "INTER") OrElse (p.TeamA = "INTER" AndAlso p.TeamB = "JUVENTUS") OrElse (p.TeamA = "TORINO" AndAlso p.TeamB = "JUVENTUS") OrElse (p.TeamA = "JUVENTUS" AndAlso p.TeamB = "TORINO") OrElse (p.TeamA = "ROMA" AndAlso p.TeamB = "LAZIO") OrElse (p.TeamA = "LAZIO" AndAlso p.TeamB = "ROMA") Then
+                    Dim ths As Integer = 75
+                    If p.PropGolFattiMatch < ths AndAlso p.PropGolFattiMatch > 50 AndAlso p.Squadra = p.TeamB Then
+                        p.PropGolFattiMatch = p.PropGolFattiMatch * 1.5
+                        If p.PropGolFattiMatch > ths Then p.PropGolFattiMatch = ths
+                    End If
+                End If
+
                 'calcolo rating 2'
+
                 If p.Ruolo = "P" Then
                     p.Rating.Rating2 = CInt(p.PropGolSubitiMatch / 100 * Parameters.MatchWidth * 0.6)
                 Else
@@ -1516,37 +1460,43 @@ Namespace Torneo
                     End If
                 End If
 
+                'calcolo rating 6 probabili formazioni'
                 Dim ratProb As Double = GetProbableRating(p, Giornata, Parameters)
 
                 p.Rating.Rating6 = ratProb
 
-                ' calcolo rating 4'
+                ' calcolo rating 4 minuti giocati'
                 If p.Minuti > (90 * Parameters.HistoricalPlayerData) * 0.7 Then
                     p.Rating.Rating4 = Parameters.LastPresenceWitdh
                 Else
                     p.Rating.Rating4 = CInt(p.Minuti / (90 * Parameters.HistoricalPlayerData) * Parameters.LastPresenceWitdh)
                 End If
 
-                ' calcolo rating 5'
+                ' calcolo rating 5 ruolo'
                 p.Rating.Rating5 = GetRoleRating(p, Giornata, Parameters, factRuolo.Min, factRuolo.Fact, dicRuoloRank)
 
-                p.Rating.Total2 = CInt(p.Rating.Rating1 + p.Rating.Rating2 + p.Rating.Rating3 + p.Rating.Rating4 + p.Rating.Rating5 + p.Rating.Rating7 + p.Rating.Rating8)
-                If p.Nome = "LEAO" Then p.Nome = p.Nome
+                'adattamento rating 1 per quei giocatori troppo svalutati, ma che giocano i squadre forti'
+                Dim rat1ths1 As Integer = CInt(Parameters.AvarangePointsWitdh * 0.5)
+                Dim rat1ths2 As Integer = CInt(Parameters.AvarangePointsWitdh * 0.7)
 
-                'If p.pGiocate < 2 AndAlso p.qCur < 10 Then p.Rating.Total2 -= 3
+                If p.Rating.Rating8 > 8 AndAlso p.Rating.Rating1 < rat1ths1 AndAlso p.qCur > 13 AndAlso p.Rating.Rating5 > Parameters.RuoloWidth * 1 AndAlso p.Rating.Rating2 > Parameters.MatchWidth * 0.6 Then
+                    Dim distanza As Double = (rat1ths2 - p.Rating.Rating1) / rat1ths2
+                    Dim fattore As Double = 1 + distanza * 0.3
+                    p.Rating.Rating1 = CInt(p.Rating.Rating1 * fattore)
+                    If p.Rating.Rating1 > rat1ths2 Then p.Rating.Rating1 = rat1ths2
+                End If
 
-                ' Disabilitata anche se vantagiosa per un sola giornata, da valutare se riabilitare in futuro
-                'If modules.ContainsKey(p.Squadra) Then
-                '    Dim moduleTeam As String = modules(p.Squadra)
-                '    If moduleTeam = "43-3-3" OrElse moduleTeam = "3-4-3" Then
-                '        p.Rating.Total2 += 3
-                '    ElseIf moduleTeam = "5-4-1" OrElse moduleTeam = "6-3-1" Then
-                '        p.Rating.Total2 -= 0
-                '    Else
-                '        p.Rating.Total2 += 0
-                '    End If
-                'End If
+                'adattamento rating 2 per quei match troppo sopravvalutati nonostate siamo squadre di bassa classifica'
+                Dim rat2ths1 As Integer = CInt(Parameters.MatchWidth * 0.75)
 
+                If p.Rating.Rating8 < 3 AndAlso p.Rating.Rating2 > rat2ths1 AndAlso p.Rating.Rating1 < Parameters.AvarangePointsWitdh * 0.4 AndAlso p.qCur < 10 AndAlso Giornata < 36 Then
+                    p.Rating.Rating2 = rat2ths1
+                End If
+
+                'determino il rating totale'
+                p.Rating.Total2 = p.Rating.Rating1 + p.Rating.Rating2 + p.Rating.Rating3 + p.Rating.Rating4 + p.Rating.Rating5 + p.Rating.Rating7 + p.Rating.Rating8
+
+                'declasso / alzo il rating se siamo di fronte a partite con 6 politico
                 Dim declassPt As Integer = DeclassPlayer(Giornata, p.Ruolo, p.Squadra)
 
                 If declassPt <> 0 Then
@@ -1557,8 +1507,7 @@ Namespace Torneo
                     End If
                 End If
 
-                p.Rating.Total1 = p.Rating.Total2
-
+                'moltiplico il rating totale per il rating di probabile formazione'
                 If probable(Giornata).Values.ToList().Where(Function(x) x.Day <> -1).Count > 0 Then
                     If ratProb = -10 Then
                         p.Rating.Total1 = -1
@@ -1567,18 +1516,27 @@ Namespace Torneo
                         If ratProb > 1 Then ratProb = 1
                         p.Rating.Total1 = CInt(p.Rating.Total2 * ratProb)
                     End If
+                Else
+                    p.Rating.Total1 = p.Rating.Total2
                 End If
 
             Next
 
             plist = SortPlayers(plist, True)
 
+            If plist.Count > 25 Then
+                Dim p As List(Of PlayerAutoFormazione) = plist.Where(Function(x) x.Ruolo = "P").Take(3).ToList()
+                Dim d As List(Of PlayerAutoFormazione) = plist.Where(Function(x) x.Ruolo = "D").Take(8).ToList()
+                Dim c As List(Of PlayerAutoFormazione) = plist.Where(Function(x) x.Ruolo = "C").Take(8).ToList()
+                Dim a As List(Of PlayerAutoFormazione) = plist.Where(Function(x) x.Ruolo = "A").Take(6).ToList()
+                plist.RemoveAll(Function(x) Not p.Contains(x) And x.Ruolo = "P")
+                plist.RemoveAll(Function(x) Not d.Contains(x) And x.Ruolo = "D")
+                plist.RemoveAll(Function(x) Not c.Contains(x) And x.Ruolo = "C")
+                plist.RemoveAll(Function(x) Not a.Contains(x) And x.Ruolo = "A")
+            End If
+
             Return plist
 
-        End Function
-
-        Private Function AdditionalRating(rat As Double, addValue As Integer) As Integer
-            Return CInt(rat / 100) * (100 - addValue) + addValue
         End Function
 
         Private Function GetPercentageOfUnavailables(giornata As Integer, squadra As String) As Integer
@@ -1616,7 +1574,6 @@ Namespace Torneo
             Next
 
             If np.Count > 0 Then
-                'Dim g As Integer = CInt((scoreAva) * 100 / scoreTot)
                 Dim g As Integer = CInt((ninf.Count + nsq.Count) * 100 / np.Count)
                 Return g
             Else
@@ -1636,8 +1593,10 @@ Namespace Torneo
                 Dim npanc As Double = 0
                 Dim ninf As Integer = 0
                 Dim nsq As Integer = 0
-                Dim maxVauePanc As Double = 0.76
-                Dim minVauePanc As Double = 0.35
+
+                Dim maxVauePanc As Double = 0.85 '0.76
+                Dim medVauePanc As Double = 0.75
+                Dim minVauePanc As Double = 0.35 '0.35
 
                 For Each site As String In probable(Giornata).Keys
 
@@ -1649,9 +1608,9 @@ Namespace Torneo
                         If probable(Giornata)(site).Players(keyp).State = "Titolare" Then
                             ntit += 1
                         ElseIf probable(Giornata)(site).Players(keyp).State = "Panchina" Then
-                            If site = "Fantacalcio" OrElse site = "PianetaFantacalcio" Then
+                            If site = "Fantacalcio" Then
                                 If probable(Giornata)(site).Players(keyp).Percentage > -1 Then
-                                    Dim valp As Double = probable(Giornata)(site).Players(keyp).Percentage / 68
+                                    Dim valp As Double = probable(Giornata)(site).Players(keyp).Percentage / 55
                                     If valp > maxVauePanc Then valp = maxVauePanc
                                     npanc += valp
                                 ElseIf probable(Giornata)(site).Players(keyp).Info = "" OrElse probable(Giornata)(site).Players(keyp).Info.Contains("allottag") Then
@@ -1662,14 +1621,23 @@ Namespace Torneo
                             Else
                                 If p.Ruolo = "P" Then
                                     npanc += 0.2
-                                ElseIf probable(Giornata)(site).Players(keyp).Info = "" OrElse probable(Giornata)(site).Players(keyp).Info.Contains("allottag") Then
+                                ElseIf probable(Giornata)(site).Players(keyp).Info.Contains("allottag") Then
                                     npanc += maxVauePanc
+                                ElseIf probable(Giornata)(site).Players(keyp).Info = "" Then
+                                    npanc += medVauePanc
                                 Else
                                     npanc += minVauePanc
                                 End If
                             End If
                         ElseIf probable(Giornata)(site).Players(keyp).State = "Infortunato" AndAlso (probable(Giornata)(site).Players(keyp).Infortunio.Giorni = -1 OrElse probable(Giornata)(site).Players(keyp).Infortunio.Giorni > 0) Then
-                            ninf += 1
+                            If probable(Giornata)(site).Players(keyp).Info.Contains("da valutare") Then
+                                npanc += minVauePanc
+                            Else
+                                ninf += 1
+                            End If
+                            If p.Nome = "DAVIS K." Then
+                                p.Nome = p.Nome
+                            End If
                         ElseIf probable(Giornata)(site).Players(keyp).State = "Squalificato" Then
                             nsq += 1
                         End If
@@ -1678,7 +1646,7 @@ Namespace Torneo
 
                 If val > -10 Then
 
-                    val = (ntit * 1.34 + npanc) / nsitefound + 0.04
+                    val = (ntit * 1.33 + npanc) / nsitefound + 0.02
                     If val <= 0.1 AndAlso ninf < 2 AndAlso nsq < 2 AndAlso Giornata < 24 Then val = 0.5
 
                     If ninf > 2 OrElse (ninf >= nsitefound / 2 AndAlso Giornata > 24) Then
@@ -1687,7 +1655,7 @@ Namespace Torneo
                         val = 0.01
                     End If
 
-                    If p.Nome = "VLAHOVIC" Then
+                    If p.Nome = "GIOVANE" Then
                         p.Nome = p.Nome
                     End If
 
@@ -1696,7 +1664,7 @@ Namespace Torneo
                             val = 1
                         Else
                             If p.Ruolo <> "P" Then
-                                val += p.Rating.Rating3 / 110 + p.Rating.Rating2 / (Parameters.MatchWidth * 300) + p.Minuti / 2000 + p.Titolare / 200
+                                val += p.Rating.Rating3 / 109 + p.Rating.Rating2 / (Parameters.MatchWidth * 600) + p.Minuti / 1900 + p.Titolare / 500
                             End If
                             If val > 0.98 Then
                                 If (p.Minuti > 200 AndAlso p.Rating.Rating3 > 5) Then ' AndAlso p.Rating.Rating2 > 40
@@ -1706,7 +1674,9 @@ Namespace Torneo
                                 End If
                             End If
 
-
+                            If npanc > 10 Then
+                                p.Nome = p.Nome
+                            End If
                             If val < 94 Then
                                 If p.Minuti > 220 OrElse (p.qIni > 15 OrElse p.qCur > 15) Then
                                     If (p.qIni > 12 OrElse p.qCur > 12) AndAlso p.Rating.Rating2 > Parameters.MatchWidth * 0.5 AndAlso p.Rating.Rating3 >= 2 Then
@@ -1761,10 +1731,6 @@ Namespace Torneo
                         val = 1
                     End If
 
-                    If p.Nome = "CANCELLIERI" Then
-                        p.Nome = p.Nome
-                    End If
-
                     Return val
                 Else
                     Return -10
@@ -1801,7 +1767,7 @@ Namespace Torneo
 
             Dim key As String = p.Ruolo & "-" & p.RuoloMantra
 
-            If rint = "CA" Then key = "A-A"
+            If rint = "CA1" OrElse rint = "CA2" Then key = "A-A"
 
             If rint = "C" Then
                 rat = 7
@@ -1811,7 +1777,9 @@ Namespace Torneo
                 rat = 3
             ElseIf rint = "D(C)" Then
                 rat = 7
-            ElseIf rint = "CA" Then
+            ElseIf rint = "CA1" Then
+                rat = 15
+            ElseIf rint = "CA2" Then
                 rat = 15
             ElseIf rint = "A" Then
                 rat = 16
@@ -1856,7 +1824,11 @@ Namespace Torneo
                     For Each l As String In listModule(0).Lines.Keys
                         If listModule(0).Lines(l).Contains(p.Nome) Then
                             If p.Ruolo = "C" AndAlso (l = "1" OrElse (listModule(0).Lines.Count = 5 AndAlso l = "2")) Then
-                                rint = "CA"
+                                If l = "1" Then
+                                    rint = "CA1"
+                                Else
+                                    rint = "CA2"
+                                End If
                             ElseIf p.Ruolo = "D" Then
                                 If l = "2" OrElse (listModule(0).Lines.Count = 5 AndAlso l = "3") Then
                                     rint = "D(C)"
@@ -1878,13 +1850,15 @@ Namespace Torneo
         End Function
 
         Private Function DeclassPlayer(giornata As Integer, ruolo As String, squadra As String) As Integer
-            If giornata = 24 Then
-                If squadra = "MILAN" OrElse squadra = "COMO" Then
-                    Return DeclassValue(ruolo)
-                End If
-            ElseIf giornata = 16 Then
-                If squadra = "NAPOLI" OrElse squadra = "PARMA" OrElse squadra = "INTER" OrElse squadra = "LECCE" OrElse squadra = "VERONA" OrElse squadra = "BOLOGNA" OrElse squadra = "MILAN" OrElse squadra = "COMO" Then
-                    Return DeclassValue(ruolo)
+            If appSett.Year = "2025" Then
+                If giornata = 24 Then
+                    If squadra = "MILAN" OrElse squadra = "COMO" Then
+                        Return DeclassValue(ruolo)
+                    End If
+                ElseIf giornata = 16 Then
+                    If squadra = "NAPOLI" OrElse squadra = "PARMA" OrElse squadra = "INTER" OrElse squadra = "LECCE" OrElse squadra = "VERONA" OrElse squadra = "BOLOGNA" OrElse squadra = "MILAN" OrElse squadra = "COMO" Then
+                        Return DeclassValue(ruolo)
+                    End If
                 End If
             End If
             Return 0
@@ -1894,7 +1868,7 @@ Namespace Torneo
             If ruolo = "P" Then
                 Return 120
             ElseIf ruolo = "D" Then
-                Return 70
+                Return 60
             ElseIf ruolo = "C" Then
                 Return -50
             Else
@@ -1904,8 +1878,8 @@ Namespace Torneo
 
         Private Function GetFormazioneFinale(plist As List(Of PlayerAutoFormazione), parameters As AutoFormazioniData.AutoFormazione.ParamenterValues) As List(Of FormazioniData.PlayerFormazione)
 
-            Dim pforma As List(Of FormazioniData.PlayerFormazione) = GetFormazioneFinalePreanalisi(plist)
-            Dim dicp As Dictionary(Of Integer, PlayerAutoFormazione) = plist.ToDictionary(Function(x) x.RosaId, Function(x) x)
+            Dim pforma As List(Of FormazioniData.PlayerFormazione) = GetFormazioneFinalePreanalisi(plist, parameters)
+            Dim dicp As Dictionary(Of Integer, PlayerAutoFormazione) = plist.GroupBy(Function(x) x.RosaId).ToDictionary(Function(g) g.Key, Function(g) g.First())
             Dim dicPlayersForTeam As New Dictionary(Of String, Dictionary(Of String, Integer))
             Dim dicPlayersForRole As New Dictionary(Of String, List(Of FormazioniData.PlayerFormazione))
             Dim recalculate As Boolean = False
@@ -1915,14 +1889,10 @@ Namespace Torneo
 
             For Each p In pforma1
 
-                'If p.Type = 1 AndAlso dicp(p.RosaId).Rating.Rating6 < 0.9 Then
-                '    dicp(p.RosaId).Rating.Total1 = CInt(dicp(p.RosaId).Rating.Total1 * 0.95)
-                '    recalculate = True
-                'End If
                 'If dicPlayersForTeam.ContainsKey(p.Squadra) = False Then dicPlayersForTeam.Add(p.Squadra, New Dictionary(Of String, Integer))
                 'If dicPlayersForTeam(p.Squadra).ContainsKey(p.Ruolo) = False Then dicPlayersForTeam(p.Squadra).Add(p.Ruolo, 0)
                 'If p.Type = 1 Then dicPlayersForTeam(p.Squadra)(p.Ruolo) += 1
-                'If p.Ruolo = "A" AndAlso p.Type = 1 AndAlso dicPlayersForTeam(p.Squadra)(p.Ruolo) > 1 Then
+                'If p.Ruolo <> "P" AndAlso p.Type = 1 AndAlso dicPlayersForTeam(p.Squadra)(p.Ruolo) > 4 Then
                 '    dicp(p.RosaId).Rating.Total1 = CInt(dicp(p.RosaId).Rating.Total1 * 0.85)
                 '    recalculate = True
                 'End If
@@ -1938,14 +1908,14 @@ Namespace Torneo
             Next
 
             Dim modf As FormazioniData.ModuloFormazione = FormazioniData.GetModule(pforma1.Where(Function(x) x.Type = 1).ToList())
-            Dim ths As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Select(Function(x) x.Rating.Total1).Min - CInt(parameters.AvarangePointsWitdh / 6 + parameters.MatchWidth / 6)
+            Dim ths As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Select(Function(x) x.Rating.Total1).Min - CInt(parameters.AvarangePointsWitdh / 7 + parameters.MatchWidth / 7)
             Dim minMatchWidth As Integer = 40
-            Dim diff As Integer = pforma1.Where(Function(x) x.Rating.Total1 > ths AndAlso x.Rating.Rating2 > minMatchWidth AndAlso x.Ruolo = "A" AndAlso (x.Rating.Rating6 >= 0.97 OrElse (x.Rating.Rating6 >= 0.93 AndAlso x.Rating.Rating3 > 2 AndAlso (x.qIni > 10 OrElse x.qCur > 10))) AndAlso x.Type = 2).Count
+            Dim diff As Integer = pforma1.Where(Function(x) x.Rating.Total1 + x.Rating.Rating3 > ths AndAlso x.Rating.Rating2 > minMatchWidth AndAlso x.Ruolo = "A" AndAlso (x.Rating.Rating6 >= 0.97 OrElse (x.Rating.Rating6 >= 0.93 AndAlso x.Rating.Rating3 > 2 AndAlso (x.qIni > 10 OrElse x.qCur > 10))) AndAlso x.Type = 2).Count
             Dim natt As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Count()
 
-            If diff > 0 AndAlso pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Count() < 3 Then
+            If diff >= 0 AndAlso pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Count() < 3 Then
                 For Each p In pforma1
-                    If p.Nome = "PEDRO" Then
+                    If p.Nome = "GIOVANE" Then
                         p.Nome = p.Nome
                     End If
                     If p.Ruolo = "A" AndAlso (p.Type = 1 OrElse (p.Rating.Total1 > ths AndAlso p.Rating.Rating2 > minMatchWidth AndAlso (p.Rating.Rating6 >= 0.97 OrElse (p.Rating.Rating6 >= 0.93 AndAlso p.Rating.Rating3 > 2 AndAlso (p.qIni > 10 OrElse p.qCur > 10))))) Then
@@ -1958,7 +1928,7 @@ Namespace Torneo
 
             If recalculate Then
                 plist = SortPlayers(plist, True)
-                pforma = GetFormazioneFinalePreanalisi(plist)
+                pforma = GetFormazioneFinalePreanalisi(plist, parameters)
             End If
 
             Return pforma
@@ -1969,7 +1939,7 @@ Namespace Torneo
             Return plist.OrderByDescending(Function(x) If(byRating1, x.Rating.Total1, x.Rating.Total2)).ThenBy(Function(x) x.RuoloValue).ThenByDescending(Function(x) If(x.Ruolo = "D", x.Rating.Rating1 + x.Rating.Rating2, x.Rating.Rating2)).ThenByDescending(Function(x) x.Rating.Rating1 + x.Rating.Rating2 + x.Rating.Rating8).ThenByDescending(Function(x) x.Rating.Rating8).ToList()
         End Function
 
-        Private Function GetFormazioneFinalePreanalisi(plist As List(Of PlayerAutoFormazione)) As List(Of FormazioniData.PlayerFormazione)
+        Private Function GetFormazioneFinalePreanalisi(plist As List(Of PlayerAutoFormazione), parameters As AutoFormazioniData.AutoFormazione.ParamenterValues) As List(Of FormazioniData.PlayerFormazione)
 
             Dim pforma As New List(Of FormazioniData.PlayerFormazione)
 
@@ -1987,7 +1957,6 @@ Namespace Torneo
                 pf.Rating = Functions.Clone(p.Rating)
                 pf.qIni = p.qIni
                 pf.qCur = p.qCur
-                'pf.Punti = CInt(p.AvgPt + p.Rating.Rating3 + p.AvgVt / 10)
                 pf.Punti = CInt(p.goodGrade + p.Rating.Rating3)
                 If p.Rating.Total1 < 20 AndAlso p.Ruolo <> "P" Then
                     pf.Type = -1
@@ -2021,7 +1990,7 @@ Namespace Torneo
                         If p.Ruolo = "C" AndAlso nc >= ruoliTitMax(p.Ruolo) Then Continue For
                         If p.Ruolo = "A" AndAlso na >= ruoliTitMax(p.Ruolo) Then Continue For
 
-                        If (p.Ruolo = "P" AndAlso np = 1) Then
+                        If p.Ruolo = "P" AndAlso np = 1 Then
                             p.Type = 2
                             p.FormaId = 12
                             np += 1
@@ -2048,25 +2017,23 @@ Namespace Torneo
             For Each p In pforma
                 If p.Rating.Rating6 < 0.93 AndAlso p.Rating.Rating2 < 45 Then p.Rating.Total1 = CInt(p.Rating.Total1 * p.Rating.Rating6)
             Next
-            'pforma = pforma.Where(Function(x) x.Rating.Total1 = CInt(x.Rating.Total1 * x.Rating.Rating6)).ToList()
+
             pforma = pforma.OrderByDescending(Function(x) x.Rating.Total1).ThenBy(Function(x) x.RuoloValue).ThenByDescending(Function(x) x.Rating.Rating2).ThenByDescending(Function(x) x.Rating.Rating8).ToList()
 
             If na > 0 Then
 
-                Dim p As FormazioniData.PlayerFormazione = pforma.Where(Function(x) x.Ruolo = "A" AndAlso x.Type = 0).ToList().FirstOrDefault()
+                Dim p As FormazioniData.PlayerFormazione = pforma.Where(Function(x) x.Ruolo = "A" AndAlso x.Type = 0 AndAlso x.Rating.Rating6 > 0.95 AndAlso x.Rating.Total1 > 145).ToList().FirstOrDefault()
                 If p IsNot Nothing Then
-                    If p.Rating.Total1 > 145 Then
-                        p.Type = 2
-                        p.FormaId = npanc + 12
-                        npanc += 1
-                    End If
+                    p.Type = 2
+                    p.FormaId = npanc + 12
+                    npanc += 1
                 End If
 
             End If
 
             For Each p As FormazioniData.PlayerFormazione In pforma
                 If p.Type = 0 Then
-                    If (p.Ruolo <> "D" AndAlso p.Ruolo <> "P" AndAlso (p.Rating.Total1 > 115 OrElse p.Rating.Rating3 > 2 OrElse (p.Ruolo = "A" OrElse p.Rating.Rating3 > 2))) Then
+                    If (p.Ruolo <> "D" AndAlso p.Ruolo <> "P" AndAlso (p.Rating.Total1 > 115 OrElse p.Rating.Rating3 > 2 OrElse p.Ruolo = "A")) Then
                         p.Type = 2
                         p.FormaId = npanc + 12
                         npanc += 1
@@ -2154,10 +2121,10 @@ Namespace Torneo
 
             Dim sqlstr As New Text.StringBuilder
             sqlstr.AppendLine("SELECT tbf.nome,tbf.squadra,tbd.pt")
-            sqlstr.AppendLine("FROM  tbformazioni as tbf")
+            sqlstr.AppendLine("FROM tbformazioni as tbf")
             sqlstr.AppendLine("LEFT join tbdati as tbd on tbd.gio=tbf.gio and tbf.nome=tbd.nome")
-            sqlstr.AppendLine("WHERE tbf.gio=" & Giornata & " and tbf.idteam=" & IdTeam & " and type<3;")
-
+            sqlstr.AppendLine("WHERE tbf.gio=" & Giornata & " AND type<3")
+            If IdTeam <> -1 Then sqlstr.AppendLine(" AND tbf.idteam=" & IdTeam)
             Dim a As String = sqlstr.ToString()
             Dim ds As Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, sqlstr.ToString())
 
@@ -2206,58 +2173,6 @@ Namespace Torneo
             Return ris
 
         End Function
-
-        Public Sub WriteLog(Giornata As Integer, idTeam As Integer, list As List(Of AutoFormazione))
-            Dim fileLog1 As String = appSett.WebDataPath & "\temp\autoformaresult" & Giornata & "-" & idTeam & ".log"
-            Dim sw As New IO.StreamWriter(fileLog1, True)
-            For Each item As AutoFormazione In list
-                WriteLog(item, sw)
-            Next
-            sw.Close()
-            sw.Dispose()
-        End Sub
-
-        Public Sub WriteLog(item As AutoFormazione, sw As IO.StreamWriter)
-            sw.WriteLine("**** Paramentri rating giornata : " & item.Formazione.Giornata & " team:" & item.Formazione.TeamId)
-            sw.WriteLine(item.Parameters.Points / 10 & vbTab & item.Parameters.GetKey().Replace("|", vbTab))
-            sw.WriteLine("**** Rating giornata: " & item.Formazione.Giornata & " team:" & item.Formazione.TeamId)
-            For k As Integer = 0 To item.PlayerRating.Count - 1
-                sw.WriteLine(item.PlayerRating(k).Ruolo & vbTab & item.PlayerRating(k).Nome & vbTab & item.PlayerRating(k).Squadra & vbTab & item.PlayerRating(k).Rating.Total1 & vbTab & item.PlayerRating(k).Rating.Total2 & vbTab & item.PlayerRating(k).Rating.Rating1 & vbTab & item.PlayerRating(k).Rating.Rating2 & vbTab & item.PlayerRating(k).Rating.Rating3 & vbTab & item.PlayerRating(k).Rating.Rating4 & vbTab & item.PlayerRating(k).Rating.Rating5 & vbTab & item.PlayerRating(k).Rating.Rating6 & vbTab & item.PlayerRating(k).Rating.Rating7)
-            Next
-            sw.WriteLine("**** Formazione giornata: " & item.Formazione.Giornata & " team:" & item.Formazione.TeamId)
-            For k As Integer = 0 To item.Formazione.Players.Count - 1
-                sw.WriteLine(item.Formazione.Players(k).Ruolo & vbTab & item.Formazione.Players(k).Nome & vbTab & item.Formazione.Players(k).Squadra & vbTab & item.Formazione.Players(k).Type & vbTab & item.Formazione.Players(k).InCampo & vbTab & If(item.Formazione.Players(k).Punti > -100, item.Formazione.Players(k).Punti.ToString(), ""))
-            Next
-        End Sub
-
-        Function FiltraInterquartili(valori As List(Of Integer)) As List(Of Integer)
-            If valori Is Nothing OrElse valori.Count = 0 Then Return New List(Of Integer)
-
-            ' 1. Ordina
-            Dim sorted = valori.OrderBy(Function(x) x).ToList()
-            Dim n = sorted.Count
-
-            ' 2. Funzione per calcolare un percentile con interpolazione
-            Dim Percentile As Func(Of Double, Double) = Function(p As Double)
-                                                            Dim pos = (n - 1) * p
-                                                            Dim i = CInt(Math.Floor(pos))
-                                                            Dim frac = pos - i
-
-                                                            If i >= n - 1 Then Return sorted(n - 1)
-                                                            Return sorted(i) + frac * (sorted(i + 1) - sorted(i))
-                                                        End Function
-
-            ' 3. Calcolo Q1 e Q3
-            Dim Q1 = Percentile(0.25)
-            Dim Q3 = Percentile(0.75)
-
-            ' 4. Filtra i valori tra Q1 e Q3
-            Dim filtrati = sorted.Where(Function(x) x >= Q1 AndAlso x <= Q3).ToList()
-
-            Return filtrati
-
-        End Function
-
 
         Public Class DecisionTree
             Public Function FrequenzeGerarchichePerPrefisso(righe As List(Of String)) As Dictionary(Of String, Integer)
@@ -2396,6 +2311,7 @@ Namespace Torneo
             Public Property RuoloValue As Integer = 0
             Public Property Ruolo As String = ""
             Public Property RuoloMantra As String = ""
+            Public Property RuoloMantraAdvance As String = ""
             Public Property RuoloInt As String = ""
             Public Property qIni() As Integer = 0
             Public Property qCur() As Integer = 0
@@ -2409,6 +2325,7 @@ Namespace Torneo
             Public Property RigT() As Double = 0
             Public Property AvgPt As Double = 0
             Public Property AvgVt As Double = 0
+            Public Property nVt6 As Double = 0
             Public Property nPartite() As Integer = 0
             Public Property pGiocate() As Integer = 0
             Public Property Titolare() As Integer = 0
@@ -2421,7 +2338,11 @@ Namespace Torneo
             Public Property TimeLeft As Integer = 0
             Public Property TeamA As String = ""
             Public Property TeamB As String = ""
-            Public Property LastPt() As Integer = 0
+            Public Property PosTeamA As Double = 0
+            Public Property PosTeamB As Double = 0
+            Public Property LastPt1() As Integer = 0
+            Public Property LastPt2() As Integer = 0
+            Public Property LastPt3() As Integer = 0
             Public Property goodGrade As Double = 0
             Public Property FattoreSquadra As Double = 0
             Public Property FattoreAvversaria As Double = 0

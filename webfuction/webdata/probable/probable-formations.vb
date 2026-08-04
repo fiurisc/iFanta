@@ -85,10 +85,8 @@ Namespace WebData
                 If State = "Ballottaggio" Then State = "Panchina"
                 wpList.Add(Name & "/" & Team, New Torneo.ProbablePlayers.Probable.Player(Name, Team, Site, State, Info, Percentage))
             Else
-
                 Dim p As Torneo.ProbablePlayers.Probable.Player = wpList(Name & "/" & Team)
                 If p.Info <> "" Then Info = "," & Info
-                If p.State <> "" Then State = p.State
                 p.Info += Info
                 p.Percentage = Percentage
             End If
@@ -170,6 +168,7 @@ Namespace WebData
                 End If
 
                 If wp.Infortunio.Giorni > 0 Then
+                    If wp.Infortunio.Giorni > 7 OrElse wp.State = "" Then wp.State = State
                     If GiorniFineCampionato > 0 Then
                         If wp.Name = "ZANIOLO" Then
                             wp.Name = wp.Name
@@ -177,10 +176,11 @@ Namespace WebData
                         wp.Infortunio.Severity = CInt(wp.Infortunio.Giorni * 100 / GiorniFineCampionato)
                         If wp.Infortunio.Severity < 100 Then wp.Infortunio.Severity = wp.Infortunio.Giorni
                         If wp.Infortunio.Severity > 100 Then wp.Infortunio.Severity = 100
-                        Else
-                            wp.Infortunio.Severity = 0
+                    Else
+                        wp.Infortunio.Severity = 0
                     End If
                 Else
+                    If wp.State = "" Then wp.State = State
                     wp.Infortunio.Severity = 0
                 End If
 

@@ -58,9 +58,9 @@ Namespace Torneo
 
             For Each m As MatchPlayer In mtxdata
 
-                Dim g As String = m.Giornata.ToString()
-                Dim s As String = m.Squadra.ToString()
-                Dim n As String = m.Nome.ToString()
+                Dim g As String = m.Day.ToString()
+                Dim s As String = m.Team.ToString()
+                Dim n As String = m.Name.ToString()
                 Dim key As String = n & "-" & s
 
                 If startDay = endDay Then g = "0"
@@ -87,8 +87,8 @@ Namespace Torneo
             data.MatchData = GetMatchData(Day, MatchId)
 
             For i As Integer = 0 To tmpdatap.Count - 1
-                If data.MatchPlayers.ContainsKey(tmpdatap(i).Squadra) = False Then data.MatchPlayers.Add(tmpdatap(i).Squadra, New List(Of MatchPlayer))
-                data.MatchPlayers(tmpdatap(i).Squadra).Add(tmpdatap(i))
+                If data.MatchPlayers.ContainsKey(tmpdatap(i).Team) = False Then data.MatchPlayers.Add(tmpdatap(i).Team, New List(Of MatchPlayer))
+                data.MatchPlayers(tmpdatap(i).Team).Add(tmpdatap(i))
             Next
 
             For i As Integer = 0 To tmpdatae.Count - 1
@@ -226,8 +226,8 @@ Namespace Torneo
                 Dim olddata As New Dictionary(Of String, Dictionary(Of String, MatchPlayer))
 
                 For Each data As MatchPlayer In mtxtdata
-                    Dim g As String = data.Giornata.ToString()
-                    Dim key As String = data.Nome & "/" & data.Squadra
+                    Dim g As String = data.Day.ToString()
+                    Dim key As String = data.Name & "/" & data.Team
                     If olddata.ContainsKey(g) = False Then olddata.Add(g, New Dictionary(Of String, MatchPlayer))
                     If olddata(g).ContainsKey(key) = False Then
                         olddata(g).Add(key, data)
@@ -244,11 +244,11 @@ Namespace Torneo
                                 Dim mp As MatchPlayer = newdata(g)(idm)(t)(n)
                                 Dim key As String = n & "/" & t
                                 If olddata.ContainsKey(g) = False OrElse olddata(g).ContainsKey(key) = False Then
-                                    sqlinsert.Add("INSERT INTO tbtabellini (gio,matchid,ruolo,nome,squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & "," & idm & ",'" & mp.Ruolo & "','" & mp.Nome & "','" & mp.Squadra & "'," & mp.Minuti & "," & mp.Titolare & "," & mp.Sostituito & "," & mp.Subentrato & "," & mp.Ammonizione & "," & mp.Espulsione & "," & mp.Assists & "," & mp.GoalFatti & "," & mp.GoalSubiti & "," & mp.AutoGoal & "," & mp.RigoriParati & "," & mp.RigoriSbagliati & ")")
+                                    sqlinsert.Add("INSERT INTO tbtabellini (gio,matchid,ruolo,nome,squadra,mm,tit,sos,sub,amm,esp,ass,gf,gs,ag,rigp,rigs) values (" & g & "," & idm & ",'" & mp.Role & "','" & mp.Name & "','" & mp.Team & "'," & mp.Min & "," & mp.Tito & "," & mp.Sost & "," & mp.Sube & "," & mp.Amm & "," & mp.Esp & "," & mp.Ass & "," & mp.Gf & "," & mp.Gs & "," & mp.AutG & "," & mp.RigP & "," & mp.RigS & ")")
                                 Else
-                                    olddata(g)(key).RecordId = -1
+                                    olddata(g)(key).Id = -1
                                     If WebData.Functions.GetCustomHashCode(olddata(g)(key)) <> WebData.Functions.GetCustomHashCode(mp) Then
-                                        sqlupdate.Add("UPDATE tbtabellini SET ruolo='" & mp.Ruolo & "',matchid=" & mp.MatchId & ",nome='" & mp.Nome & "',squadra='" & mp.Squadra & "',mm=" & mp.Minuti & ",tit=" & mp.Titolare & ",sos=" & mp.Sostituito & ",sub=" & mp.Subentrato & ",amm=" & mp.Ammonizione & ",esp=" & mp.Espulsione & ",ass=" & mp.Assists & ",gf=" & mp.GoalFatti & ",gs=" & mp.GoalSubiti & ",ag=" & mp.AutoGoal & ",rigp=" & mp.RigoriParati & ",rigs=" & mp.RigoriSbagliati & " WHERE gio=" & g & " AND nome='" & mp.Nome & "' AND squadra='" & mp.Squadra & "'")
+                                        sqlupdate.Add("UPDATE tbtabellini SET ruolo='" & mp.Role & "',matchid=" & mp.MatchId & ",nome='" & mp.Name & "',squadra='" & mp.Team & "',mm=" & mp.Min & ",tit=" & mp.Tito & ",sos=" & mp.Sost & ",sub=" & mp.Sube & ",amm=" & mp.Amm & ",esp=" & mp.Esp & ",ass=" & mp.Ass & ",gf=" & mp.Gf & ",gs=" & mp.Gs & ",ag=" & mp.AutG & ",rigp=" & mp.RigP & ",rigs=" & mp.RigS & " WHERE gio=" & g & " AND nome='" & mp.Name & "' AND squadra='" & mp.Team & "'")
                                     End If
                                 End If
                             Next
@@ -261,8 +261,8 @@ Namespace Torneo
 
                 For Each g In olddata.Keys
                     For Each k In olddata(g).Keys
-                        If olddata(g)(k).RecordId <> -1 Then
-                            sqldelete.Add("DELETE FROM tbtabellini WHERE id=" & olddata(g)(k).RecordId)
+                        If olddata(g)(k).Id <> -1 Then
+                            sqldelete.Add("DELETE FROM tbtabellini WHERE id=" & olddata(g)(k).Id)
                         End If
                     Next
                 Next
@@ -342,24 +342,24 @@ Namespace Torneo
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
                         Dim row As DataRow = ds.Tables(0).Rows(i)
                         Dim m As New MatchPlayer
-                        m.RecordId = Functions.ReadFieldIntegerData(row.Item("id"), 0)
-                        m.Giornata = Functions.ReadFieldIntegerData(row.Item("gio"), 1)
+                        m.Id = Functions.ReadFieldIntegerData(row.Item("id"), 0)
+                        m.Day = Functions.ReadFieldIntegerData(row.Item("gio"), 1)
                         m.MatchId = Functions.ReadFieldIntegerData(row.Item("matchid"), 0)
-                        m.Ruolo = Functions.ReadFieldStringData(row.Item("ruolo").ToString())
-                        m.Nome = Functions.ReadFieldStringData(row.Item("nome").ToString())
-                        m.Squadra = Functions.ReadFieldStringData(row.Item("squadra").ToString())
-                        m.Minuti = Functions.ReadFieldIntegerData(row.Item("mm"), 0)
-                        m.Titolare = Functions.ReadFieldIntegerData(row.Item("tit"), 0)
-                        m.Sostituito = Functions.ReadFieldIntegerData(row.Item("sos"), 0)
-                        m.Subentrato = Functions.ReadFieldIntegerData(row.Item("sub"), 0)
-                        m.Ammonizione = Functions.ReadFieldIntegerData(row.Item("amm"), 0)
-                        m.Espulsione = Functions.ReadFieldIntegerData(row.Item("esp"), 0)
-                        m.Assists = Functions.ReadFieldIntegerData(row.Item("ass"), 0)
-                        m.GoalFatti = Functions.ReadFieldIntegerData(row.Item("gf"), 0)
-                        m.GoalSubiti = Functions.ReadFieldIntegerData(row.Item("gs"), 0)
-                        m.AutoGoal = Functions.ReadFieldIntegerData(row.Item("ag"), 0)
-                        m.RigoriParati = Functions.ReadFieldIntegerData(row.Item("rigp"), 0)
-                        m.RigoriSbagliati = Functions.ReadFieldIntegerData(row.Item("rigs"), 0)
+                        m.Role = Functions.ReadFieldStringData(row.Item("ruolo").ToString())
+                        m.Name = Functions.ReadFieldStringData(row.Item("nome").ToString())
+                        m.Team = Functions.ReadFieldStringData(row.Item("squadra").ToString())
+                        m.Min = Functions.ReadFieldIntegerData(row.Item("mm"), 0)
+                        m.Tito = Functions.ReadFieldIntegerData(row.Item("tit"), 0)
+                        m.Sost = Functions.ReadFieldIntegerData(row.Item("sos"), 0)
+                        m.Sube = Functions.ReadFieldIntegerData(row.Item("sub"), 0)
+                        m.Amm = Functions.ReadFieldIntegerData(row.Item("amm"), 0)
+                        m.Esp = Functions.ReadFieldIntegerData(row.Item("esp"), 0)
+                        m.Ass = Functions.ReadFieldIntegerData(row.Item("ass"), 0)
+                        m.Gf = Functions.ReadFieldIntegerData(row.Item("gf"), 0)
+                        m.Gs = Functions.ReadFieldIntegerData(row.Item("gs"), 0)
+                        m.AutG = Functions.ReadFieldIntegerData(row.Item("ag"), 0)
+                        m.RigP = Functions.ReadFieldIntegerData(row.Item("rigp"), 0)
+                        m.RigS = Functions.ReadFieldIntegerData(row.Item("rigs"), 0)
                         mtxtdata.Add(m)
                     Next
 
@@ -427,24 +427,24 @@ Namespace Torneo
         End Class
 
         Public Class MatchPlayer
-            Public Property RecordId As Integer = 1
-            Public Property Giornata As Integer = 1
+            Public Property Id As Integer = 1
+            Public Property Day As Integer = 1
             Public Property MatchId As Integer = 0
-            Public Property Ruolo As String = ""
-            Public Property Nome As String = ""
-            Public Property Squadra As String = ""
-            Public Property Minuti As Integer = 90
-            Public Property Titolare As Integer = 0
-            Public Property Sostituito As Integer = 0
-            Public Property Subentrato As Integer = 0
-            Public Property Ammonizione As Integer = 0
-            Public Property Espulsione As Integer = 0
-            Public Property Assists As Integer = 0
-            Public Property GoalFatti As Integer = 0
-            Public Property GoalSubiti As Integer = 0
-            Public Property AutoGoal As Integer = 0
-            Public Property RigoriParati As Integer = 0
-            Public Property RigoriSbagliati As Integer = 0
+            Public Property Role As String = ""
+            Public Property Name As String = ""
+            Public Property Team As String = ""
+            Public Property Min As Integer = 90
+            Public Property Tito As Integer = 0
+            Public Property Sost As Integer = 0
+            Public Property Sube As Integer = 0
+            Public Property Amm As Integer = 0
+            Public Property Esp As Integer = 0
+            Public Property Ass As Integer = 0
+            Public Property Gf As Integer = 0
+            Public Property Gs As Integer = 0
+            Public Property AutG As Integer = 0
+            Public Property RigP As Integer = 0
+            Public Property RigS As Integer = 0
 
             Sub New()
 

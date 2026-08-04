@@ -42,10 +42,10 @@ Namespace Torneo
 
         End Function
 
-        Public Function ApiGetStoricoClassifica() As String
+        Public Function ApiGetStoricoClassifica(top As Boolean) As String
 
             Try
-                Return WebData.Functions.SerializzaOggetto(GetStoricoData(), True)
+                Return WebData.Functions.SerializzaOggetto(GetStoricoData(top), True)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
@@ -254,14 +254,17 @@ Namespace Torneo
 
         End Function
 
-        Public Function GetStoricoData() As Dictionary(Of String, StoricoDati)
+        Public Function GetStoricoData(top As Boolean) As Dictionary(Of String, StoricoDati)
 
+            Dim tb As String = "tbformazioni"
+
+            If top Then tb = "" & tb & "top"
             Dim clasa As New Dictionary(Of String, StoricoDati)
             Dim str As New System.Text.StringBuilder
 
             str.AppendLine("SELECT t.gio,t.idteam as idteam,tt.nome,tt.allenatore,sum(t.pt) as pt,sum(t.ptmin) as ptmin,sum(t.ptmax) as ptmax,sum(t.amm) as amm,sum(t.esp) as esp,sum(t.ass) as ass,sum(t.gs) as gs,sum(t.gf) as gf FROM (")
             str.AppendLine("SELECT f.gio,f.idteam,sum(f.pt) as pt,'0' as ptmin,'0' as ptmax,sum(f.amm) as amm,sum(f.esp) as esp,sum(f.ass) as ass,sum(f.gs) as gs,sum(f.gf) as gf")
-            str.AppendLine("FROM tbformazioni as f")
+            str.AppendLine("FROM " & tb & " as f")
             str.AppendLine("WHERE (incampo=1 OR type=10) and f.pt>-100")
             str.AppendLine("GROUP BY f.idteam,f.gio ORDER BY f.gio,f.idteam")
             str.AppendLine("UNION")

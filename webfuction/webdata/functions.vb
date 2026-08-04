@@ -167,6 +167,7 @@ Namespace WebData
             compatta = False
 #End If
             Dim serializer As New JavaScriptSerializer()
+            serializer.MaxJsonLength = Integer.MaxValue
             Dim json As String = serializer.Serialize(obj)
             If compatta Then
                 Return serializer.Serialize(obj)
