@@ -108,11 +108,11 @@ Namespace Torneo
                     End If
 
                     If olddata.ContainsKey(key) = False Then
-                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,ruolomantra,ruolomantras,nome,squadra,qini,qcur, outofgame) values ('" & p.Ruolo & "','" & p.RuoloMantra & "','" & p.RuoloMantraS & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.OutOfGame & ")")
+                        sqlinsert.Add("INSERT INTO tbplayer (ruolo,ruolomantra,ruolomantras,nome,squadra,qini,qcur,fmv,outofgame) values ('" & p.Ruolo & "','" & p.RuoloMantra & "','" & p.RuoloMantraS & "','" & p.Nome & "','" & p.Squadra & "'," & p.Qini & "," & p.Qcur & "," & p.FMV & "," & p.OutOfGame & ")")
                     Else
                         olddata(key).RecordId = -1
                         If WebData.Functions.GetCustomHashCode(olddata(key)) <> WebData.Functions.GetCustomHashCode(p) Then
-                            sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.Ruolo & "',ruolomantra='" & p.RuoloMantra & "',ruolomantras='" & p.RuoloMantraS & "',squadra='" & p.Squadra & "',qini=" & p.Qini & ",qcur=" & p.Qcur & ",outofgame=" & p.OutOfGame & " WHERE Nome='" & p.Nome & "'")
+                            sqlupdate.Add("UPDATE tbplayer SET ruolo='" & p.Ruolo & "',ruolomantra='" & p.RuoloMantra & "',ruolomantras='" & p.RuoloMantraS & "',squadra='" & p.Squadra & "',qini=" & p.Qini & ",qcur=" & p.Qcur & ",fmv=" & p.FMV & ",outofgame=" & p.OutOfGame & " WHERE Nome='" & p.Nome & "'")
                         End If
                     End If
                 Next
@@ -302,6 +302,7 @@ Namespace Torneo
             Public Property Squadra As String = ""
             Public Property Qini As Integer = 0
             Public Property Qcur As Integer = 0
+            Public Property FMV As Integer = 0
             Public Property OutOfGame As Integer = 0
 
             Sub New()

@@ -68,34 +68,37 @@ Namespace WebData
 
                                     If pdata.Length = 11 Then
 
-                                        If p.ToUpper().Contains("STROM") Then
+                                        If p.ToUpper().Contains("STIG") Then
                                             Dim a As Integer = 0
                                         End If
 
-                                        Dim role As String = pdata(2).Replace("role:", "")
+                                        Dim role As String = ""
                                         Dim nat As String = ""
-                                        Dim NatCode As String = Functions.GetNatCode(pdata(3).Replace("flag:", ""))
-                                        Dim birthdays As String = System.Text.RegularExpressions.Regex.Match(pdata(4), "\d{1,}-\d{1,}-\d{1,}").Value
+                                        Dim NatCode As String = ""
+                                        Dim birthdays As String = ""
                                         Dim anni As Integer = 0
-                                        Dim name1 As String = Functions.NormalizeText(pdata(5).Replace("surname:", "").ToUpper()).Trim() & " " & pdata(6).Replace("name:", "").ToUpper().Substring(0, 1)
-                                        Dim name2 As String = Functions.NormalizeText(pdata(9).Replace("fullname:", "").ToUpper()).Replace(".", ". ").Replace("  ", " ").Trim()
-                                        Dim peso As String = pdata(7).Replace("weight:", "")
-                                        Dim altezza As String = pdata(10).Replace("height:", "")
 
-                                        If birthdays <> "" Then
-                                            Dim birthday As Date = CDate(birthdays)
-                                            anni = Date.Now.Year - birthday.Year
-                                            If Date.Now.Date < birthday.AddYears(anni) Then
-                                                anni -= 1
-                                            End If
+                                        Dim peso As String = ""
+                                        Dim altezza As String = ""
+                                        Dim name As String = ""
+                                        Dim surname As String = ""
+
+                                        Dim name1 As String = ""
+                                        Dim name2 As String = ""
+
+                                        For Each pdato In pdata
+                                            If pdato.StartsWith("role:") Then role = pdato.Replace("role:", "")
+                                            If pdato.StartsWith("flag:") Then NatCode = pdato.Replace("flag:", "")
+                                            If pdato.StartsWith("birthdate:") Then birthdays = System.Text.RegularExpressions.Regex.Match(pdato, "\d{1,}-\d{1,}-\d{1,}").Value
+                                            If pdato.StartsWith("name:") Then name = Functions.NormalizeText(pdato.Replace("name:", "").ToUpper()).Trim()
+                                            If pdato.StartsWith("surname:") Then surname = Functions.NormalizeText(pdato.Replace("surname:", "").ToUpper()).Trim()
+                                            If pdato.StartsWith("weight:") Then peso = pdato.Replace("weight:", "")
+                                            If pdato.StartsWith("height:") Then altezza = pdato.Replace("height:", "")
+                                        Next
+
+                                        If name.Contains("MILINKOVIC") OrElse surname.Contains("MILINKOVIC") Then
+                                            name = "MILINKOVIC-SAVIC"
                                         End If
-
-                                        If NatCode = "SCT" Then NatCode = "GBR"
-                                        If NatCode = "CIV" Then NatCode = "CIV"
-
-                                        If dicNatCode.ContainsKey(NatCode) Then nat = dicNatCode(NatCode) Else nat = ""
-
-                                        nat = Functions.NormalizeText(nat)
 
                                         If role = "Goalkeeper" Then
                                             role = "P"
@@ -109,7 +112,26 @@ Namespace WebData
                                             role = ""
                                         End If
 
-                                        If role <> "" Then
+                                        If role <> "" AndAlso name <> "" AndAlso surname <> "" Then
+
+                                            name1 = surname & " " & name.Substring(0, 1)
+                                            name2 = name & " " & surname.Substring(0, 1)
+
+                                            If birthdays <> "" Then
+                                                Dim birthday As Date = CDate(birthdays)
+                                                anni = Date.Now.Year - birthday.Year
+                                                If Date.Now.Date < birthday.AddYears(anni) Then
+                                                    anni -= 1
+                                                End If
+                                            End If
+
+                                            If NatCode = "SCT" Then NatCode = "GBR"
+                                            If NatCode = "CIV" Then NatCode = "CIV"
+                                            If NatCode = "XKX" Then NatCode = "KOS"
+
+                                            If dicNatCode.ContainsKey(NatCode) Then nat = dicNatCode(NatCode) Else nat = ""
+
+                                            nat = Functions.NormalizeText(nat)
 
                                             Dim playerm As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(role, name1, sq, wpl, True, False)
                                             If playerm.Matched = False Then playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, False)
@@ -131,6 +153,7 @@ Namespace WebData
                                             End If
 
                                             npla += 1
+
                                         End If
 
                                     End If

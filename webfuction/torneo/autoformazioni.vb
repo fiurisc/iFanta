@@ -718,9 +718,13 @@ Namespace Torneo
         Public Function GetMaxDayData() As Integer
             Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "Select max(gio) As gio FROM tbdati")
             If ds.Tables.Count > 0 AndAlso ds.Tables(0).Rows.Count > 0 Then
-                Return CInt(ds.Tables(0).Rows(0)("gio"))
+                If ds.Tables(0).Rows(0)("gio") IsNot DBNull.Value Then
+                    Return CInt(ds.Tables(0).Rows(0)("gio"))
+                Else
+                    Return 0
+                End If
             Else
-                Return 0
+                    Return 0
             End If
         End Function
 

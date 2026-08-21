@@ -156,6 +156,7 @@ Namespace WebData
 
         Public Shared Function DeserializeJson(Of T)(json As String) As T
             Dim serializer As New JavaScriptSerializer()
+            serializer.MaxJsonLength = Integer.MaxValue
             ' Esegue la deserializzazione JSON -> T
             Dim obj As T = serializer.Deserialize(Of T)(json)
             Return obj
@@ -272,6 +273,7 @@ Namespace WebData
             txt = txt.Replace("È", "E")
             txt = txt.Replace("&#200;", "E")
             txt = txt.Replace("Á", "A")
+            txt = txt.Replace("Å", "A")
             txt = txt.Replace("À", "A’")
             txt = txt.Replace("&#192;", "A’")
             txt = txt.Replace("Ú", "U")
@@ -550,7 +552,7 @@ Namespace WebData
 
 #If DEBUG Then
             If Url.Contains("www.fantacalcio.it") Then
-                Url = "https://www.ifantacalcio.it/site.php?url=" & Url
+                'Url = "https://www.ifantacalcio.it/site.php?url=" & Url
             End If
 #End If
 

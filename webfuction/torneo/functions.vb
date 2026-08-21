@@ -148,9 +148,39 @@ Namespace Torneo
             End Using
         End Sub
 
+        Public Shared Sub ExecuteSqlWithParamters(appSett As PublicVariables, ByVal SqlString As String, Parameters As Dictionary(Of String, String), Optional DbUser As Boolean = False)
+            If SqlString.Count = 0 Then Exit Sub
+            Using conn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
+                conn.Open()
+                Using cmd As New OleDbCommand(SqlString, conn)
+                    For Each p In Parameters
+                        cmd.Parameters.AddWithValue(p.Key, p.Value)
+                    Next
+                    cmd.ExecuteNonQuery()
+                End Using
+            End Using
+        End Sub
+
+        Public Shared Sub ExecuteSqlWithParamters(appSett As PublicVariables, ByVal SqlString As Dictionary(Of String, Dictionary(Of String, String)), Optional DbUser As Boolean = False)
+            If SqlString.Count = 0 Then Exit Sub
+            Using conn As New OleDbConnection(GetDbConnectionString(appSett, DbUser))
+                conn.Open()
+                For Each s In SqlString.Keys
+                    Using cmd As New OleDbCommand(s, conn)
+                        For Each p In SqlString(s)
+                            cmd.Parameters.AddWithValue(p.Key, p.Value)
+                        Next
+                        cmd.ExecuteNonQuery()
+                    End Using
+                Next
+            End Using
+        End Sub
+
         Public Shared Function ExecuteSqlReturnDataSet(appSett As PublicVariables, ByVal SqlString As String, Optional DbUser As Boolean = False) As System.Data.DataSet
 
             Dim ds As New System.Data.DataSet
+
+            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, GetDbConnectionString(appSett, DbUser))
 
             If EnableQueryCache AndAlso QueryCache.ContainsKey(SqlString) Then
                 ds = QueryCache(SqlString)

@@ -23,13 +23,19 @@ Namespace Torneo
                 For Each tid As String In mData.data.Keys
 
                     Functions.ExecuteSql(appSett, "DELETE FROM tbteam WHERE idteam=" & tid)
-                    Functions.ExecuteSql(appSett, "INSERT INTO tbteam (idteam,nome,allenatore) values (" & tid & ",'" & mData.data(tid).name & "','" & mData.data(tid).coach & "');")
+                    Dim paras As New Dictionary(Of String, String) From {
+                        {"idteam", tid},
+                        {"nome", mData.data(tid).name},
+                        {"allenatore", mData.data(tid).coach}
+                    }
+
+                    Functions.ExecuteSqlWithParamters(appSett, "INSERT INTO tbteam (idteam,nome,allenatore) values (@idteam,@nome,@allenatore);", paras)
 
                     Dim sqlinsert As New List(Of String)
                     For Each p As Player In mData.data(tid).players
                         Dim sqlp As New System.Text.StringBuilder
                         sqlp.AppendLine("INSERT INTO tbrose (idteam,idrosa,ruolo,nome,costo,qini,riconfermato) values (")
-                        sqlp.AppendLine(tid & "," & p.RosaId & ",'" & p.Ruolo & "','" & p.Nome.ToUpper() & "'," & p.Costo & "," & p.Qini & "," & p.Riconfermato & ")")
+                        sqlp.AppendLine(tid & "," & p.RosaId & ",'" & p.Ruolo & "','" & p.Nome.Replace("'", "''").ToUpper() & "'," & If(p.Costo > 0, p.Costo.ToString(), "NULL") & "," & If(p.Qini > 0, p.Qini.ToString(), "NULL") & "," & p.Riconfermato & ")")
                         sqlinsert.Add(sqlp.ToString())
                     Next
                     Functions.ExecuteSql(appSett, sqlinsert)
@@ -53,7 +59,7 @@ Namespace Torneo
                 Dim teams As New Dictionary(Of String, Object)
 
                 Try
-                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbteam")
+                    Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM tbteam ORDER BY idteam")
 
                     If ds.Tables.Count > 0 Then
                         For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -130,13 +136,16 @@ Namespace Torneo
 
             Try
                 Dim strTeadId As String = "idteam = " & TeamId
+                Dim ordeby As String = " ORDER BY idteam,idrosa"
+
                 If TeamId = "-1" Then
                     strTeadId = "idteam >= 0"
                 ElseIf TeamId = "-2" Then
                     strTeadId = "idteam is null"
+                    ordeby = " ORDER BY ruolo,nome"
                 End If
 
-                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM player WHERE " & strTeadId & If(role <> "-1" AndAlso role <> "", " AND ruolo = '" & role & "'", "") & If(OutOfGame = "0", " AND (outofgame is null OR outofgame <> 1)", "") & " ORDER BY idteam,idrosa")
+                Dim ds As System.Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT * FROM player WHERE " & strTeadId & If(role <> "-1" AndAlso role <> "", " AND ruolo = '" & role & "'", "") & If(OutOfGame = "0", " AND (outofgame is null OR outofgame <> 1)", "") & ordeby)
 
                 If ds.Tables.Count > 0 Then
                     For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -157,10 +166,10 @@ Namespace Torneo
                         p.RuoloMantraS = Functions.ReadFieldStringData("ruolomantras", row, "P")
                         p.Nat = Functions.ReadFieldStringData("nat", row, "")
                         p.NatCode = Functions.ReadFieldStringData("natcode", row, "")
-                        p.Nome = Functions.ReadFieldStringData("nome", row, "D")
-                        p.Squadra = Functions.ReadFieldStringData("squadra", row, "D")
+                        p.Nome = Functions.ReadFieldStringData("nome", row, "")
+                        p.Squadra = Functions.ReadFieldStringData("squadra", row, "")
                         p.Riconfermato = Functions.ReadFieldIntegerData("riconfermato", row, 0)
-                        p.Anni = Functions.ReadFieldIntegerData("anni", row, 0)
+                        p.Anni = Functions.ReadFieldStringData("anni", row, "")
                         p.Compleanno = Functions.ReadFieldStringData("birthday", row, "")
                         p.Altezza = Functions.ReadFieldStringData("altezza", row, "")
                         p.Peso = Functions.ReadFieldStringData("peso", row, "")
@@ -215,6 +224,7 @@ Namespace Torneo
             Public Property data As Dictionary(Of String, TeamData)
 
             Public Class TeamData
+                Public Property icon As String = ""
                 Public Property name As String = ""
                 Public Property coach() As String = ""
                 Public Property players As List(Of Player)
@@ -261,7 +271,7 @@ Namespace Torneo
             Public Property Squadra() As String = ""
             Public Property Nat() As String = ""
             Public Property NatCode() As String = ""
-            Public Property Anni() As Integer = 0
+            Public Property Anni() As String = ""
             Public Property Compleanno() As String = ""
             Public Property Altezza() As String = ""
             Public Property Peso() As String = ""

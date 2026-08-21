@@ -72,6 +72,9 @@ Namespace WebData
                         'Leggo la quotazione iniziale'
                         If line(i).Contains("player-classic-current-price") Then
                             p.Qcur = CInt(line(i + 1).Trim())
+                        End If
+                        If line(i).Contains("player-mantra-fvm") Then
+                            p.FMV = CInt(line(i + 1).Trim())
                             playersq.Add(p)
                             p = New Torneo.Players.PlayerQuotesItem()
                         End If
