@@ -66,11 +66,11 @@ Namespace WebData
                                 For Each p As String In players
                                     Dim pdata As String() = p.Replace(",{", "").Replace("""", "").Split(",".ToCharArray())
 
-                                    If pdata.Length = 11 Then
+                                    If p.ToUpper().Contains("PROVEDEL") Then
+                                        Dim a As Integer = 0
+                                    End If
 
-                                        If p.ToUpper().Contains("STIG") Then
-                                            Dim a As Integer = 0
-                                        End If
+                                    If pdata.Length = 11 Then
 
                                         Dim role As String = ""
                                         Dim nat As String = ""
@@ -98,6 +98,10 @@ Namespace WebData
 
                                         If name.Contains("MILINKOVIC") OrElse surname.Contains("MILINKOVIC") Then
                                             name = "MILINKOVIC-SAVIC"
+                                        End If
+
+                                        If name.Contains("ORSO") Then
+                                            name = name
                                         End If
 
                                         If role = "Goalkeeper" Then
@@ -135,6 +139,7 @@ Namespace WebData
 
                                             Dim playerm As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(role, name1, sq, wpl, True, False)
                                             If playerm.Matched = False Then playerm = WebData.Players.Data.ResolveName(role, name2, sq, wpl, True, False)
+                                            If playerm.Matched = False Then playerm = WebData.Players.Data.ResolveName("", name1, sq, wpl, True, False)
 
                                             If wpl.ContainsKey(name1) = False Then wpl.Add(name1, playerm)
 

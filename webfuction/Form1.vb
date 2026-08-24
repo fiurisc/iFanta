@@ -131,7 +131,7 @@ Public Class Form1
         Dim data As New Torneo.FormazioniData(appSett)
         Dim dataauto As New Torneo.AutoFormazioniData(appSett)
         Dim comp As New Torneo.CompilaData(appSett)
-        For i As Integer = 3 To 35
+        For i As Integer = 1 To 1
             comp.ApiCompila(i.ToString())
         Next
         'comp.ApiCompila("36")

@@ -70,8 +70,10 @@ Namespace WebData
                         If line <> "" Then
 
                             If line.Contains("competition-predicted-lineups") Then
-                                Dim json As String = System.Text.RegularExpressions.Regex.Match(line, "\{""create.*}(?=' query)").Value().Replace(vbCrLf, vbCr).Replace(vbLf, "")
+
+                                Dim json As String = System.Text.RegularExpressions.Regex.Match(line, "(?<=matchList"":\[).*(?=])").Value().Replace(vbCrLf, vbCr).Replace(vbLf, "")
                                 Dim sublines() As String = Functions.FormatJson(json).Split(Convert.ToChar(13))
+                                Dim pstate As String = ""
 
                                 For k As Integer = 0 To sublines.Length - 1
 
@@ -79,40 +81,36 @@ Namespace WebData
                                     Dim pname As String = Functions.GetJsonPropertyName(linej)
                                     Dim pvalue As String = Functions.GetJsonPropertyValue(linej)
 
-                                    If linej.EndsWith("{") OrElse linej.EndsWith("[") Then
-                                        paths.Add(pname)
-                                        cpath = Torneo.Functions.ConvertListStringToString(paths, "/")
-                                    ElseIf (linej.EndsWith("],") OrElse linej.EndsWith("},") OrElse linej.EndsWith("}") OrElse linej.EndsWith("]")) Then
-                                        If paths.Count > 0 Then paths.RemoveAt(paths.Count - 1)
-                                    Else
-                                        If pname = "formation" Then
-                                            modf = String.Join("-", pvalue.Select(Function(c) c.ToString()))
-                                            modp = pvalue.Select(Function(c) CInt(Char.GetNumericValue(c))).ToList()
-                                        ElseIf pname = "seoName" Then
-                                            team = Functions.CheckTeamName(pvalue.ToUpper())
-                                        ElseIf pname = "fullname" AndAlso cpath.Contains("substitutes") Then
-                                            Dim plist() As String = System.Text.RegularExpressions.Regex.Replace(pvalue.ToUpper(), "(?<=\s\w{2})\s(?=\w+)", "-").Split(Convert.ToChar(" "))
-                                            For Each p As String In plist
-                                                Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", System.Text.RegularExpressions.Regex.Replace(p.Replace("-", " "), "(?<=\w)\.(?=\w+)", ". "), team, playersLog, False)
-                                                name = pm.GetName()
-                                                Call AddInfo(name, team, site, "Panchina", "", 0, plaryersData.Players)
-                                            Next
-                                        ElseIf pname = "fullname" AndAlso cpath.Contains("startingLineup") Then
-                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", System.Text.RegularExpressions.Regex.Replace(pvalue.ToUpper(), "(?<=\w)\.(?=\w+)", ". "), team, playersLog, False)
+                                    If linej.Contains("giornata-") Then
+                                        currgg = CInt(System.Text.RegularExpressions.Regex.Match(linej, "(?<=giornata-)\d+").Value)
+                                    ElseIf linej.Contains("disqualifieds") Then
+                                        pstate = "Squalificato"
+                                    ElseIf linej.Contains("substitutes") Then
+                                        pstate = "Panchina"
+                                    ElseIf linej.Contains("startingLineup") Then
+                                        pstate = "Titolare"
+                                    ElseIf linej.Contains("unavailables") Then
+                                        pstate = "Infortunati"
+                                    ElseIf linej.Contains("seoName") Then
+                                        team = Functions.CheckTeamName(pvalue.ToUpper())
+                                    ElseIf linej.Contains("]") Then
+                                        pstate = ""
+                                    ElseIf linej.Contains("fullName") AndAlso pstate <> "" Then
+                                        Dim plist As Text.RegularExpressions.MatchCollection = System.Text.RegularExpressions.Regex.Matches(pvalue.ToUpper(), "(\w{1,2}[\s\.])?\w{2,}(\s\w{1,2}\.)?")
+                                        For Each p As Text.RegularExpressions.Match In plist
+                                            Dim pm As Players.PlayerMatch = Players.Data.ResolveName("", p.Value, team, playersLog, False)
                                             name = pm.GetName()
-                                            Call AddInfo(name, team, site, "Titolare", "", 0, plaryersData.Players)
-                                        ElseIf pname = "round" Then
-                                            currgg = Convert.ToInt32(pvalue)
-                                            plaryersData.Day = currgg
-                                        End If
-
+                                            Call AddInfo(name, team, site, pstate, "", 0, plaryersData.Players)
+                                        Next
                                     End If
+
                                 Next
                             End If
                         End If
                     Next
 
                     If currgg <> -1 Then
+                        plaryersData.Day = currgg
                         fileBakupHtml = GetBackupHtmlDataFileName(site.ToLower(), currgg)
                         If dicMatchDays(currgg) > 0 AndAlso FromBackup = False Then WriteBackupProbableHtml(fileTemp, fileBakupHtml)
                         Dim fileBackup As String = dirData & currgg & "\" & site.ToLower() & ".json"
