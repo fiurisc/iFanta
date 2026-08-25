@@ -1,7 +1,10 @@
 ﻿
+Imports System.Web.Script.Serialization
+
 Namespace Torneo
 
     Public Class CompilaData
+
 
         Dim appSett As New PublicVariables
         Dim gen As General
@@ -117,8 +120,33 @@ Namespace Torneo
         End Sub
 
         Private Sub DownloadFile(ByVal Giornata As String, ByVal FileName As String)
-            Dim html As String = WebData.Functions.GetPage(appSett, "https://www.pianetafanta.it/Voti-Ufficiali-Excel.asp?giornataScelta=" & Giornata & "&searchBonus=")
-            If html <> "" Then IO.File.WriteAllText(FileName, html, System.Text.Encoding.GetEncoding("ISO-8859-1"))
+            Dim stagione As String = appSett.Year & "_" & (CInt(appSett.Year) + 1).ToString()
+            Dim json As String = WebData.Functions.GetPage(appSett, "https://www.pianetafanta.it/api/voti/partite?giornata=" & Giornata & "&stagione=" & stagione)
+            Dim d As Dictionary(Of String, DateTime) = ExtractTeamTimeMatch(json)
+            Dim strData As New System.Text.StringBuilder
+
+            For Each kv As String In d.Keys
+                If d(kv).Date < Date.Now Then
+                    json = WebData.Functions.GetPage(appSett, "https://www.pianetafanta.it/api/voti/squadra?squadra=" & kv & "&Giornata=" & Giornata & "&stagione=" & stagione)
+                    Dim start As Integer = json.IndexOf("""giocatori""")
+                    If start <> -1 Then
+                        Dim subJson As String = json.Substring(start)
+                        Dim startArray As Integer = subJson.IndexOf("[") + 1
+                        Dim endArray As Integer = subJson.IndexOf("]") - 1
+                        Dim arrayContent As String = subJson.Substring(startArray, endArray - startArray + 1).Replace("},", "}," & Environment.NewLine)
+                        strData.AppendLine(arrayContent)
+                    End If
+
+
+                End If
+            Next
+
+
+            json = ""
+            'If html <> "" Then IO.File.WriteAllText(FileName, html, System.Text.Encoding.GetEncoding("ISO-8859-1"))
+
+            'Dim html As String = WebData.Functions.GetPage(appSett, "https: //www.pianetafanta.it/Voti-Ufficiali-Excel.asp?giornataScelta=" & Giornata & "&searchBonus=")
+            If strData.Length > 0 Then IO.File.WriteAllText(FileName, strData.ToString(), System.Text.Encoding.GetEncoding("ISO-8859-1"))
         End Sub
 
         Private Function ExtractData(ByVal SourceFileName As String, ByVal DestFileName As String) As Integer
@@ -140,161 +168,285 @@ Namespace Torneo
 
                     sw.WriteLine("RUOLO|NAME|SQUADRA|AMM|ESP|GOAL F|GOAL S|AUTO GOL|ASS|RIG TRA|RIG SB|RIG PAR|VOTO|PT")
 
-                    Dim line() As String = System.Text.RegularExpressions.Regex.Replace(IO.File.ReadAllText(SourceFileName), "\<tr\>", "|").Split(CChar("|"))
+                    Dim lines() As String = IO.File.ReadAllLines(SourceFileName)
 
-                    For i As Integer = 0 To line.Length - 1
+                    For i As Integer = 0 To lines.Length - 1
+                        If lines(i) = "" Then Continue For
+                        Dim data As Dictionary(Of String, String) = JsonToDictionary(lines(i))
+                        Dim datplayer As New Dictionary(Of String, PtPlayer)
+                        Dim name As String = data("Nome").ToUpper()
+                        Dim ruolo As String = data("Ruolo").ToUpper()
+                        Dim squadra As String = data("Squadra").ToUpper()
+                        Dim amm As String = data("Amm")
+                        Dim esp As String = data("Esp")
+                        Dim rigs As String = data("RigoreSba")
+                        Dim rigp As String = data("RigorePar")
+                        Dim rigt As String = data("RigoreTra")
 
-                        If line(i).Contains("Legenda Visualizzabile nel sito") = False Then
+                        If name.Contains("EDERSON") Then
+                            name = name
+                        End If
 
-                            Dim cell() As String = System.Text.RegularExpressions.Regex.Replace(line(i), "\<\/td\>", "|").Split(CChar("|"))
+                        Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
+                        If pmath.Matched = False Then
+                            pmath = WebData.Players.Data.ResolveName("", name, squadra, True)
+                        End If
+                        fname = pmath.MatchedPlayer.Name
 
-                            If cell.Length = 36 Then
+                        If pmath.Matched Then
+                            totplayer += 1
+                        Else
+                            totplayernotfound += 1
+                            fname = "#" & fname
+                        End If
 
-                                For k As Integer = 0 To cell.Length - 1
-                                    cell(k) = System.Text.RegularExpressions.Regex.Match(cell(k), "(?<=\>).*").Value.Trim
-                                Next
+                        For k As Integer = 0 To appSett.Settings.Points.SiteReferenceForPoints.Count - 1
+                            datplayer.Add(appSett.Settings.Points.SiteReferenceForPoints(k), New PtPlayer)
+                        Next
 
-                                Dim datplayer As New Dictionary(Of String, PtPlayer)
-                                Dim name As String = cell(1).ToUpper()
-                                Dim ruolo As String = cell(2)
-                                Dim squadra As String = cell(4)
-                                Dim amm As String = cell(23)
-                                Dim esp As String = cell(24)
-                                Dim rigs As String = cell(27)
-                                Dim rigp As String = cell(28)
-                                Dim rigt As String = cell(29)
+                        Dim vtf As Integer = 0
+                        Dim ptf As Integer = 0
+                        Dim nvt As Integer = 0
 
-                                If name.Contains("EDERSON") Then
-                                    name = name
-                                End If
+                        If appSett.Settings.Points.SiteReferenceForPoints.Contains("gazzetta") Then
+                            datplayer("gazzetta").vt = data("VotoGazzetta").Replace(".", ",")
+                            datplayer("gazzetta").gf = data("GoalReal")
+                            datplayer("gazzetta").gs = data("GoalSub")
+                            datplayer("gazzetta").aut = data("Autorete")
+                            datplayer("gazzetta").ass = data("Assist")
+                        End If
+                        If appSett.Settings.Points.SiteReferenceForPoints.Contains("corriere") Then
+                            datplayer("corriere").vt = data("VotoCorriere").Replace(".", ",")
+                            datplayer("corriere").gf = data("GoalRealCor")
+                            datplayer("corriere").gs = data("GoalSubCor")
+                            datplayer("corriere").aut = data("AutoreteCor")
+                            datplayer("corriere").ass = data("AssistCor")
+                        End If
+                        If appSett.Settings.Points.SiteReferenceForPoints.Contains("tuttosport") Then
+                            datplayer("tuttosport").vt = data("VotoTuttoSport").Replace(".", ",")
+                            datplayer("tuttosport").gf = data("GoalRealTut")
+                            datplayer("tuttosport").gs = data("GoalSubTut")
+                            datplayer("tuttosport").aut = data("AutoreteTut")
+                            datplayer("tuttosport").ass = data("AssistTut")
+                        End If
 
-                                If ruolo = "P" OrElse ruolo = "D" OrElse ruolo = "C" OrElse ruolo = "A" Then
+                        nvt = 0
 
-                                    name = WebData.Functions.NormalizeText(name)
-                                    If name.Contains("TOURE ID.") Then
-                                        name = name
-                                    End If
+                        For Each s As String In datplayer.Keys
 
-                                    Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
-                                    If pmath.Matched = False Then
-                                        pmath = WebData.Players.Data.ResolveName("", name, squadra, True)
-                                    End If
-                                    fname = pmath.MatchedPlayer.Name
-
-                                    If pmath.Matched Then
-                                        totplayer += 1
-                                    Else
-                                        totplayernotfound += 1
-                                        fname = "#" & fname
-                                    End If
-
-                                    For k As Integer = 0 To appSett.Settings.Points.SiteReferenceForPoints.Count - 1
-                                        datplayer.Add(appSett.Settings.Points.SiteReferenceForPoints(k), New PtPlayer)
-                                    Next
-
-                                    Dim vtf As Integer = 0
-                                    Dim ptf As Integer = 0
-                                    Dim nvt As Integer = 0
-
-                                    If appSett.Settings.Points.SiteReferenceForPoints.Contains("gazzetta") Then
-                                        datplayer("gazzetta").vt = cell(6).Replace(".", ",")
-                                        datplayer("gazzetta").pt = cell(32).Replace(".", ",")
-                                        datplayer("gazzetta").gf = cell(7)
-                                        datplayer("gazzetta").gs = cell(8)
-                                        datplayer("gazzetta").aut = cell(9)
-                                        datplayer("gazzetta").ass = cell(10)
-                                    End If
-                                    If appSett.Settings.Points.SiteReferenceForPoints.Contains("corriere") Then
-                                        datplayer("corriere").vt = cell(11).Replace(".", ",")
-                                        datplayer("corriere").pt = cell(33).Replace(".", ",")
-                                        datplayer("corriere").gf = cell(12)
-                                        datplayer("corriere").gs = cell(13)
-                                        datplayer("corriere").aut = cell(14)
-                                        datplayer("corriere").ass = cell(15)
-                                    End If
-                                    If appSett.Settings.Points.SiteReferenceForPoints.Contains("tuttosport") Then
-                                        datplayer("tuttosport").vt = cell(16).Replace(".", ",")
-                                        datplayer("tuttosport").pt = cell(34).Replace(".", ",")
-                                        datplayer("tuttosport").gf = cell(17)
-                                        datplayer("tuttosport").gs = cell(18)
-                                        datplayer("tuttosport").aut = cell(19)
-                                        datplayer("tuttosport").ass = cell(20)
-                                    End If
-
-                                    nvt = 0
-
-                                    For Each s As String In datplayer.Keys
-
-                                        'In caso di s.v.ma con presenza di bonus/malus fisso il voto a 6 come da regolamento'
-                                        If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
-                                            If (esp <> "" AndAlso esp <> "0") Then
-                                                datplayer(s).vt = "4"
-                                            ElseIf (datplayer(s).ass <> "" AndAlso datplayer(s).ass <> "0") OrElse (datplayer(s).gf <> "" AndAlso datplayer(s).gf <> "0") OrElse (datplayer(s).gs <> "" AndAlso datplayer(s).gs <> "0") OrElse (datplayer(s).aut <> "" AndAlso datplayer(s).aut <> "0") OrElse (rigp <> "" AndAlso rigp <> "0") OrElse (rigs <> "" AndAlso rigs <> "0") Then
-                                                datplayer(s).vt = "6"
-                                            End If
-                                        End If
-
-                                        If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
-                                            datplayer(s).pt = "-200"
-                                        Else
-                                            datplayer(s).vt = datplayer(s).vt.Replace(",", System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
-                                            datplayer(s).vt = CStr(Math.Truncate(CSng(datplayer(s).vt) * 10))
-                                            datplayer(s).pt = datplayer(s).vt
-                                            If esp <> "" AndAlso esp <> "0" Then
-                                                datplayer(s).pt = AddBonus(datplayer(s).pt, -10)
-                                            ElseIf amm <> "" AndAlso amm <> "0" Then
-                                                datplayer(s).pt = AddBonus(datplayer(s).pt, -5)
-                                            End If
-                                            If datplayer(s).ass <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).ass) * 10)
-                                            If datplayer(s).aut <> "" Then
-                                                If ruolo = "P" Then
-                                                    datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 10)
-                                                Else
-                                                    datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 20)
-                                                End If
-                                            End If
-                                            If rigs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(rigs) * 30)
-                                            If rigp <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(rigp) * 30)
-                                            If datplayer(s).gf <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).gf) * 30)
-                                            If datplayer(s).gs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).gs) * 10)
-                                            vtf = CInt(vtf + CDbl(datplayer(s).vt))
-                                            nvt += 1
-                                        End If
-                                    Next
-
-                                    If nvt > 0 Then
-
-                                        Dim t As Double = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
-                                        vtf = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
-                                        ptf = vtf
-
-                                        If esp <> "" AndAlso esp <> "0" Then
-                                            ptf += appSett.Settings.Points.Expulsion
-                                        ElseIf amm <> "" AndAlso amm <> "0" Then
-                                            ptf += appSett.Settings.Points.Admonition
-                                        End If
-                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass) * appSett.Settings.Points.Assist(ruolo)
-                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut) * appSett.Settings.Points.OwnGoal(ruolo)
-                                        If rigs <> "" Then ptf = ptf + CInt(rigs) * appSett.Settings.Points.MissedPenalty(ruolo)
-                                        If rigp <> "" Then ptf = ptf + CInt(rigp) * 30
-                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf) * appSett.Settings.Points.GoalScored(ruolo)
-                                        If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs) * appSett.Settings.Points.GoalConceded
-
-                                    Else
-                                        vtf = -200
-                                        ptf = -200
-                                    End If
-
-                                    Dim key As String = ruolo & "|" & fname & "|" & squadra
-
-                                    If kplay.Contains(key) = False Then
-                                        sw.WriteLine(ruolo & "|" & name & "|" & fname & "|" & squadra & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs & "|" & amm & "|" & esp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass & "|" & rigt & "|" & rigs & "|" & rigp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut & "|" & vtf & "|" & ptf)
-                                        kplay.Add(key)
-                                    End If
-
+                            'In caso di s.v.ma con presenza di bonus/malus fisso il voto a 6 come da regolamento'
+                            If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
+                                If (esp <> "" AndAlso esp <> "0") Then
+                                    datplayer(s).vt = "4"
+                                ElseIf (datplayer(s).ass <> "" AndAlso datplayer(s).ass <> "0") OrElse (datplayer(s).gf <> "" AndAlso datplayer(s).gf <> "0") OrElse (datplayer(s).gs <> "" AndAlso datplayer(s).gs <> "0") OrElse (datplayer(s).aut <> "" AndAlso datplayer(s).aut <> "0") OrElse (rigp <> "" AndAlso rigp <> "0") OrElse (rigs <> "" AndAlso rigs <> "0") Then
+                                    datplayer(s).vt = "6"
                                 End If
                             End If
+
+                            If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
+                                datplayer(s).pt = "-200"
+                            Else
+                                datplayer(s).vt = datplayer(s).vt.Replace(",", System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
+                                datplayer(s).vt = CStr(Math.Truncate(CSng(datplayer(s).vt) * 10))
+                                datplayer(s).pt = datplayer(s).vt
+                                If esp <> "" AndAlso esp <> "0" Then
+                                    datplayer(s).pt = AddBonus(datplayer(s).pt, -10)
+                                ElseIf amm <> "" AndAlso amm <> "0" Then
+                                    datplayer(s).pt = AddBonus(datplayer(s).pt, -5)
+                                End If
+                                If datplayer(s).ass <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).ass) * 10)
+                                If datplayer(s).aut <> "" Then
+                                    If ruolo = "P" Then
+                                        datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 10)
+                                    Else
+                                        datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 20)
+                                    End If
+                                End If
+                                If rigs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(rigs) * 30)
+                                If rigp <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(rigp) * 30)
+                                If datplayer(s).gf <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).gf) * 30)
+                                If datplayer(s).gs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).gs) * 10)
+                                vtf = CInt(vtf + CDbl(datplayer(s).vt))
+                                nvt += 1
+                            End If
+                        Next
+
+                        If nvt > 0 Then
+
+                            Dim t As Double = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
+                            vtf = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
+                            ptf = vtf
+
+                            If esp <> "" AndAlso esp <> "0" Then
+                                ptf += appSett.Settings.Points.Expulsion
+                            ElseIf amm <> "" AndAlso amm <> "0" Then
+                                ptf += appSett.Settings.Points.Admonition
+                            End If
+                            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass) * appSett.Settings.Points.Assist(ruolo)
+                            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut) * appSett.Settings.Points.OwnGoal(ruolo)
+                            If rigs <> "" Then ptf = ptf + CInt(rigs) * appSett.Settings.Points.MissedPenalty(ruolo)
+                            If rigp <> "" Then ptf = ptf + CInt(rigp) * 30
+                            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf) * appSett.Settings.Points.GoalScored(ruolo)
+                            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs) * appSett.Settings.Points.GoalConceded
+
+                        Else
+                            vtf = -200
+                            ptf = -200
                         End If
+
+                        Dim key As String = ruolo & "|" & fname & "|" & squadra
+
+                        If kplay.Contains(key) = False Then
+                            sw.WriteLine(ruolo & "|" & name & "|" & fname & "|" & squadra & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs & "|" & amm & "|" & esp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass & "|" & rigt & "|" & rigs & "|" & rigp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut & "|" & vtf & "|" & ptf)
+                            kplay.Add(key)
+                        End If
+
+                        'If cell.Length = 36 Then
+
+                        '    For k As Integer = 0 To cell.Length - 1
+                        '        cell(k) = System.Text.RegularExpressions.Regex.Match(cell(k), "(?<=\>).*").Value.Trim
+                        '    Next
+
+                        '    Dim datplayer As New Dictionary(Of String, PtPlayer)
+                        '    Dim name As String = cell(1).ToUpper()
+                        '    Dim ruolo As String = cell(2)
+                        '    Dim squadra As String = cell(4)
+                        '    Dim amm As String = cell(23)
+                        '    Dim esp As String = cell(24)
+                        '    Dim rigs As String = cell(27)
+                        '    Dim rigp As String = cell(28)
+                        '    Dim rigt As String = cell(29)
+
+                        '    If name.Contains("EDERSON") Then
+                        '        name = name
+                        '    End If
+
+                        '    If ruolo = "P" OrElse ruolo = "D" OrElse ruolo = "C" OrElse ruolo = "A" Then
+
+                        '        name = WebData.Functions.NormalizeText(name)
+                        '        If name.Contains("TOURE ID.") Then
+                        '            name = name
+                        '        End If
+
+                        '        Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
+                        '        If pmath.Matched = False Then
+                        '            pmath = WebData.Players.Data.ResolveName("", name, squadra, True)
+                        '        End If
+                        '        fname = pmath.MatchedPlayer.Name
+
+                        '        If pmath.Matched Then
+                        '            totplayer += 1
+                        '        Else
+                        '            totplayernotfound += 1
+                        '            fname = "#" & fname
+                        '        End If
+
+                        '        For k As Integer = 0 To appSett.Settings.Points.SiteReferenceForPoints.Count - 1
+                        '            datplayer.Add(appSett.Settings.Points.SiteReferenceForPoints(k), New PtPlayer)
+                        '        Next
+
+                        '        Dim vtf As Integer = 0
+                        '        Dim ptf As Integer = 0
+                        '        Dim nvt As Integer = 0
+
+                        '        If appSett.Settings.Points.SiteReferenceForPoints.Contains("gazzetta") Then
+                        '            datplayer("gazzetta").vt = cell(6).Replace(".", ",")
+                        '            datplayer("gazzetta").pt = cell(32).Replace(".", ",")
+                        '            datplayer("gazzetta").gf = cell(7)
+                        '            datplayer("gazzetta").gs = cell(8)
+                        '            datplayer("gazzetta").aut = cell(9)
+                        '            datplayer("gazzetta").ass = cell(10)
+                        '        End If
+                        '        If appSett.Settings.Points.SiteReferenceForPoints.Contains("corriere") Then
+                        '            datplayer("corriere").vt = cell(11).Replace(".", ",")
+                        '            datplayer("corriere").pt = cell(33).Replace(".", ",")
+                        '            datplayer("corriere").gf = cell(12)
+                        '            datplayer("corriere").gs = cell(13)
+                        '            datplayer("corriere").aut = cell(14)
+                        '            datplayer("corriere").ass = cell(15)
+                        '        End If
+                        '        If appSett.Settings.Points.SiteReferenceForPoints.Contains("tuttosport") Then
+                        '            datplayer("tuttosport").vt = cell(16).Replace(".", ",")
+                        '            datplayer("tuttosport").pt = cell(34).Replace(".", ",")
+                        '            datplayer("tuttosport").gf = cell(17)
+                        '            datplayer("tuttosport").gs = cell(18)
+                        '            datplayer("tuttosport").aut = cell(19)
+                        '            datplayer("tuttosport").ass = cell(20)
+                        '        End If
+
+                        '        nvt = 0
+
+                        '        For Each s As String In datplayer.Keys
+
+                        '            'In caso di s.v.ma con presenza di bonus/malus fisso il voto a 6 come da regolamento'
+                        '            If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
+                        '                If (esp <> "" AndAlso esp <> "0") Then
+                        '                    datplayer(s).vt = "4"
+                        '                ElseIf (datplayer(s).ass <> "" AndAlso datplayer(s).ass <> "0") OrElse (datplayer(s).gf <> "" AndAlso datplayer(s).gf <> "0") OrElse (datplayer(s).gs <> "" AndAlso datplayer(s).gs <> "0") OrElse (datplayer(s).aut <> "" AndAlso datplayer(s).aut <> "0") OrElse (rigp <> "" AndAlso rigp <> "0") OrElse (rigs <> "" AndAlso rigs <> "0") Then
+                        '                    datplayer(s).vt = "6"
+                        '                End If
+                        '            End If
+
+                        '            If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
+                        '                datplayer(s).pt = "-200"
+                        '            Else
+                        '                datplayer(s).vt = datplayer(s).vt.Replace(",", System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
+                        '                datplayer(s).vt = CStr(Math.Truncate(CSng(datplayer(s).vt) * 10))
+                        '                datplayer(s).pt = datplayer(s).vt
+                        '                If esp <> "" AndAlso esp <> "0" Then
+                        '                    datplayer(s).pt = AddBonus(datplayer(s).pt, -10)
+                        '                ElseIf amm <> "" AndAlso amm <> "0" Then
+                        '                    datplayer(s).pt = AddBonus(datplayer(s).pt, -5)
+                        '                End If
+                        '                If datplayer(s).ass <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).ass) * 10)
+                        '                If datplayer(s).aut <> "" Then
+                        '                    If ruolo = "P" Then
+                        '                        datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 10)
+                        '                    Else
+                        '                        datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 20)
+                        '                    End If
+                        '                End If
+                        '                If rigs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(rigs) * 30)
+                        '                If rigp <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(rigp) * 30)
+                        '                If datplayer(s).gf <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).gf) * 30)
+                        '                If datplayer(s).gs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).gs) * 10)
+                        '                vtf = CInt(vtf + CDbl(datplayer(s).vt))
+                        '                nvt += 1
+                        '            End If
+                        '        Next
+
+                        '        If nvt > 0 Then
+
+                        '            Dim t As Double = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
+                        '            vtf = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
+                        '            ptf = vtf
+
+                        '            If esp <> "" AndAlso esp <> "0" Then
+                        '                ptf += appSett.Settings.Points.Expulsion
+                        '            ElseIf amm <> "" AndAlso amm <> "0" Then
+                        '                ptf += appSett.Settings.Points.Admonition
+                        '            End If
+                        '            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass) * appSett.Settings.Points.Assist(ruolo)
+                        '            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut) * appSett.Settings.Points.OwnGoal(ruolo)
+                        '            If rigs <> "" Then ptf = ptf + CInt(rigs) * appSett.Settings.Points.MissedPenalty(ruolo)
+                        '            If rigp <> "" Then ptf = ptf + CInt(rigp) * 30
+                        '            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf) * appSett.Settings.Points.GoalScored(ruolo)
+                        '            If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs) * appSett.Settings.Points.GoalConceded
+
+                        '        Else
+                        '            vtf = -200
+                        '            ptf = -200
+                        '        End If
+
+                        '        Dim key As String = ruolo & "|" & fname & "|" & squadra
+
+                        '        If kplay.Contains(key) = False Then
+                        '            sw.WriteLine(ruolo & "|" & name & "|" & fname & "|" & squadra & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs & "|" & amm & "|" & esp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass & "|" & rigt & "|" & rigs & "|" & rigp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut & "|" & vtf & "|" & ptf)
+                        '            kplay.Add(key)
+                        '        End If
+
+                        '    End If
+                        'End If
                     Next
 
                     sw.WriteLine("#------------------------------------------")
@@ -318,6 +470,232 @@ Namespace Torneo
 
         End Function
 
+        Private Function JsonToDictionary(raw As String) As Dictionary(Of String, String)
+            Dim dict As New Dictionary(Of String, String)
+
+            ' Dividi per virgola
+            Dim parts() As String = raw.Split(","c)
+
+            For Each p In parts
+                If p.Contains(":") Then
+                    Dim kv() As String = p.Split(":"c)
+
+                    Dim key As String = kv(0).Trim().Trim(""""c)
+                    Dim value As String = kv(1).Trim()
+
+                    ' Rimuove eventuali doppi apici dal valore
+                    value = value.Trim(""""c)
+
+                    ' Aggiunge al dizionario
+                    If Not dict.ContainsKey(key) Then
+                        dict.Add(key, value)
+                    End If
+                End If
+            Next
+
+            Return dict
+
+        End Function
+
+
+
+        'Private Function ExtractData(ByVal SourceFileName As String, ByVal DestFileName As String) As Integer
+
+        '    Dim ngio As Integer = 0
+
+        '    If IO.File.Exists(SourceFileName) Then
+
+        '        Dim sw As New IO.StreamWriter(DestFileName, False, System.Text.Encoding.UTF8)
+
+        '        Try
+
+        '            Dim start As Boolean = False
+        '            Dim fname As String = ""
+        '            Dim str As New System.Text.StringBuilder
+        '            Dim kplay As New List(Of String)
+        '            Dim totplayer As Integer = 0
+        '            Dim totplayernotfound As Integer = 0
+
+        '            sw.WriteLine("RUOLO|NAME|SQUADRA|AMM|ESP|GOAL F|GOAL S|AUTO GOL|ASS|RIG TRA|RIG SB|RIG PAR|VOTO|PT")
+
+        '            Dim line() As String = System.Text.RegularExpressions.Regex.Replace(IO.File.ReadAllText(SourceFileName), "\<tr\>", "|").Split(CChar("|"))
+
+        '            For i As Integer = 0 To line.Length - 1
+
+        '                If line(i).Contains("Legenda Visualizzabile nel sito") = False Then
+
+        '                    Dim cell() As String = System.Text.RegularExpressions.Regex.Replace(line(i), "\<\/td\>", "|").Split(CChar("|"))
+
+        '                    If cell.Length = 36 Then
+
+        '                        For k As Integer = 0 To cell.Length - 1
+        '                            cell(k) = System.Text.RegularExpressions.Regex.Match(cell(k), "(?<=\>).*").Value.Trim
+        '                        Next
+
+        '                        Dim datplayer As New Dictionary(Of String, PtPlayer)
+        '                        Dim name As String = cell(1).ToUpper()
+        '                        Dim ruolo As String = cell(2)
+        '                        Dim squadra As String = cell(4)
+        '                        Dim amm As String = cell(23)
+        '                        Dim esp As String = cell(24)
+        '                        Dim rigs As String = cell(27)
+        '                        Dim rigp As String = cell(28)
+        '                        Dim rigt As String = cell(29)
+
+        '                        If name.Contains("EDERSON") Then
+        '                            name = name
+        '                        End If
+
+        '                        If ruolo = "P" OrElse ruolo = "D" OrElse ruolo = "C" OrElse ruolo = "A" Then
+
+        '                            name = WebData.Functions.NormalizeText(name)
+        '                            If name.Contains("TOURE ID.") Then
+        '                                name = name
+        '                            End If
+
+        '                            Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
+        '                            If pmath.Matched = False Then
+        '                                pmath = WebData.Players.Data.ResolveName("", name, squadra, True)
+        '                            End If
+        '                            fname = pmath.MatchedPlayer.Name
+
+        '                            If pmath.Matched Then
+        '                                totplayer += 1
+        '                            Else
+        '                                totplayernotfound += 1
+        '                                fname = "#" & fname
+        '                            End If
+
+        '                            For k As Integer = 0 To appSett.Settings.Points.SiteReferenceForPoints.Count - 1
+        '                                datplayer.Add(appSett.Settings.Points.SiteReferenceForPoints(k), New PtPlayer)
+        '                            Next
+
+        '                            Dim vtf As Integer = 0
+        '                            Dim ptf As Integer = 0
+        '                            Dim nvt As Integer = 0
+
+        '                            If appSett.Settings.Points.SiteReferenceForPoints.Contains("gazzetta") Then
+        '                                datplayer("gazzetta").vt = cell(6).Replace(".", ",")
+        '                                datplayer("gazzetta").pt = cell(32).Replace(".", ",")
+        '                                datplayer("gazzetta").gf = cell(7)
+        '                                datplayer("gazzetta").gs = cell(8)
+        '                                datplayer("gazzetta").aut = cell(9)
+        '                                datplayer("gazzetta").ass = cell(10)
+        '                            End If
+        '                            If appSett.Settings.Points.SiteReferenceForPoints.Contains("corriere") Then
+        '                                datplayer("corriere").vt = cell(11).Replace(".", ",")
+        '                                datplayer("corriere").pt = cell(33).Replace(".", ",")
+        '                                datplayer("corriere").gf = cell(12)
+        '                                datplayer("corriere").gs = cell(13)
+        '                                datplayer("corriere").aut = cell(14)
+        '                                datplayer("corriere").ass = cell(15)
+        '                            End If
+        '                            If appSett.Settings.Points.SiteReferenceForPoints.Contains("tuttosport") Then
+        '                                datplayer("tuttosport").vt = cell(16).Replace(".", ",")
+        '                                datplayer("tuttosport").pt = cell(34).Replace(".", ",")
+        '                                datplayer("tuttosport").gf = cell(17)
+        '                                datplayer("tuttosport").gs = cell(18)
+        '                                datplayer("tuttosport").aut = cell(19)
+        '                                datplayer("tuttosport").ass = cell(20)
+        '                            End If
+
+        '                            nvt = 0
+
+        '                            For Each s As String In datplayer.Keys
+
+        '                                'In caso di s.v.ma con presenza di bonus/malus fisso il voto a 6 come da regolamento'
+        '                                If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
+        '                                    If (esp <> "" AndAlso esp <> "0") Then
+        '                                        datplayer(s).vt = "4"
+        '                                    ElseIf (datplayer(s).ass <> "" AndAlso datplayer(s).ass <> "0") OrElse (datplayer(s).gf <> "" AndAlso datplayer(s).gf <> "0") OrElse (datplayer(s).gs <> "" AndAlso datplayer(s).gs <> "0") OrElse (datplayer(s).aut <> "" AndAlso datplayer(s).aut <> "0") OrElse (rigp <> "" AndAlso rigp <> "0") OrElse (rigs <> "" AndAlso rigs <> "0") Then
+        '                                        datplayer(s).vt = "6"
+        '                                    End If
+        '                                End If
+
+        '                                If datplayer(s).vt = "" OrElse datplayer(s).vt = "s,v," Then
+        '                                    datplayer(s).pt = "-200"
+        '                                Else
+        '                                    datplayer(s).vt = datplayer(s).vt.Replace(",", System.Globalization.CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator)
+        '                                    datplayer(s).vt = CStr(Math.Truncate(CSng(datplayer(s).vt) * 10))
+        '                                    datplayer(s).pt = datplayer(s).vt
+        '                                    If esp <> "" AndAlso esp <> "0" Then
+        '                                        datplayer(s).pt = AddBonus(datplayer(s).pt, -10)
+        '                                    ElseIf amm <> "" AndAlso amm <> "0" Then
+        '                                        datplayer(s).pt = AddBonus(datplayer(s).pt, -5)
+        '                                    End If
+        '                                    If datplayer(s).ass <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).ass) * 10)
+        '                                    If datplayer(s).aut <> "" Then
+        '                                        If ruolo = "P" Then
+        '                                            datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 10)
+        '                                        Else
+        '                                            datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).aut) * 20)
+        '                                        End If
+        '                                    End If
+        '                                    If rigs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(rigs) * 30)
+        '                                    If rigp <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(rigp) * 30)
+        '                                    If datplayer(s).gf <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, CInt(datplayer(s).gf) * 30)
+        '                                    If datplayer(s).gs <> "" Then datplayer(s).pt = AddBonus(datplayer(s).pt, -CInt(datplayer(s).gs) * 10)
+        '                                    vtf = CInt(vtf + CDbl(datplayer(s).vt))
+        '                                    nvt += 1
+        '                                End If
+        '                            Next
+
+        '                            If nvt > 0 Then
+
+        '                                Dim t As Double = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
+        '                                vtf = CInt(Math.Truncate(((vtf / (nvt * 10)) + 0.25) * 2) / 0.2)
+        '                                ptf = vtf
+
+        '                                If esp <> "" AndAlso esp <> "0" Then
+        '                                    ptf += appSett.Settings.Points.Expulsion
+        '                                ElseIf amm <> "" AndAlso amm <> "0" Then
+        '                                    ptf += appSett.Settings.Points.Admonition
+        '                                End If
+        '                                If datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass) * appSett.Settings.Points.Assist(ruolo)
+        '                                If datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut) * appSett.Settings.Points.OwnGoal(ruolo)
+        '                                If rigs <> "" Then ptf = ptf + CInt(rigs) * appSett.Settings.Points.MissedPenalty(ruolo)
+        '                                If rigp <> "" Then ptf = ptf + CInt(rigp) * 30
+        '                                If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf) * appSett.Settings.Points.GoalScored(ruolo)
+        '                                If datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs <> "" Then ptf = ptf + CInt(datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs) * appSett.Settings.Points.GoalConceded
+
+        '                            Else
+        '                                vtf = -200
+        '                                ptf = -200
+        '                            End If
+
+        '                            Dim key As String = ruolo & "|" & fname & "|" & squadra
+
+        '                            If kplay.Contains(key) = False Then
+        '                                sw.WriteLine(ruolo & "|" & name & "|" & fname & "|" & squadra & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gf & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).gs & "|" & amm & "|" & esp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).ass & "|" & rigt & "|" & rigs & "|" & rigp & "|" & datplayer(appSett.Settings.Points.SiteReferenceForBonus).aut & "|" & vtf & "|" & ptf)
+        '                                kplay.Add(key)
+        '                            End If
+
+        '                        End If
+        '                    End If
+        '                End If
+        '            Next
+
+        '            sw.WriteLine("#------------------------------------------")
+        '            sw.WriteLine("#total player=" & totplayer)
+        '            sw.WriteLine("#total player found=" & totplayer - totplayernotfound)
+        '            sw.WriteLine("#total player not found=" & totplayernotfound)
+        '            sw.WriteLine("#percentage total player not found=" & CInt((totplayernotfound * 100) / totplayer) & "%")
+        '            sw.WriteLine("#------------------------------------------")
+
+        '        Catch ex As Exception
+        '            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
+        '        End Try
+
+        '        sw.Dispose()
+
+        '    Else
+        '        WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "Dati non trovati")
+        '    End If
+
+        '    Return ngio
+
+        'End Function
+
         Private Sub InsertData(ByVal Giornata As String, ByVal FileName As String)
 
             If IO.File.Exists(FileName) Then
@@ -334,6 +712,8 @@ Namespace Torneo
                     Dim r As Integer = 0
 
                     'Analizzo i dati'
+                    Dim sqlList As New List(Of String)
+
                     For i As Integer = 0 To line.Length - 1
                         If line(i).Contains("#") = False Then
                             Dim s() As String = line(i).Split(CChar("|"))
@@ -341,10 +721,13 @@ Namespace Torneo
                                 For k As Integer = 3 To s.Length - 1
                                     If s(k) = "" Then s(k) = "0"
                                 Next
-                                Functions.ExecuteSql(appSett, sins & "(" & Giornata & ",'" & s(0) & "','" & s(2) & "','" & s(3) & "'," & s(4) & "," & s(5) & "," & s(6) & "," & s(7) & "," & s(8) & "," & s(9) & "," & s(10) & "," & s(11) & "," & s(12) & "," & s(13) & "," & s(14) & ")")
+                                sqlList.Add(sins & "(" & Giornata & ",'" & s(0) & "','" & s(2) & "','" & s(3) & "'," & s(4) & "," & s(5) & "," & s(6) & "," & s(7) & "," & s(8) & "," & s(9) & "," & s(10) & "," & s(11) & "," & s(12) & "," & s(13) & "," & s(14) & ")")
+
                             End If
                         End If
                     Next
+
+                    Functions.ExecuteSql(appSett, sqlList)
 
                 Catch ex As Exception
                     WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
@@ -970,6 +1353,41 @@ Namespace Torneo
         Private Function AddBonus(pt As String, bonus As Integer) As String
             Return CStr(CDbl(pt) - bonus)
         End Function
+
+        Private Function ExtractTeamTimeMatch(json As String) As Dictionary(Of String, DateTime)
+            Dim dict As New Dictionary(Of String, DateTime)
+
+            Dim js As New JavaScriptSerializer()
+            Dim root As RootMatchs = js.Deserialize(Of RootMatchs)(json)
+
+            For Each p In root.data.partite
+                Dim dt As DateTime = DateTime.Parse(p.DataOrario)
+                dict.Add(p.SquadraCasa, dt)
+                dict.Add(p.SquadraOspite, dt)
+            Next
+
+            Return dict
+        End Function
+
+        Public Class RootMatchs
+            Public Property ok As Boolean
+            Public Property data As DataContainer
+        End Class
+
+        Public Class DataContainer
+            Public Property partite As List(Of Partita)
+            Public Property congelate As Object
+        End Class
+
+        Public Class Partita
+            Public Property SquadraCasa As String
+            Public Property SquadraOspite As String
+            Public Property GolCasa As Object
+            Public Property GolOspite As Object
+            Public Property Data As String
+            Public Property DataOrario As String
+        End Class
+
 
         Public Class CompileStatus
             Public Property Text As String = ""

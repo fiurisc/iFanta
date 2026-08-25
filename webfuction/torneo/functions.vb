@@ -180,8 +180,6 @@ Namespace Torneo
 
             Dim ds As New System.Data.DataSet
 
-            WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, GetDbConnectionString(appSett, DbUser))
-
             If EnableQueryCache AndAlso QueryCache.ContainsKey(SqlString) Then
                 ds = QueryCache(SqlString)
             Else

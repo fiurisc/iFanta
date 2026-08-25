@@ -294,8 +294,8 @@ Public Class Form1
         Dim data As New Torneo.FormazioniData(appSett)
         Dim comp As New Torneo.CompilaData(appSett)
 
-        'Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
-        Dim team As List(Of Integer) = Enumerable.Range(1, 1).ToList()
+        Dim team As List(Of Integer) = Enumerable.Range(0, 10).ToList()
+        'Dim team As List(Of Integer) = Enumerable.Range(1, 1).ToList()
 
         Dim histData As New Dictionary(Of Integer, List(Of Torneo.AutoFormazioniData.AutoFormazione))
 
@@ -376,7 +376,7 @@ Public Class Form1
 
         Dim dt As Date = Date.Now
 
-        For g As Integer = 20 To 38
+        For g As Integer = 2 To 2
 
             Dim sr1 As New IO.StreamWriter(fileLog1, True)
             Dim sr2 As New IO.StreamWriter(fileLog2, True)
@@ -426,9 +426,18 @@ Public Class Form1
                     Dim autoForma As New Torneo.AutoFormazioniData(appSett)
                     Dim dicpt As Dictionary(Of String, Integer) = autoForma.GetPlayerPuntiData(g, id)
 
+                    'If dicpt.Count > 0 Then
+
+                    'End If
+
                     For Each p As Torneo.FormazioniData.PlayerFormazione In dicResult(id).Formazione.Players
-                        If dicpt.ContainsKey(p.Nome) Then p.Punti = dicpt(p.Nome)
+                        If dicpt.ContainsKey(p.Nome) Then
+                            p.Punti = dicpt(p.Nome)
+                        Else
+                            p.Punti = 0
+                        End If
                     Next
+
                     dicResult(id).Formazione = comp.CompileDataForma(dicResult(id).Formazione, False)
                     data.CalculatePuntiFormazione(dicResult(id).Formazione)
 
