@@ -73,6 +73,7 @@ Namespace Torneo
             Try
                 Dim list As List(Of Formazione) = GetFormazioni(Day, TeamId, Type)
                 Dim dicForma As Dictionary(Of String, Formazione) = list.ToDictionary(Function(x) x.TeamId.ToString(), Function(x) x)
+
                 Return WebData.Functions.SerializzaOggetto(dicForma, True)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)

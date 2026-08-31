@@ -210,6 +210,7 @@
     <Compile Include="webdata\probable\get-sky.vb" />
     <Compile Include="webdata\probable\probable-formations.vb" />
     <Compile Include="webdata\classifica-seriea.vb" />
+    <Compile Include="webdata\probable\probable-match-result.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">

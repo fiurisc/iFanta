@@ -53,9 +53,9 @@ Public Class Form1
 
         'UpdateProbableModuleTeam()
         'GetAutomaticBestHistoricalParameters()
-        'GetAutomaticFormation()
+        GetAutomaticFormation()
 
-        'End
+        End
 
     End Sub
 
@@ -131,7 +131,7 @@ Public Class Form1
         Dim data As New Torneo.FormazioniData(appSett)
         Dim dataauto As New Torneo.AutoFormazioniData(appSett)
         Dim comp As New Torneo.CompilaData(appSett)
-        For i As Integer = 1 To 1
+        For i As Integer = 2 To 2
             comp.ApiCompila(i.ToString())
         Next
         'comp.ApiCompila("36")
@@ -376,7 +376,7 @@ Public Class Form1
 
         Dim dt As Date = Date.Now
 
-        For g As Integer = 2 To 2
+        For g As Integer = 1 To 2
 
             Dim sr1 As New IO.StreamWriter(fileLog1, True)
             Dim sr2 As New IO.StreamWriter(fileLog2, True)
@@ -415,6 +415,7 @@ Public Class Form1
                                            Dim id As Integer = teamid
                                            Dim dataautoTeam As New Torneo.AutoFormazioniData(appSett)
                                            dataautoTeam.SetProbable(g, probable, dicPlayers)
+                                           dataautoTeam.LoadRoseBackup(g.ToString())
                                            dataautoTeam.MaxDayInArchive = maxday
                                            result.Add(dataautoTeam.GetFormazioneAutomatica(gio, id, True))
                                        End Sub)
@@ -482,7 +483,7 @@ Public Class Form1
                     Dim lstUser As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Regular)
                     Dim lstTop As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Top)
 
-                    If lstUser.Count > 0 Then
+                    If lstUser.Count > 0 AndAlso lstTop.Count = lstUser.Count Then
 
                         Dim sout As New System.Text.StringBuilder
                         Dim difftot As Double = 0
@@ -661,5 +662,11 @@ Public Class Form1
         r.ApiAddRosa("5", json)
 
         'prob.GetPlayersRankingData(False, 3)
+    End Sub
+
+    Private Sub Button19_Click(sender As Object, e As EventArgs) Handles Button19.Click
+        Dim prob As New WebData.ProbableMatchResult(appSett)
+        prob.GetProbableMatchResult(False)
+
     End Sub
 End Class

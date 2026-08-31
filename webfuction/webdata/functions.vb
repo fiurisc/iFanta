@@ -571,7 +571,7 @@ Namespace WebData
                 End Using
 
             Catch ex As Exception
-                WriteLog(appSett, eMessageType.Errors, ex.Message)
+                WriteLog(appSett, eMessageType.Errors, Url & " -> " & ex.Message)
                 responseFromServer = ex.Message
             End Try
 

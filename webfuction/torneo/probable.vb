@@ -1,5 +1,48 @@
 ﻿
+Imports webfuction.Torneo.ProbablePlayers
+
 Namespace Torneo
+
+    Public Class ProbableMatchResult
+
+        Dim appSett As New PublicVariables
+
+        Sub New(appSett As PublicVariables)
+            Me.appSett = appSett
+        End Sub
+
+        Public Function ApiGetProbableMatchFormation(Giornata As Integer) As String
+            Dim data As List(Of ProbableResult) = GetProbableResult(Giornata)
+            Return WebData.Functions.SerializzaOggetto(data, True)
+        End Function
+
+        Public Function GetProbableResult(Giornata As Integer) As List(Of ProbableResult)
+
+            Dim data As New List(Of ProbableResult)
+            Dim probData As New WebData.ProbableMatchResult(appSett)
+            Dim fname As String = probData.GetDataFileName(Giornata)
+            If IO.File.Exists(fname) = False Then Return data
+            Dim json As String = IO.File.ReadAllText(probData.GetDataFileName(Giornata), System.Text.Encoding.GetEncoding(1252))
+            If json = "" Then Return data
+            data = WebData.Functions.DeserializeJson(Of List(Of ProbableResult))(json)
+
+            Return data
+
+        End Function
+
+
+        Public Class ProbableResult
+            Public Property Match() As String = ""
+            Public Property TeamHome() As String = ""
+            Public Property TeamAway() As String = ""
+            Public Property Prob1 As Integer = 0
+            Public Property ProbX As Integer = 0
+            Public Property Prob2 As Integer = 0
+
+        End Class
+
+    End Class
+
     Public Class ProbablePlayers
 
         Dim appSett As New PublicVariables

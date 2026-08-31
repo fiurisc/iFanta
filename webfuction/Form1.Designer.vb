@@ -41,6 +41,7 @@ Partial Class Form1
         Me.Button16 = New System.Windows.Forms.Button()
         Me.Button17 = New System.Windows.Forms.Button()
         Me.Button18 = New System.Windows.Forms.Button()
+        Me.Button19 = New System.Windows.Forms.Button()
         Me.SuspendLayout()
         '
         'Button1
@@ -228,11 +229,21 @@ Partial Class Form1
         Me.Button18.Text = "get players ranking"
         Me.Button18.UseVisualStyleBackColor = True
         '
+        'Button19
+        '
+        Me.Button19.Location = New System.Drawing.Point(307, 127)
+        Me.Button19.Name = "Button19"
+        Me.Button19.Size = New System.Drawing.Size(153, 36)
+        Me.Button19.TabIndex = 215
+        Me.Button19.Text = "Probable Match result"
+        Me.Button19.UseVisualStyleBackColor = True
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(605, 340)
+        Me.Controls.Add(Me.Button19)
         Me.Controls.Add(Me.Button18)
         Me.Controls.Add(Me.Button17)
         Me.Controls.Add(Me.Button16)
@@ -278,4 +289,5 @@ Partial Class Form1
     Friend WithEvents Button16 As Button
     Friend WithEvents Button17 As Button
     Friend WithEvents Button18 As Button
+    Friend WithEvents Button19 As Button
 End Class

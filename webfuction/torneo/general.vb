@@ -166,6 +166,21 @@ Namespace Torneo
 
         End Function
 
+        Public Function ApiGetTorneoHistoryWinnerList(Torneo As String) As String
+
+            Dim years As New List(Of YearTorneo)
+            Dim dtorneo As String = appSett.RootTorneiPath & Torneo
+
+            If IO.Directory.Exists(dtorneo) Then
+                If IO.File.Exists(dtorneo & "/albo.json") Then
+                    Return IO.File.ReadAllText(dtorneo & "/albo.json")
+                End If
+            End If
+
+            Return ""
+
+        End Function
+
         Public Function ApiGetYearsList() As List(Of YearTorneo)
 
             Dim years As New List(Of YearTorneo)

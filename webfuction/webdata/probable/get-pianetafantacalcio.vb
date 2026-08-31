@@ -43,7 +43,7 @@ Namespace WebData
                     fileTemp = fileBakupHtml
                     If IO.File.Exists(fileBakupHtml) Then html = "ok"
                 Else
-                    html = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-complete-serie-a-live.asp", "UTF-8")
+                    html = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-fantacalcio", "UTF-8")
                     IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
                 End If
 
@@ -69,8 +69,8 @@ Namespace WebData
 
                         If lines(i) <> "" Then
 
-                            If lines(i).Contains("><h4><strong>") Then
-                                currgg = Convert.ToInt32(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=\>)\d+(?=\s+Giornata)").Value)
+                            If lines(i).Contains("Giornata <!-- -->") Then
+                                currgg = Convert.ToInt32(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=Giornata \<!-- --\>)\d+").Value)
                             ElseIf lines(i).Contains("top-squadre-selezionate") Then
                                 sq.Clear()
                             ElseIf lines(i).Contains("<h2 class=""TeamNome"">") Then

@@ -127,7 +127,7 @@ Namespace Torneo
 
             For Each kv As String In d.Keys
                 If d(kv).Date < Date.Now Then
-                    json = WebData.Functions.GetPage(appSett, "https://www.pianetafanta.it/api/voti/squadra?squadra=" & kv & "&Giornata=" & Giornata & "&stagione=" & stagione)
+                    json = WebData.Functions.GetPage(appSett, "https://www.pianetafanta.it/api/voti/squadra?squadra=" & kv & "&giornata=" & Giornata & "&stagione=" & stagione)
                     Dim start As Integer = json.IndexOf("""giocatori""")
                     If start <> -1 Then
                         Dim subJson As String = json.Substring(start)
@@ -136,8 +136,6 @@ Namespace Torneo
                         Dim arrayContent As String = subJson.Substring(startArray, endArray - startArray + 1).Replace("},", "}," & Environment.NewLine)
                         strData.AppendLine(arrayContent)
                     End If
-
-
                 End If
             Next
 
