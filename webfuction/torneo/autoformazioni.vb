@@ -949,11 +949,6 @@ Namespace Torneo
                                     p.PropGolFattiMatch *= 1.025
                             End Select
                             p.goodGrade = GetGoodGradePrabability(Functions.ReadFieldDoubleData("avg_ptn", row, 0) / 10, p.pGiocate, p.Ruolo, p.qIni)
-                            'If lstpgio > 1 AndAlso (lstpt / lstpgio) > 70 AndAlso p.goodGrade < 40 AndAlso p.qIni > 10 Then
-                            '    p.goodGrade = 50
-                            'End If
-
-                            'If p.LastPt1 < 60 AndAlso p.LastPt2 < 60 AndAlso p.LastPt3 < 60 AndAlso p.goodGrade < 50 AndAlso p.LastPt1 > -200 AndAlso p.LastPt2 > -200 AndAlso p.LastPt3 > -200 Then p.goodGrade = p.goodGrade * 0.9
 
                             If p.Ruolo = "P" Then p.goodGrade = p.AvgVt
                             If p.LastPt1 = -200 AndAlso p.Ruolo <> "P" AndAlso p.goodGrade < 35 AndAlso p.Squadra = p.TeamA AndAlso infortunatiOld.Contains(p.Nome) = False Then p.goodGrade += 3
@@ -968,15 +963,6 @@ Namespace Torneo
                                 End If
                             Else
                                 Dim factavv As Double = If(Giornata > 30, 1.5, 1.6)
-
-                                'Dim rat As Double = (1 - Math.Exp(-p.FattoreSquadra * p.FattoreAvversaria * p.Gf)) * Parameters.GoalWidth + (1 - Math.Exp(-p.Ass)) * Parameters.AssistWidth + (1 - Math.Exp(-p.RigT)) * 0 + (1 - Math.Exp(-dicFactTeam("TOT")("GF") * p.FattoreSquadra * 3 * p.FattoreAvversaria)) * factavv - (1 - Math.Exp(-p.Amm)) * Parameters.AmmonitionWidth
-                                'If p.Ruolo = "D" Then
-                                '    p.Rating.Rating3 = CInt(rat * 1.15)
-                                'ElseIf p.Ruolo = "C" Then
-                                '    p.Rating.Rating3 = CInt(rat * 1.01)
-                                'Else
-                                '    p.Rating.Rating3 = CInt(rat)
-                                'End If
 
                                 p.Rating.Rating3 = CInt((1 - Math.Exp(-p.FattoreSquadra * p.FattoreAvversaria * p.Gf)) * Parameters.GoalWidth + (1 - Math.Exp(-p.Ass)) * Parameters.AssistWidth + (1 - Math.Exp(-p.RigT)) * 0 + (1 - Math.Exp(-dicFactTeam("TOT")("GF") * p.FattoreSquadra * 3 * p.FattoreAvversaria)) * factavv - (1 - Math.Exp(-p.Amm)) * Parameters.AmmonitionWidth)
 
@@ -1056,19 +1042,6 @@ Namespace Torneo
 
             Return Fsoft
 
-        End Function
-
-        Private Function GetLambaTeamMatch(squadra As String, avv As String, getAvv As Boolean, dicFactTeam As Dictionary(Of String, Dictionary(Of String, Double))) As Double
-            Dim ptmax As Double = dicFactTeam.Values.Select(Function(x) If(x.ContainsKey("PT"), x("PT"), 0)).Max
-            Dim forzaAttSquadra = dicFactTeam(squadra)("GF") / dicFactTeam("TOT")("GF")
-            Dim forzaDifSquadra = dicFactTeam(squadra)("GS") / dicFactTeam("TOT")("GS")
-            Dim forzaAttAvv = dicFactTeam(avv)("GF") / dicFactTeam("TOT")("GF")
-            Dim forzaDifAvv = dicFactTeam(avv)("GS") / dicFactTeam("TOT")("GS")
-            If getAvv Then
-                Return forzaAttAvv * forzaDifSquadra * dicFactTeam("TOT")("GF")
-            Else
-                Return forzaAttSquadra * forzaDifAvv * dicFactTeam("TOT")("GF")
-            End If
         End Function
 
         Private Function GetMatchResultProbability(giornata As Integer, Squadra As String, Avv As String, dicFactTeam As Dictionary(Of String, Dictionary(Of String, Double)), home As Boolean) As Double
@@ -1250,135 +1223,17 @@ Namespace Torneo
 
         End Function
 
-        Private Function GetMatchRankData1(HistoricalMatchData As Integer) As Dictionary(Of String, Dictionary(Of String, Double))
-
-            If HistoricalMatchData > daydata Then
-                HistoricalMatchData = daydata
-            End If
-
-            Dim dic1 As New Dictionary(Of String, Dictionary(Of String, Double))
-            Dim avg_gf As Double = 0
-            Dim avg_gfd As Double = 0
-            Dim avg_gff As Double = 0
-            Dim avg_gs As Double = 0
-            Dim avg_gsd As Double = 0
-            Dim avg_gsf As Double = 0
-            Dim dec As String = "1" ' "exp(-0.02*(" & daydata & "-gio))"
-
-            Dim sqlstr As New Text.StringBuilder
-            sqlstr.AppendLine("SELECT d.*,r.pt FROM (SELECT squadra,iif(sum(tb.npd)+sum(tb.npf),(sum(tb.tgfd)+sum(tb.tgff))/(sum(tb.npd)+sum(tb.npf)),0) as gf,iif(sum(tb.npd)>0,sum(tb.tgfd)/sum(tb.npd),0) as gfd,iif(sum(tb.npf)>0,sum(tb.tgff)/sum(tb.npf),0) as gff,iif(sum(tb.npd)+sum(tb.npf)>0,(sum(tb.tgsd)+sum(tb.tgsf))/(sum(tb.npd)+sum(tb.npf)),0) as gs,iif(sum(tb.npd)>0,sum(tb.tgsd)/sum(tb.npd),0) as gsd,iif(sum(tb.npf)>0,sum(tb.tgsf)/sum(tb.npf),0) as gsf FROM (")
-            sqlstr.AppendLine("SELECT teama as squadra,SUM(goala*" & dec & ") as tgfd,SUM(goalb*" & dec & ") as tgsd,'0' as tgff,'0' as tgsf,SUM(" & dec & ") as npd,'0' as npf FROM tbmatch WHERE gio>" & daydata - HistoricalMatchData & " AND gio<=" & daydata & " and goala<>'' and goalb<>'' GROUP BY teama")
-            sqlstr.AppendLine("UNION")
-            sqlstr.AppendLine("SELECT teamb as squadra,'0' as tgfd,'0' as tgsd,SUM(goalb*" & dec & ") as tgff,SUM(goala*" & dec & ") as tgsf,'0' as npd,SUM(" & dec & ") as npf FROM tbmatch WHERE gio>" & daydata - HistoricalMatchData & " AND gio<=" & daydata & " and goala<>'' and goalb<>'' GROUP BY teamb")
-            sqlstr.AppendLine(") as tb")
-            sqlstr.AppendLine("GROUP BY squadra) as d LEFT JOIN tbrank as r on (r.squadra=d.squadra and r.gio=" & daydata & ")")
-
-            Dim a As String = sqlstr.ToString()
-            Dim ds As Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, sqlstr.ToString())
-
-            dic1.Add("TOT", New Dictionary(Of String, Double))
-            dic1("TOT").Add("GF", 0)
-            dic1("TOT").Add("GS", 0)
-
-            If ds.Tables.Count > 0 Then
-
-                Dim n As Integer = 0
-                Dim sgf As Double = 0
-                Dim sgfd As Double = 0
-                Dim sgff As Double = 0
-                Dim sgs As Double = 0
-                Dim sgsd As Double = 0
-                Dim sgsf As Double = 0
-
-                For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
-
-                    Dim key As String = ds.Tables(0).Rows(i)("squadra").ToString()
-
-                    Dim gf As Double = CDbl(ds.Tables(0).Rows(i)("gf"))
-                    Dim gfd As Double = CDbl(ds.Tables(0).Rows(i)("gfd"))
-                    Dim gff As Double = CDbl(ds.Tables(0).Rows(i)("gff"))
-
-                    Dim gs As Double = CDbl(ds.Tables(0).Rows(i)("gs"))
-                    Dim gsd As Double = CDbl(ds.Tables(0).Rows(i)("gsd"))
-                    Dim gsf As Double = CDbl(ds.Tables(0).Rows(i)("gsf"))
-                    Dim pt As Integer = CInt(ds.Tables(0).Rows(i)("pt"))
-
-                    If dic1.ContainsKey(key) = False Then dic1.Add(key, New Dictionary(Of String, Double))
-
-                    dic1(key).Add("GF", gf)
-                    dic1(key).Add("GFD", gfd)
-                    dic1(key).Add("GFF", gff)
-
-                    dic1(key).Add("GS", gs)
-                    dic1(key).Add("GSD", gsd)
-                    dic1(key).Add("GSF", gsf)
-                    dic1(key).Add("PT", pt)
-
-                    n += 1
-
-                    sgf += gf
-                    sgfd += gfd
-                    sgff += gff
-
-                    sgs += gs
-                    sgsd += gsd
-                    sgsf += gsf
-
-                Next
-
-                If n = 0 Then Return dic1
-
-                avg_gf = sgf / n
-                avg_gfd = sgfd / n
-                avg_gff = sgff / n
-
-                avg_gs = sgs / n
-                avg_gsd = sgsd / n
-                avg_gsf = sgsf / n
-
-                dic1("TOT")("GF") = avg_gf
-                dic1("TOT")("GFD") = avg_gfd
-                dic1("TOT")("GFF") = avg_gff
-
-                dic1("TOT")("GS") = avg_gs
-                dic1("TOT")("GSD") = avg_gsd
-                dic1("TOT")("GSF") = avg_gsf
-
-                For Each key As String In dic1.Keys
-                    If key <> "TOT" Then
-
-                        dic1(key)("GF") = dic1(key)("GF") / avg_gf
-                        dic1(key)("GFD") = dic1(key)("GFD") / avg_gfd
-                        dic1(key)("GFF") = dic1(key)("GFF") / avg_gff
-
-                        dic1(key)("GS") = dic1(key)("GS") / avg_gs
-                        dic1(key)("GSD") = dic1(key)("GSD") / avg_gsd
-                        dic1(key)("GSF") = dic1(key)("GSF") / avg_gsf
-
-                    End If
-                Next
-
-            End If
-
-            Return dic1
-
-        End Function
-
         Private Function GetTeamRankData(teamWidth As Integer) As Dictionary(Of String, Dictionary(Of String, Double))
 
-            Dim dicTeam As New Dictionary(Of String, Dictionary(Of String, Double))
-            dicTeam.Add("TOT", New Dictionary(Of String, Double))
-            dicTeam.Add("TOTD", New Dictionary(Of String, Double))
-            dicTeam.Add("TOTF", New Dictionary(Of String, Double))
+            Dim dicTeam As New Dictionary(Of String, Dictionary(Of String, Double)) From {
+                {"TOT", New Dictionary(Of String, Double)},
+                {"TOTD", New Dictionary(Of String, Double)},
+                {"TOTF", New Dictionary(Of String, Double)}
+            }
 
             If teamWidth = 0 Then Return dicTeam
 
-            Dim sqlstr As New Text.StringBuilder
-            'sqlstr.AppendLine("SELECT squadra,(vitt) as tot,vittd as totd,vittf as totf FROM tbrank WHERE gio=" & daydata & "")
-            sqlstr.AppendLine("SELECT squadra,((20-pos)/20+vitt) as tot,vittd as totd,vittf as totf FROM tbrank WHERE gio=" & daydata & "")
-
-            Dim a As String = sqlstr.ToString()
-            Dim ds As Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, sqlstr.ToString())
+            Dim ds As Data.DataSet = Functions.ExecuteSqlReturnDataSet(appSett, "SELECT squadra,((20-pos)/20+vitt) as tot,vittd as totd,vittf as totf FROM tbrank WHERE gio=" & daydata)
 
             If ds.Tables.Count > 0 Then
                 For i As Integer = 0 To ds.Tables(0).Rows.Count - 1
@@ -1969,14 +1824,14 @@ Namespace Torneo
             Next
 
             Dim modf As FormazioniData.ModuloFormazione = FormazioniData.GetModule(pforma1.Where(Function(x) x.Type = 1).ToList())
-            Dim ths As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Select(Function(x) x.Rating.Total1).Min - CInt(parameters.AvarangePointsWitdh / 7 + parameters.MatchWidth / 7)
+            Dim ths As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Select(Function(x) x.Rating.Total1).Min - CInt(parameters.AvarangePointsWitdh / 6 + parameters.MatchWidth / 6)
             Dim minMatchWidth As Integer = 40
             Dim diff As Integer = pforma1.Where(Function(x) x.Rating.Total1 + x.Rating.Rating3 > ths AndAlso x.Rating.Rating2 > minMatchWidth AndAlso x.Ruolo = "A" AndAlso (x.Rating.Rating6 >= 0.97 OrElse (x.Rating.Rating6 >= 0.93 AndAlso x.Rating.Rating3 > 2 AndAlso (x.qIni > 10 OrElse x.qCur > 10))) AndAlso x.Type = 2).Count
             Dim natt As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Count()
 
             If diff >= 0 AndAlso pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Count() < 3 Then
                 For Each p In pforma1
-                    If p.Nome = "GIOVANE" Then
+                    If p.Nome = "DOUVIKAS" Then
                         p.Nome = p.Nome
                     End If
                     If p.Ruolo = "A" AndAlso (p.Type = 1 OrElse (p.Rating.Total1 > ths AndAlso p.Rating.Rating2 > minMatchWidth AndAlso (p.Rating.Rating6 >= 0.97 OrElse (p.Rating.Rating6 >= 0.93 AndAlso p.Rating.Rating3 > 2 AndAlso (p.qIni > 10 OrElse p.qCur > 10))))) Then
