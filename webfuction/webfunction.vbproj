@@ -182,7 +182,6 @@
     <Compile Include="torneo\formazioni.vb" />
     <Compile Include="torneo\functions.vb" />
     <Compile Include="torneo\general.vb" />
-    <Compile Include="torneo\make_version.vb" />
     <Compile Include="torneo\matchs.vb" />
     <Compile Include="torneo\player-ranking.vb" />
     <Compile Include="torneo\players.vb" />

@@ -698,7 +698,7 @@ Namespace Torneo
             Try
                 plist = CalculatePlayersRating(Giornata, IdTeam, Parameters, plist, dicTeamRank, dicRuoloRank)
                 autoForma.PlayerRating = Torneo.Functions.Clone(plist)
-                autoForma.Formazione.Players = GetFormazioneFinale(autoForma.PlayerRating, Parameters)
+                autoForma.Formazione.Players = GetFormazioneFinale(Giornata, autoForma.PlayerRating, Parameters)
             Catch ex As Exception
                 WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Errors, ex.Message)
             End Try
@@ -734,7 +734,7 @@ Namespace Torneo
                     Return 0
                 End If
             Else
-                    Return 0
+                Return 0
             End If
         End Function
 
@@ -1341,40 +1341,27 @@ Namespace Torneo
                 'calcolo rating 2'
                 If enapronostic AndAlso pronostic.Count > 0 Then
                     Dim pro As Torneo.ProbableMatchResult.ProbableResult = pronostic.Where(Function(x) x.TeamHome = p.TeamA AndAlso x.TeamAway = p.TeamB).FirstOrDefault()
-                    If p.Squadra = p.TeamA Then
-                        p.Rating.Rating2 = pro.Prob1 + pro.ProbX
-                    Else
-                        p.Rating.Rating2 = pro.ProbX + pro.Prob2
-                    End If
-
-                    If p.Ruolo = "P" Then
-                        p.Rating.Rating2 = CInt(p.Rating.Rating2 / 100 * Parameters.MatchWidth * 0.6)
-                    Else
-                        p.Rating.Rating2 = CInt(p.Rating.Rating2 / 100 * Parameters.MatchWidth)
-                        If p.Ruolo = "D" Then
-                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1.06)
-                        ElseIf p.Ruolo = "C" Then
-                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1)
+                    If pro IsNot Nothing Then
+                        If p.Squadra = p.TeamA Then
+                            p.Rating.Rating2 = pro.Prob1 + pro.ProbX
                         Else
-                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 0.89)
-                        End If
-                    End If
-
-                Else
-                    If p.Ruolo = "P" Then
-                        p.Rating.Rating2 = CInt(p.PropGolSubitiMatch / 100 * Parameters.MatchWidth * 0.6)
-                    Else
-                        p.Rating.Rating2 = CInt(p.PropGolFattiMatch / 100 * Parameters.MatchWidth)
-                        If p.Ruolo = "D" Then
-                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1.06)
-                        ElseIf p.Ruolo = "C" Then
-                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1)
-                        Else
-                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 0.89)
+                            p.Rating.Rating2 = pro.ProbX + pro.Prob2
                         End If
                     End If
                 End If
 
+                If p.Ruolo = "P" Then
+                    p.Rating.Rating2 = CInt(p.PropGolSubitiMatch / 100 * Parameters.MatchWidth * 0.6)
+                Else
+                    p.Rating.Rating2 = CInt(p.PropGolFattiMatch / 100 * Parameters.MatchWidth)
+                    If p.Ruolo = "D" Then
+                        p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1.06)
+                    ElseIf p.Ruolo = "C" Then
+                        p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1)
+                    Else
+                        p.Rating.Rating2 = CInt(p.Rating.Rating2 * 0.89)
+                    End If
+                End If
 
                 'calcolo rating 6 probabili formazioni'
                 Dim ratProb As Double = GetProbableRating(p, Giornata, Parameters)
@@ -1792,7 +1779,7 @@ Namespace Torneo
             End If
         End Function
 
-        Private Function GetFormazioneFinale(plist As List(Of PlayerAutoFormazione), parameters As AutoFormazioniData.AutoFormazione.ParamenterValues) As List(Of FormazioniData.PlayerFormazione)
+        Private Function GetFormazioneFinale(giornata As Integer, plist As List(Of PlayerAutoFormazione), parameters As AutoFormazioniData.AutoFormazione.ParamenterValues) As List(Of FormazioniData.PlayerFormazione)
 
             Dim pforma As List(Of FormazioniData.PlayerFormazione) = GetFormazioneFinalePreanalisi(plist, parameters)
             Dim dicp As Dictionary(Of Integer, PlayerAutoFormazione) = plist.GroupBy(Function(x) x.RosaId).ToDictionary(Function(g) g.Key, Function(g) g.First())
@@ -1824,7 +1811,7 @@ Namespace Torneo
             Next
 
             Dim modf As FormazioniData.ModuloFormazione = FormazioniData.GetModule(pforma1.Where(Function(x) x.Type = 1).ToList())
-            Dim ths As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Select(Function(x) x.Rating.Total1).Min - CInt(parameters.AvarangePointsWitdh / 6 + parameters.MatchWidth / 6)
+            Dim ths As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Select(Function(x) x.Rating.Total1).Min - CInt(parameters.AvarangePointsWitdh / 4 + parameters.MatchWidth / 4)
             Dim minMatchWidth As Integer = 40
             Dim diff As Integer = pforma1.Where(Function(x) x.Rating.Total1 + x.Rating.Rating3 > ths AndAlso x.Rating.Rating2 > minMatchWidth AndAlso x.Ruolo = "A" AndAlso (x.Rating.Rating6 >= 0.97 OrElse (x.Rating.Rating6 >= 0.93 AndAlso x.Rating.Rating3 > 2 AndAlso (x.qIni > 10 OrElse x.qCur > 10))) AndAlso x.Type = 2).Count
             Dim natt As Integer = pforma1.Where(Function(x) x.Type = 1 AndAlso x.Ruolo = "A").Count()
@@ -1834,7 +1821,7 @@ Namespace Torneo
                     If p.Nome = "DOUVIKAS" Then
                         p.Nome = p.Nome
                     End If
-                    If p.Ruolo = "A" AndAlso (p.Type = 1 OrElse (p.Rating.Total1 > ths AndAlso p.Rating.Rating2 > minMatchWidth AndAlso (p.Rating.Rating6 >= 0.97 OrElse (p.Rating.Rating6 >= 0.93 AndAlso p.Rating.Rating3 > 2 AndAlso (p.qIni > 10 OrElse p.qCur > 10))))) Then
+                    If p.Ruolo = "A" AndAlso (p.Type = 1 OrElse (p.Rating.Total1 > ths AndAlso p.Rating.Rating2 > minMatchWidth AndAlso (p.Rating.Rating6 >= 0.97 OrElse (p.Rating.Rating6 >= 0.93 AndAlso (p.Rating.Rating3 > 2 OrElse giornata < 5) AndAlso (p.qIni > 10 OrElse p.qCur > 10))))) Then
                         dicp(p.RosaId).Rating.Total1 += 35
                         If p.Type = 2 Then natt += 1
                     End If

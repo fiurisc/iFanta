@@ -17,6 +17,8 @@ Namespace WebData
 
         Public Shared lastClean As Date = Date.Now
         Public Shared makefileplayer As Boolean = True ' Abilita la generazione dei file con la lista dei giocatori trovati'
+        Public Shared token1 As String = "YcissHidSVyuCd9s76O446xRjLIYKzx4AlsglQuO0eHbVrwFlmP4VBZhmTmr"
+        Public Shared seasonid As New Dictionary(Of String, String) From {{"2025", "25533"}, {"2026", "27895"}}
 
         Public Shared Function GetJsonPropertyName(Value As String) As String
             Return System.Text.RegularExpressions.Regex.Match(Value, ".*(?=:)").Value().Replace(Convert.ToChar(34), "").Trim()
@@ -28,7 +30,7 @@ Namespace WebData
 
         Public Shared Sub WriteLog(appSett As Torneo.PublicVariables, ByVal MessageType As eMessageType, ByVal Message As String)
 
-            Dim flog As String = appSett.RootTorneiPath
+            Dim flog As String = If(appSett.RootTorneiPath <> "", appSett.RootTorneiPath, appSett.RootWebDataPath)
             If IO.Directory.Exists(appSett.TorneoPath) Then flog = appSett.TorneoPath
 
             Try
@@ -295,6 +297,8 @@ Namespace WebData
             txt = txt.Replace("Ä", "A")
             txt = txt.Replace("Ä", "A")
             txt = txt.Replace("Ü", "U")
+            txt = txt.Replace("Ž", "Z")
+            txt = txt.Replace("Ć", "C")
             Dim regex As New System.Text.RegularExpressions.Regex("[0-9a-zA-Z\'\s\.\-\’ª]{0,}")
             Dim newtxt As String = ""
 
@@ -551,8 +555,8 @@ Namespace WebData
             Dim responseFromServer As String = ""
 
 #If DEBUG Then
-            If Url.Contains("www.fantacalcio.it") Then
-                'Url = "https://www.ifantacalcio.it/site.php?url=" & Url
+            If Url.Contains("www.fantacalcio.it") OrElse Url.Contains("superpronostici") Then
+                Url = "https://www.ifantacalcio.it/proxy_page.php?url=" & Url
             End If
 #End If
 

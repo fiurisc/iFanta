@@ -8,14 +8,12 @@ Namespace WebData
     Public Class ProbableFormations
 
         Dim appSett As New Torneo.PublicVariables
-        Dim mdatat As Torneo.MatchsData
         Dim mdataw As MatchsData
         Dim dirTemp As String = ""
         Dim dirData As String = ""
 
         Sub New(appSett As Torneo.PublicVariables)
             Me.appSett = appSett
-            mdatat = New Torneo.MatchsData(appSett)
             mdataw = New MatchsData(appSett)
             dirTemp = appSett.WebDataPath & "temp\"
             dirData = appSett.WebDataPath & "data\pforma\"
@@ -27,7 +25,7 @@ Namespace WebData
         Public Function GetProbableFormation(siteList As String, show As Boolean, Optional Giornata As Integer = -1) As String
 
             Dim str As New System.Text.StringBuilder
-            Dim matchs As List(Of Torneo.MatchsData.Match) = mdatat.GetMatchsData("-1")
+            Dim matchs As List(Of Torneo.MatchsData.Match) = mdataw.GetMatchsData()
             Dim sites() As String = siteList.Split(CChar(","))
 
             dicMatchDays.Clear()
@@ -95,7 +93,7 @@ Namespace WebData
             Dim GiorniFineCampionato As Integer = dicMatchDays.Values.Last() \ 24
 
             If Info <> "" AndAlso State = "Infortunato" Then
-                Dim m As System.Text.RegularExpressions.Match = System.Text.RegularExpressions.Regex.Match(Info, "\d+(?=\s+settiman[ea])")
+                Dim m As System.Text.RegularExpressions.Match = System.Text.RegularExpressions.Regex.Match(Info, "\d+(?=\s+settiman[ea])|(?<=alla\s+)\d+")
                 If m.Success Then
                     wp.Infortunio.Giorni = CInt(m.Value) * 7
                 Else
@@ -103,7 +101,7 @@ Namespace WebData
                     If m.Success Then
                         wp.Infortunio.Giorni = CInt(m.Value) * 30
                     Else
-                        m = System.Text.RegularExpressions.Regex.Match(Info, "\d+(?=(ª|a) giornata)")
+                        m = System.Text.RegularExpressions.Regex.Match(Info, "\d+(?=(ª|a))")
                         If m.Success Then
                             Dim mday As Integer = CInt(m.Value)
                             If dicMatchDays.ContainsKey(mday) Then

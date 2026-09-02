@@ -49,6 +49,28 @@ Namespace WebData
             Return appsett.WebDataPath & "data\matchs\matchs-events-data.json"
         End Function
 
+        Public Function GetMatchsData() As List(Of Torneo.MatchsData.Match)
+
+            Dim res As New List(Of Torneo.MatchsData.Match)
+
+            Dim fname As String = GetMatchFileName(appSett)
+
+            If IO.File.Exists(fname) Then
+
+                Dim j As String = IO.File.ReadAllText(fname)
+                Dim dicdata As SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match)) = Functions.DeserializeJson(Of SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match)))(j)
+
+                For Each d As String In dicdata.Keys
+                    For Each mid As String In dicdata(d).Keys
+                        res.Add(dicdata(d)(mid))
+                    Next
+                Next
+            End If
+
+            Return res
+
+        End Function
+
         Public Sub LoadWebMatchs()
 
             If KeyMatchs.Count = 0 Then
@@ -320,7 +342,7 @@ Namespace WebData
                                     goal1 = Regex.Match(line(i), "\d+(?=\</span)").Value.ToUpper()
                                 ElseIf line(i).Contains("score-away") Then
                                     goal2 = Regex.Match(line(i), "\d+(?=\</span)").Value.ToUpper()
-                                ElseIf line(i).Contains("<meta itemprop=""url"" content=") AndAlso line(i).Contains("https://www.fantacalcio.it/serie-a/calendario") Then
+                                ElseIf line(i).Contains("<meta itemprop=""url"" content=") AndAlso line(i).Contains("https://www.fantacalcio.it/serie-a/calendario") AndAlso line(i).Contains("target=") = False Then
 
                                     Dim mtach As String = Regex.Match(line(i), "(?<=\d+-\d+\/)\w+-\w+(?=\/\d+)").Value.ToUpper()
 

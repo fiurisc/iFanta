@@ -12,7 +12,6 @@ Namespace WebData
             'Public Shared keyplayers As New Dictionary(Of String, WebPlayerKey)
             'squadra/ruolo/key/nome
             Public Shared keyplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, String)))
-            Public Shared keyplayersNew As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, String)))
 
             Public Shared Sub ResetCacheData()
                 players.Clear()
@@ -53,10 +52,6 @@ Namespace WebData
 
                         For Each p As Torneo.Players.PlayerQuotesItem In playersq
 
-                            If p.Nome.Contains("TOURE’ I.") Then
-                                p.Nome = p.Nome
-                            End If
-
                             If players.ContainsKey(p.Squadra) = False Then players.Add(p.Squadra, New Dictionary(Of String, List(Of String)))
                             If players(p.Squadra).ContainsKey(p.Ruolo) = False Then players(p.Squadra).Add(p.Ruolo, New List(Of String))
                             players(p.Squadra)(p.Ruolo).Add(p.Nome)
@@ -64,7 +59,7 @@ Namespace WebData
                             If keyplayers.ContainsKey(p.Squadra) = False Then keyplayers.Add(p.Squadra, New Dictionary(Of String, Dictionary(Of String, String)))
                             If keyplayers(p.Squadra).ContainsKey(p.Ruolo) = False Then keyplayers(p.Squadra).Add(p.Ruolo, New Dictionary(Of String, String))
 
-                            Dim keylist As List(Of String) = GetKeyWordList(p.Nome, True)
+                            Dim keylist As New List(Of String) From {p.Nome}
 
                             For k As Integer = 0 To keylist.Count - 1
                                 If keyplayers(p.Squadra)(p.Ruolo).ContainsKey(keylist(k)) = False Then
@@ -77,57 +72,6 @@ Namespace WebData
 
             End Sub
 
-            Private Shared Function GetKeyWordList(Name As String, fromPlayer As Boolean) As List(Of String)
-
-                Return New List(Of String) From {Name}
-
-                'Dim keylist As New List(Of String)
-                'Dim NameOptions As New List(Of String) From {Name}
-
-                'If Name.Contains("ANGUISSA") Then
-                '    Name = Name
-                'End If
-                'If Name.Contains("’") Then
-                '    NameOptions.Add(Name.Replace("’", ""))
-                'End If
-
-                'For Each n As String In NameOptions
-                '    If n.Contains(" ") Then
-
-                '        Dim parts = n.Trim().Split({" "}, StringSplitOptions.RemoveEmptyEntries)
-                '        Dim pattern As String = "^(.+)\s+(\S+)$"
-                '        Dim m As Match = Regex.Match(n.ToUpper(), pattern)
-
-                '        If m.Success Then
-
-                '            Dim cognome As String = m.Groups(1).Value.Trim()
-                '            Dim nome As String = m.Groups(2).Value.Trim()
-
-                '            Try
-                '                keylist.Add(cognome)
-                '                keylist.Add(cognome & "/" & nome)
-                '                keylist.Add(cognome & "/" & nome.Substring(0, 1))
-                '                If nome.Length > 3 Then
-                '                    keylist.Add(nome)
-                '                    keylist.Add(nome & "/" & cognome)
-                '                    keylist.Add(nome & "/" & cognome.Substring(0, 1))
-                '                End If
-                '            Catch ex As Exception
-                '                nome = Name
-                '            End Try
-
-                '        End If
-
-                '    End If
-
-                '    If keylist.Contains(n) = False Then keylist.Add(n.Replace(".", ""))
-
-                'Next
-
-                'Return keylist.Distinct().ToList()
-
-            End Function
-
             Public Shared Function ResolveName(Role As String, Name As String, Team As String, FindAllTeam As Boolean) As Players.PlayerMatch
                 Return ResolveName(Role, Name, Team, Nothing, FindAllTeam)
             End Function
@@ -136,76 +80,9 @@ Namespace WebData
                 Return ResolveName(Role, Name, Team, wp, FindAllTeam, True)
             End Function
 
-            Public Shared Function ResolveName1(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
-
-                If Name.Contains("LAUTARO") Then
-                    Name = Name
-                End If
-
-                Name = Name.Replace("MILINKOVIC-SAVIC", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC").Replace("DEL PRATO", "DELPRATO").Replace("DEL PRATO", "DELPRATO")
-                Name = Name.Replace("P.ESPOSITO", "ESPOSITO F.P.")
-                Name = Name.Replace("ROBERTO S.", "SERGI ROBERTO.")
-                Name = Name.Replace("JESUS J.", "JUAN JESUS").Replace("LAUTARO MARTÍNEZ", "MARTINEZ L.").Replace("LAUTARO", "MARTINEZ L.")
-
-                Name = Name.ToUpper().Trim()
-                Name = Functions.NormalizeText(Name)
-
-                If Regex.Match(Name, "\w+\s+\w+").Success Then
-                    Name = Regex.Match(Name, "[\w+\.]{1,}\s+[\w+\.]{1,}").Value
-                End If
-                If Regex.Match(Name, "\w{1}\.\s\w{1,}").Success Then
-                    Dim s() As String = Name.Split(CChar(" "))
-                    Name = s(1) & " " & s(0)
-                End If
-
-                Dim pm As New Players.PlayerMatch(Role, Name, Team)
-                Dim keylist As List(Of String) = GetKeyWordList(Name, False)
-
-                For Each t As String In keyplayers.Keys
-                    If Team = "" OrElse t = Team Then
-
-                        If Name.Contains("MARTINEZ") Then
-                            Name = Name
-                        End If
-
-                        For Each r As String In keyplayers(t).Keys
-                            If keyplayers(t)(r).ContainsKey(Name) Then
-                                pm.MatchedPlayer = New WebPlayer(r, keyplayers(t)(r)(Name), t)
-                                If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
-                                Return pm
-                            End If
-                        Next
-
-                        Dim pkeyLenght As Integer = 0
-
-                        For Each r As String In keyplayers(t).Keys
-                            If Role = "" OrElse r = Role Then
-                                For Each pkey As String In keylist
-                                    If keyplayers(t)(r).ContainsKey(pkey) Then
-                                        If pkey.Length > pkeyLenght Then
-                                            pm.MatchedPlayer = New WebPlayer(r, keyplayers(t)(r)(pkey), t)
-                                            'If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
-                                            pkeyLenght = pkey.Length
-                                        End If
-                                    End If
-                                Next
-                            End If
-                        Next
-                        If pm.Matched = False Then
-                            CheckPlayer(pm, "", t, keylist)
-                        End If
-                    End If
-                Next
-
-                If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
-
-                Return pm
-
-            End Function
-
             Public Shared Function ResolveName(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
 
-                If Name.Contains("N’DRI K.") Then
+                If Name.Contains("KONE") Then
                     Name = Name
                 End If
 
@@ -229,7 +106,7 @@ Namespace WebData
                 nameList.RemoveAll(Function(n) n.Length < 3)
 
                 For Each t As String In keyplayers.Keys
-                    If Team = "" OrElse t = Team Then
+                    If Team = "" OrElse t = Team OrElse FindAllTeam Then
                         For Each r As String In keyplayers(t).Keys
                             If Role = "" OrElse r = Role Then
                                 For Each pname As String In keyplayers(t)(r).Keys
@@ -241,8 +118,13 @@ Namespace WebData
                                         Dim res As Integer = LevenshteinDistance(Name, pname.Trim().Replace(".", ""))
                                         If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
                                         dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
+                                    ElseIf Name.Length > 7 Then
+                                        Dim res As Integer = LevenshteinDistance(Name, pname.Trim().Replace(".", ""))
+                                        If res < 5 Then
+                                            If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
+                                            dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
+                                        End If
                                     End If
-
                                 Next
                             End If
                         Next
@@ -399,8 +281,7 @@ Namespace WebData
                             cost = 1
                         End If
 
-                        d(i, j) = Math.Min(Math.Min(d(i - 1, j) + 1, d(i, j - 1) + 1),
-                                   d(i - 1, j - 1) + cost)
+                        d(i, j) = Math.Min(Math.Min(d(i - 1, j) + 1, d(i, j - 1) + 1), d(i - 1, j - 1) + cost)
                     Next
                 Next
 

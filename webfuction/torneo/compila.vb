@@ -181,14 +181,18 @@ Namespace Torneo
                         Dim rigp As String = data("RigorePar")
                         Dim rigt As String = data("RigoreTra")
 
-                        If name.Contains("EDERSON") Then
+                        If name.Contains("KONE") Then
                             name = name
                         End If
 
-                        Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, True)
+                        Dim pmath As WebData.Players.PlayerMatch = WebData.Players.Data.ResolveName(ruolo, name, squadra, False)
                         If pmath.Matched = False Then
-                            pmath = WebData.Players.Data.ResolveName("", name, squadra, True)
+                            pmath = WebData.Players.Data.ResolveName("", name, squadra, False)
+                            If pmath.Matched = False Then
+                                pmath = WebData.Players.Data.ResolveName("", name, squadra, True)
+                            End If
                         End If
+
                         fname = pmath.MatchedPlayer.Name
 
                         If pmath.Matched Then
@@ -1170,12 +1174,12 @@ Namespace Torneo
                     Dim ndgooda As Integer = 0
 
                     Dim ruoli() As String = mudule.Split(CChar("-"))
-                    Dim rdic As New Dictionary(Of String, Integer) From {
-                            {"P", CInt(ruoli(0))},
-                            {"D", CInt(ruoli(1))},
-                            {"C", CInt(ruoli(2))},
-                            {"A", CInt(ruoli(3))}
-                        }
+                    Dim rdic As New Dictionary(Of String, Integer)()
+
+                    rdic.Add("P", CInt(ruoli(0)))
+                    rdic.Add("D", CInt(ruoli(1)))
+                    rdic.Add("C", CInt(ruoli(2)))
+                    rdic.Add("A", CInt(ruoli(3)))
 
                     For Each r As String In rdic.Keys
 

@@ -1,5 +1,4 @@
 ﻿Imports System.Data
-Imports System.Windows.Forms.VisualStyles
 
 Namespace Torneo
 
@@ -295,16 +294,14 @@ Namespace Torneo
             End If
         End Function
 
-        <Serializable()>
-        Public Class MetaData
+        <Serializable()> Public Class MetaData
             Public Property type As String = ""
             Public Property giornata() As String = ""
             Public Property teamId() As String = ""
             Public Property data As List(Of Formazione)
         End Class
 
-        <Serializable()>
-        Public Class Formazione
+        <Serializable()> Public Class Formazione
 
             Public Property Giornata() As Integer = 1
             Public Property TeamId() As Integer = 0
@@ -321,16 +318,14 @@ Namespace Torneo
 
         End Class
 
-        <Serializable()>
-        Public Class ModuloFormazione
+        <Serializable()> Public Class ModuloFormazione
             Public Property Display() As String = "0-0-0"
             Public Property Difensori() As Integer = 0
             Public Property Centrocampisti() As Integer = 0
             Public Property Attaccanti() As Integer = 0
         End Class
 
-        <Serializable()>
-        Public Class PlayerFormazione
+        <Serializable()> Public Class PlayerFormazione
 
             Sub New()
 

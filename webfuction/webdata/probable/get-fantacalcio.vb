@@ -81,7 +81,7 @@
                                 pstate = "Titolare"
                             ElseIf line.Contains(">Panchina") Then
                                 pstate = "Panchina"
-                            ElseIf line.Contains(">Infortunati") Then
+                            ElseIf line.Contains("Etichetta Infermeria in Probabili Formazioni") Then
                                 pstate = "Infortunato"
                             ElseIf line.Contains(">Diffidati") Then
                                 pstate = ""

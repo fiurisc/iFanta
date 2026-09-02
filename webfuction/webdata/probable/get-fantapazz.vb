@@ -70,8 +70,8 @@ Namespace WebData
                                 For l As Integer = 0 To ms.Count - 1
                                     Dim sublines() As String = ms(l).Value.Replace("</li>", "|").Split(Convert.ToChar("|"))
                                     For Each sline As String In sublines
-                                        Dim pname As String = System.Text.RegularExpressions.Regex.Match(sline, "(?<='calciatore'\>)(.*?)(?=\<\/span)").Value
-                                        If pname.Contains("artine") Then
+                                        Dim pname As String = System.Text.RegularExpressions.Regex.Match(sline, "(?<='calciatore'\>)(.*?)(?=\<\/span)").Value.ToUpper()
+                                        If pname.Contains("KONE") Then
                                             pname = pname
                                         End If
                                         pname = Players.Data.ResolveName("", pname, team, playersLog, False).GetName()
@@ -93,6 +93,9 @@ Namespace WebData
                                             Dim sfields() As String = sline.Split(CChar("@"))
                                             Dim pname As String = sfields(0).Trim().ToUpper()
                                             Dim pinfo As String = If(sfields.Length > 1, sfields(1), "").Trim()
+                                            If pname.Contains("KONE") Then
+                                                pname = pname
+                                            End If
                                             pname = Players.Data.ResolveName("", pname, team, playersLog, False).GetName()
                                             Call AddInfo(pname, team, site, pstate, pinfo, -1, plaryersData.Players)
                                         End If

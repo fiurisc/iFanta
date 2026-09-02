@@ -1,7 +1,4 @@
-﻿Imports System.Web.Script.Serialization
-Imports Newtonsoft.Json.Linq
-
-Namespace WebData
+﻿Namespace WebData
     Partial Class ProbableFormations
 
         Public Function GetSky(ReturnData As Boolean) As String
