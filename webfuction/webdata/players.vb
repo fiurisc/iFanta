@@ -12,7 +12,6 @@ Namespace WebData
             'Public Shared keyplayers As New Dictionary(Of String, WebPlayerKey)
             'squadra/ruolo/key/nome
             Public Shared keyplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, String)))
-            Public Shared keyplayersNew As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, String)))
 
             Public Shared Sub ResetCacheData()
                 players.Clear()
@@ -52,10 +51,6 @@ Namespace WebData
                         keyplayers.Clear()
 
                         For Each p As Torneo.Players.PlayerQuotesItem In playersq
-
-                            If p.Nome.Contains("TOURE’ I.") Then
-                                p.Nome = p.Nome
-                            End If
 
                             If players.ContainsKey(p.Squadra) = False Then players.Add(p.Squadra, New Dictionary(Of String, List(Of String)))
                             If players(p.Squadra).ContainsKey(p.Ruolo) = False Then players(p.Squadra).Add(p.Ruolo, New List(Of String))
@@ -241,8 +236,13 @@ Namespace WebData
                                         Dim res As Integer = LevenshteinDistance(Name, pname.Trim().Replace(".", ""))
                                         If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
                                         dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
+                                    ElseIf Name.Length > 7 Then
+                                        Dim res As Integer = LevenshteinDistance(Name, pname.Trim().Replace(".", ""))
+                                        If res < 5 Then
+                                            If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
+                                            dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
+                                        End If
                                     End If
-
                                 Next
                             End If
                         Next
