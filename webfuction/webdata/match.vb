@@ -49,28 +49,6 @@ Namespace WebData
             Return appsett.WebDataPath & "data\matchs\matchs-events-data.json"
         End Function
 
-        Public Function GetMatchsData() As List(Of Torneo.MatchsData.Match)
-
-            Dim res As New List(Of Torneo.MatchsData.Match)
-
-            Dim fname As String = GetMatchFileName(appSett)
-
-            If IO.File.Exists(fname) Then
-
-                Dim j As String = IO.File.ReadAllText(fname)
-                Dim dicdata As SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match)) = Functions.DeserializeJson(Of SortedDictionary(Of String, SortedDictionary(Of String, Torneo.MatchsData.Match)))(j)
-
-                For Each d As String In dicdata.Keys
-                    For Each mid As String In dicdata(d).Keys
-                        res.Add(dicdata(d)(mid))
-                    Next
-                Next
-            End If
-
-            Return res
-
-        End Function
-
         Public Sub LoadWebMatchs()
 
             If KeyMatchs.Count = 0 Then
