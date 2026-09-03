@@ -116,7 +116,7 @@
                             ElseIf Name.Length > 4 Then
                                 For Each pn As String In pnameList
                                     For Each n As String In nameList
-                                        Dim res As Integer = LevenshteinDistance(n, pn.Trim().Replace(".", ""))
+                                        Dim res As Integer = LevenshteinDistance(n, pn.Trim().Replace(".", "")) + CommonPrefixLength(n, pn.Trim().Replace(".", ""))
                                         If res < 4 Then
                                             If Role = r Then res -= 1
                                             If t = Team Then res -= 1
@@ -132,8 +132,19 @@
 
                 If dicRes.Count > 0 Then
                     If dicRes.Keys.First() < 1 Then
-                        pm.MatchedPlayer = dicRes(dicRes.Keys.First()).First()
-                        pm.MatchedPlayer.Rank = dicRes.Keys.First()
+                        If dicRes(dicRes.Keys.First()).Count > 1 Then
+                            Dim dicResS As SortedDictionary(Of Integer, List(Of WebPlayer)) = New SortedDictionary(Of Integer, List(Of WebPlayer))
+                            For Each m As WebPlayer In dicRes(dicRes.Keys.First())
+                                Dim res As Integer = CommonPrefixLength(Name, m.Name)
+                                If dicResS.ContainsKey(res) = False Then dicResS.Add(res, New List(Of WebPlayer))
+                                dicResS(res).Add(New WebPlayer(m.Role, m.Name, m.Team))
+                            Next
+                            pm.MatchedPlayer = dicResS(dicResS.Keys.First()).First()
+                            pm.MatchedPlayer.Rank = dicResS.Keys.First()
+                        Else
+                            pm.MatchedPlayer = dicRes(dicRes.Keys.First()).First()
+                            pm.MatchedPlayer.Rank = dicRes.Keys.First()
+                        End If
                     End If
                 End If
 
@@ -185,6 +196,22 @@
                 Next
 
                 Return d(n, m)
+            End Function
+
+            Shared Function CommonPrefixLength(s As String, t As String) As Integer
+                Dim maxLen = Math.Min(s.Length, t.Length)
+                Dim count As Integer = 0
+
+                For i = 0 To maxLen - 1
+                    If s(i) = t(i) Then
+                        count += 1
+                    Else
+                        Exit For
+                    End If
+                Next
+
+                Return s.Length - count
+
             End Function
 
         End Class

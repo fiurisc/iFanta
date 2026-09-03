@@ -53,12 +53,9 @@ Public Class Form1
 
         'UpdateProbableModuleTeam()
         'GetAutomaticBestHistoricalParameters()
-        'GetAutomaticFormation()
+        GetAutomaticFormation()
 
-        'End
-
-        Dim p As New Torneo.Players(appSett)
-        p.ApiGetPlayersStatistic("Thorstvedt", "pgio")
+        End
 
     End Sub
 
@@ -379,7 +376,7 @@ Public Class Form1
 
         Dim dt As Date = Date.Now
 
-        For g As Integer = 1 To 2
+        For g As Integer = 3 To 3
 
             Dim sr1 As New IO.StreamWriter(fileLog1, True)
             Dim sr2 As New IO.StreamWriter(fileLog2, True)

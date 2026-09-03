@@ -71,21 +71,21 @@ Namespace WebData
                                     Dim sublines() As String = ms(l).Value.Replace("</li>", "|").Split(Convert.ToChar("|"))
                                     For Each sline As String In sublines
                                         Dim pname As String = System.Text.RegularExpressions.Regex.Match(sline, "(?<='calciatore'\>)(.*?)(?=\<\/span)").Value.ToUpper()
-                                        If pname.Contains("KONE") Then
+                                        Dim ruolo As String = System.Text.RegularExpressions.Regex.Match(sline, "(?<=\<span class='Ruolo Ruolo_\d+'\>)\w+(?=\<\/span\>)").Value.ToUpper()
+                                        If pname.Contains("MARTIN") Then
                                             pname = pname
                                         End If
-                                        pname = Players.Data.ResolveName("", pname, team, playersLog, False).GetName()
+                                        pname = Players.Data.ResolveName(ruolo, pname, team, playersLog, False).GetName()
                                         Call AddInfo(pname, team, site, If(l = 0, "Titolare", "Panchina"), "", -1, plaryersData.Players)
                                     Next
-
                                 Next
-                            ElseIf lines(i).Contains("<div class=""squalificati""><div class=""titolo"">") OrElse lines(i).Contains("<div class=""indisponibili""><div class=""titolo"">") Then
-                                If lines(i).Contains("<div class=""squalificati""><div class=""titolo"">") Then
+                            ElseIf lines(i).Contains("<div Class=""squalificati""><div Class=""titolo"">") OrElse lines(i).Contains("<div Class=""indisponibili""><div Class=""titolo"">") Then
+                                If lines(i).Contains("<div Class=""squalificati""><div Class=""titolo"">") Then
                                     pstate = "Squalificato"
                                 Else
                                     pstate = "Infortunato"
                                 End If
-                                Dim line As String = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=ul\>)(.*?)(?=\<\/ul)").Value
+                                Dim line As String = System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=ul\>)(.*?)(?=\ <\/ul)").Value
                                 If line <> "" Then
                                     Dim sublines() = line.Replace("<li>", "").Replace("<span  class='motivazione'>", "").Replace("</span>", "").Replace("[", "@").Replace("]", "").Replace("</li>", "|").Split(Convert.ToChar("|"))
                                     For Each sline As String In sublines

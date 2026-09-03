@@ -94,10 +94,9 @@ Namespace WebData
                                 End If
 
                                 name = System.Text.RegularExpressions.Regex.Match(line(i), "(?<=""lineup-team__name\"">)[\w\s+\-]{1,}(?=\<)").Value.Replace("-", " ").ToUpper().Replace("'", "’")
+                                If name = "MARTINEZ" Then name = "MARTINEZ JO."
                                 If name = "LAUTARO" Then name = "MARTINEZ L."
-                                If name.Contains("MILINK") Then
-                                    name = name
-                                End If
+
                                 If name <> "" Then
                                     name = Players.Data.ResolveName("", name, sq(sqid), playersLog, False).GetName()
                                     Call AddInfo(name, sq(sqid), site, "Titolare", "", 100, plaryersData.Players)

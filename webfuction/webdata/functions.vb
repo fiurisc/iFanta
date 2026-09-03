@@ -146,7 +146,7 @@ Namespace WebData
                 If prop.Name <> "RecordId" Then
                     Dim value = prop.GetValue(obj, Nothing)
                     If value IsNot Nothing Then
-                        hash.Append(value.ToString())
+                        hash.Append(value.ToString() & "X")
                     End If
                 End If
             Next

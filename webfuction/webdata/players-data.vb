@@ -133,9 +133,9 @@ Namespace WebData
                                 ElseIf pname = "display_name" Then
                                     name4 = Functions.NormalizeText(pvalue.ToUpper())
                                 ElseIf pname = "height" Then
-                                    peso = pvalue
+                                    peso = pvalue.Replace("null", "")
                                 ElseIf pname = "weight" Then
-                                    altezza = pvalue
+                                    altezza = pvalue.Replace("null", "")
                                 ElseIf pname = "date_of_birth" Then
 
                                     If pvalue <> "" Then
@@ -207,7 +207,7 @@ Namespace WebData
                                         If playerm.Matched Then
                                             Dim newname As String = playerm.GetName()
                                             If dicname.Contains(newname) = False Then
-                                                playersd.Add(New Torneo.Players.PlayerDataItem(role, newname, sq, nat, NatCode, anni, birthdays, altezza, peso))
+                                                playersd.Add(New Torneo.Players.PlayerDataItem(role, newname, sq, "", nat, anni, birthdays, altezza, peso))
                                                 strplayer.AppendLine(npla.ToString().PadRight(3, CChar("x")).Replace("x", "&nbsp;") & " - " & role & " - " & name1 & " -> " & playerm.MatchedPlayer.Role & " - " & newname & " - " & playerm.MatchedPlayer.Team & " - " & nat & " - " & NatCode & " - " & birthdays)
                                                 dicname.Add(newname)
                                             Else
