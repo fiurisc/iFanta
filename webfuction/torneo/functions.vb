@@ -193,8 +193,6 @@ Namespace Torneo
                 If EnableQueryCache Then QueryCache.TryAdd(SqlString, ds)
             End If
 
-            'WebData.Functions.WriteLog(appSett, WebData.Functions.eMessageType.Info, "rec:" & ds.Tables(0).Rows.Count & " sql:" & SqlString)
-
             Return ds
 
         End Function

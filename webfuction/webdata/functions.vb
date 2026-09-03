@@ -328,6 +328,7 @@ Namespace WebData
         End Function
 
         Public Shared Function CheckTeamName(ByVal Squadra As String) As String
+            Squadra = GetTeamNameFromCode(Squadra)
             Squadra = Squadra.ToUpper.Replace("CHIEVOVERONA", "CHIEVO")
             Squadra = Squadra.ToUpper.Replace("CHIEVO-VERONA", "CHIEVO")
             Squadra = Squadra.ToUpper.Replace("CHIEVO VERONA", "CHIEVO")
@@ -341,8 +342,6 @@ Namespace WebData
             Squadra = Squadra.ToUpper.Replace("CALCIO ", "")
             Squadra = Squadra.ToUpper.Replace("FC ", "")
             Squadra = Squadra.ToUpper.Replace(" FC", "")
-            If Squadra = "GEN" Then Squadra = "GENOA"
-            If Squadra = "CAG" Then Squadra = "CAGLIARI"
             If Squadra.ToUpper() = "JUVE" Then Squadra = "JUVENTUS"
             Squadra = Squadra.Trim()
             Return Squadra
@@ -525,7 +524,7 @@ Namespace WebData
                 strdata.AppendLine("***List players***")
 
                 For Each pkey As String In wp.Keys
-                    strdata.AppendLine(wp(pkey).SourcePlayer.Role & "|" & wp(pkey).SourcePlayer.Name & "|" & wp(pkey).SourcePlayer.Team & "|" & wp(pkey).MatchedPlayer.Role & "|" & wp(pkey).MatchedPlayer.Name & "|" & wp(pkey).MatchedPlayer.Team)
+                    strdata.AppendLine(wp(pkey).SourcePlayer.Role & "|" & wp(pkey).SourcePlayer.Name & "|" & wp(pkey).SourcePlayer.Team & "|" & wp(pkey).MatchedPlayer.Rank & "|" & wp(pkey).MatchedPlayer.Role & "|" & wp(pkey).MatchedPlayer.Name & "|" & wp(pkey).MatchedPlayer.Team)
                     If wp(pkey).Matched = False Then notfound.Add(wp(pkey).SourcePlayer)
                 Next
                 strdata.AppendLine("")

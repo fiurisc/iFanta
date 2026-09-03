@@ -1,15 +1,9 @@
-﻿
-Imports System.Data
-Imports System.Text.RegularExpressions
-
-Namespace WebData
+﻿Namespace WebData
     Namespace Players
 
         Public Class Data
 
             Public Shared players As New Dictionary(Of String, Dictionary(Of String, List(Of String)))
-            'COGNome Nome/Nome LENGHT/LIST Nome ASSOCIATI'
-            'Public Shared keyplayers As New Dictionary(Of String, WebPlayerKey)
             'squadra/ruolo/key/nome
             Public Shared keyplayers As New Dictionary(Of String, Dictionary(Of String, Dictionary(Of String, String)))
 
@@ -82,9 +76,11 @@ Namespace WebData
 
             Public Shared Function ResolveName(Role As String, Name As String, Team As String, wp As Dictionary(Of String, Players.PlayerMatch), FindAllTeam As Boolean, AddPlayerToList As Boolean) As Players.PlayerMatch
 
-                If Name.Contains("KONE") Then
+                If Name.Contains("TRAORA") Then
                     Name = Name
                 End If
+
+                Name = Name.ToUpper().Trim()
 
                 Name = Name.Replace("MILINKOVIC-SAVIC", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC V.", "MILINKOVIC SAVIC V.").Replace("MILINKOVIC S.", "MILINKOVIC SAVIC").Replace("DEL PRATO", "DELPRATO").Replace("DEL PRATO", "DELPRATO")
                 Name = Name.Replace("P.ESPOSITO", "ESPOSITO F.P.")
@@ -92,13 +88,12 @@ Namespace WebData
                 Name = Name.Replace("CARLOS D.", "DIEGO CARLOS").Replace("ANGUISSA A.", "ZAMBO ANGUISSA")
                 Name = Name.Replace("JESUS J.", "JUAN JESUS").Replace("LAUTARO MARTÍNEZ", "MARTINEZ L.").Replace("LAUTARO", "MARTINEZ L.")
 
-                Name = Name.ToUpper().Trim()
-                Name = Functions.NormalizeText(Name)
+                Name = Functions.NormalizeText(Name).Trim()
 
-                Dim pm As New Players.PlayerMatch(Role, Name, Team)
+                Dim pm As New PlayerMatch(Role, Name, Team)
                 Dim dicRes As SortedDictionary(Of Integer, List(Of WebPlayer)) = New SortedDictionary(Of Integer, List(Of WebPlayer))
 
-                Dim nameList As New List(Of String) From {Name.Replace("’", "")}
+                Dim nameList As New List(Of String) From {Name}
 
                 If Name.Contains(" ") Then
                     nameList.AddRange(Name.Replace("’", "").Split(CChar(" ")).ToList())
@@ -106,33 +101,40 @@ Namespace WebData
                 nameList.RemoveAll(Function(n) n.Length < 3)
 
                 For Each t As String In keyplayers.Keys
-                    If Team = "" OrElse t = Team OrElse FindAllTeam Then
-                        For Each r As String In keyplayers(t).Keys
-                            If Role = "" OrElse r = Role Then
-                                For Each pname As String In keyplayers(t)(r).Keys
+                    For Each r As String In keyplayers(t).Keys
+                        For Each pname As String In keyplayers(t)(r).Keys
 
-                                    Dim pnameList As List(Of String) = pname.Replace("’", "").Split(CChar(" ")).ToList()
-                                    pnameList.RemoveAll(Function(n) n.Length < 3)
+                            Dim pnameList As List(Of String) = pname.Replace("’", "").Split(CChar(" ")).ToList()
+                            pnameList.RemoveAll(Function(n) n.Length < 3)
 
-                                    If nameList.Intersect(pnameList).ToList().Count > 0 Then
-                                        Dim res As Integer = LevenshteinDistance(Name, pname.Trim().Replace(".", ""))
-                                        If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
-                                        dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
-                                    ElseIf Name.Length > 7 Then
-                                        Dim res As Integer = LevenshteinDistance(Name, pname.Trim().Replace(".", ""))
-                                        If res < 5 Then
+                            If nameList.Intersect(pnameList).ToList().Count > 0 Then
+                                Dim res As Integer = 0
+                                If Role = r Then res -= 1
+                                If t = Team Then res -= 1
+                                If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
+                                dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
+                            ElseIf Name.Length > 4 Then
+                                For Each pn As String In pnameList
+                                    For Each n As String In nameList
+                                        Dim res As Integer = LevenshteinDistance(n, pn.Trim().Replace(".", ""))
+                                        If res < 4 Then
+                                            If Role = r Then res -= 1
+                                            If t = Team Then res -= 1
                                             If dicRes.ContainsKey(res) = False Then dicRes.Add(res, New List(Of WebPlayer))
                                             dicRes(res).Add(New WebPlayer(r, keyplayers(t)(r)(pname), t))
                                         End If
-                                    End If
+                                    Next
                                 Next
                             End If
                         Next
-                    End If
+                    Next
                 Next
 
                 If dicRes.Count > 0 Then
-                    pm.MatchedPlayer = dicRes(dicRes.Keys.First()).First()
+                    If dicRes.Keys.First() < 1 Then
+                        pm.MatchedPlayer = dicRes(dicRes.Keys.First()).First()
+                        pm.MatchedPlayer.Rank = dicRes.Keys.First()
+                    End If
                 End If
 
                 If AddPlayerToList AndAlso wp IsNot Nothing Then If wp.ContainsKey(Name) = False Then wp.Add(Name, pm)
@@ -143,110 +145,7 @@ Namespace WebData
 
             End Function
 
-            Private Shared Sub CheckPlayer(pm As Players.PlayerMatch, Role As String, Team As String, keylist As List(Of String))
-                Dim pkeyLenght As Integer = 0
-                For Each r As String In keyplayers(Team).Keys
-                    If Role = "" OrElse r = Role Then
-                        For Each pkey As String In keylist
-                            If keyplayers(Team)(r).ContainsKey(pkey) Then
-                                If pkey.Length > pkeyLenght Then
-                                    pm.MatchedPlayer = New WebPlayer(r, keyplayers(Team)(r)(pkey), Team)
-                                    pkeyLenght = pkey.Length
-                                End If
-                            End If
-                        Next
-                    End If
-                Next
-            End Sub
-
-            'Public Shared Function CheckName(wk As Dictionary(Of String, Players.WebPlayerKey), Team As String, keylist As List(Of String)) As Players.WebPlayerKeyMatch
-
-            '    For Each r As String In wk.Keys
-            '        For k As Integer = 0 To keylist.Count - 1
-            '            If keylist(k).Contains("/") = False AndAlso wk(r).key.ContainsKey(keylist(k)) Then
-            '                Return New Players.WebPlayerKeyMatch(keylist(k), Team, r, keylist(k).Length)
-            '                Exit For
-            '            End If
-            '        Next
-            '    Next
-
-            '    For Each r As String In wk.Keys
-            '        For k As Integer = 0 To keylist.Count - 1
-            '            If keylist(k).Contains("/") Then
-            '                Dim subkey() As String = keylist(k).Split(CChar("/"))
-            '                Dim macth As Players.WebPlayerKey = CheckName(wk(r), subkey, 0)
-            '                If macth IsNot Nothing Then
-            '                    Return New Players.WebPlayerKeyMatch(macth.Name, Team, macth.Role, subkey(0).Length)
-            '                    Exit For
-            '                End If
-            '            End If
-
-            '        Next
-            '    Next
-
-            '    Return Nothing
-
-            'End Function
-
-            'Public Shared Function CheckName(wk As Players.WebPlayerKey, Team As String, keylist As List(Of String)) As Players.WebPlayerKeyMatch
-
-            '    For k As Integer = 0 To keylist.Count - 1
-            '        Dim subkey() As String = keylist(k).Split(CChar("/"))
-            '        Dim macth As Players.WebPlayerKey = CheckName(wk, subkey, 0)
-            '        If macth IsNot Nothing Then
-            '            Return New Players.WebPlayerKeyMatch(macth.Name, Team, macth.Role, subkey(0).Length)
-            '            Exit For
-            '        End If
-            '    Next
-
-            '    Return Nothing
-
-            'End Function
-
-            'Public Shared Function CheckName(wk As Players.WebPlayerKey, subkey As String(), ind As Integer) As Players.WebPlayerKey
-
-            '    If wk.key.ContainsKey(subkey(ind)) AndAlso subkey(ind) <> "UNK" AndAlso subkey(ind).Length > 2 Then
-            '        If wk.key(subkey(ind)).key.Count = 0 Then
-            '            Return wk.key(subkey(ind))
-            '        ElseIf wk.key(subkey(ind)).key.Count = 1 Then
-            '            Return wk.key(subkey(ind))
-            '        Else
-            '            If subkey.Count > 1 Then
-            '                For Each w As String In wk.key(subkey(0)).key.Keys
-            '                    If w.StartsWith(subkey(1)) OrElse subkey(1).StartsWith(w) Then
-            '                        If wk.key(w).key.Count = 0 Then
-            '                            Return wk.key(w)
-            '                        ElseIf wk.key(w).key.Count = 1 Then
-            '                            Return wk.key(w)
-            '                        Else
-            '                            Return Nothing
-            '                        End If
-            '                    End If
-            '                Next
-            '            End If
-            '        End If
-            '    Else
-            '        If ind > 0 Then
-            '            For Each w As String In wk.key.Keys
-            '                If w.StartsWith(subkey(ind)) OrElse subkey(ind).StartsWith(w) Then
-            '                    If wk.key(w).key.Count = 0 Then
-            '                        Return wk.key(w)
-            '                    ElseIf wk.key(w).key.Count = 1 Then
-            '                        Return wk.key(w)
-            '                    Else
-            '                        Return Nothing
-            '                    End If
-            '                End If
-            '            Next
-            '            Return Nothing
-            '        Else
-            '            Return Nothing
-            '        End If
-            '    End If
-            '    Return Nothing
-            'End Function
-
-            Public Shared Function LevenshteinDistance(ByVal s As String, ByVal t As String) As Integer
+            Private Shared Function LevenshteinDistance(ByVal s As String, ByVal t As String) As Integer
 
                 Dim n As Integer = s.Length
                 Dim m As Integer = t.Length
@@ -290,97 +189,51 @@ Namespace WebData
 
         End Class
 
-
         Public Class WebPlayer
-
-            Dim _role As String = ""
-            Dim _name As String = ""
-            Dim _team As String = ""
-
             Sub New()
 
             End Sub
 
             Sub New(Name As String)
-                _name = Name
+                Me.Name = Name
             End Sub
 
             Sub New(Role As String, Name As String, Team As String)
-                _role = Role
-                _name = Name
-                _team = Team
+                Me.Role = Role
+                Me.Name = Name
+                Me.Team = Team
             End Sub
 
-            Public Property Role As String
-                Get
-                    Return _role
-                End Get
-                Set(value As String)
-                    _role = value
-                End Set
-            End Property
-
-            Public Property Name As String
-                Get
-                    Return _name
-                End Get
-                Set(value As String)
-                    _name = value
-                End Set
-            End Property
-
-            Public Property Team As String
-                Get
-                    Return _team
-                End Get
-                Set(value As String)
-                    _team = value
-                End Set
-            End Property
+            Public Property Role As String = ""
+            Public Property Name As String = ""
+            Public Property Team As String = ""
+            Public Property Rank As Integer = 10
 
         End Class
 
         Public Class PlayerMatch
 
-            Dim _source As New WebPlayer
-            Dim _new As New WebPlayer
-
             Sub New(Name As String)
-                _source.Name = Name
+                SourcePlayer.Name = Name
             End Sub
 
             Sub New(Role As String, Name As String)
-                _source.Role = Role
-                _source.Name = Name
+                SourcePlayer.Role = Role
+                SourcePlayer.Name = Name
             End Sub
 
             Sub New(Role As String, Name As String, Team As String)
-                _source.Role = Role
-                _source.Name = Name
-                _source.Team = Team
+                SourcePlayer.Role = Role
+                SourcePlayer.Name = Name
+                SourcePlayer.Team = Team
             End Sub
 
-            Public Property SourcePlayer As WebPlayer
-                Get
-                    Return _source
-                End Get
-                Set(value As WebPlayer)
-                    _source = value
-                End Set
-            End Property
-
-            Public Property MatchedPlayer As WebPlayer
-                Get
-                    Return _new
-                End Get
-                Set(value As WebPlayer)
-                    _new = value
-                End Set
-            End Property
+            Public Property SourcePlayer As WebPlayer = New WebPlayer
+            Public Property MatchedPlayer As WebPlayer = New WebPlayer
 
             Public ReadOnly Property Matched As Boolean
                 Get
-                    If _new.Name = "" Then
+                    If MatchedPlayer.Name = "" Then
                         Return False
                     Else
                         Return True
@@ -389,80 +242,30 @@ Namespace WebData
             End Property
 
             Public Function GetName() As String
-                If _new.Name <> "" Then
-                    Return _new.Name
+                If MatchedPlayer.Name <> "" Then
+                    Return MatchedPlayer.Name
                 Else
-                    Return _source.Name
+                    Return SourcePlayer.Name
                 End If
             End Function
 
             Public Function GetRole() As String
-                If _new.Role <> "" Then
-                    Return _new.Role
+                If MatchedPlayer.Role <> "" Then
+                    Return MatchedPlayer.Role
                 Else
-                    Return _source.Role
+                    Return SourcePlayer.Role
                 End If
             End Function
 
             Public Function GetWebPlayer() As WebPlayer
                 If Me.Matched Then
-                    Return _new
+                    Return MatchedPlayer
                 Else
-                    Return _source
+                    Return SourcePlayer
                 End If
             End Function
 
         End Class
 
-        'Public Class NewWebPlayerKey
-        '    Public Property key As New Dictionary(Of String, WebPlayerKey)
-        '    Public Property Name As String = ""
-        '    Public Property Role As String = ""
-
-        '    Sub New()
-
-        '    End Sub
-
-        '    Sub New(Name As String, Role As String)
-        '        Me.Name = Name
-        '        Me.Role = Role
-        '    End Sub
-
-        'End Class
-
-        'Public Class WebPlayerKey
-        '    Public Property Name As String = ""
-        '    Public Property Role As String = ""
-
-        '    Sub New()
-
-        '    End Sub
-
-        '    Sub New(Name As String, Role As String)
-        '        Me.Name = Name
-        '        Me.Role = Role
-        '    End Sub
-
-        'End Class
-
-        'Public Class WebPlayerKeyMatch
-
-        '    Public Property Name As String = ""
-        '    Public Property Team As String = ""
-        '    Public Property Role As String = ""
-        '    Public Property KeyLength As Integer = 0
-
-        '    Sub New()
-
-        '    End Sub
-
-        '    Sub New(Name As String, Team As String, Role As String, KeyLength As Integer)
-        '        Me.Name = Name
-        '        Me.Team = Team
-        '        Me.Role = Role
-        '        Me.KeyLength = KeyLength
-        '    End Sub
-
-        'End Class
     End Namespace
 End Namespace

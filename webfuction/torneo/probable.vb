@@ -1,6 +1,4 @@
 ﻿
-Imports webfuction.Torneo.ProbablePlayers
-
 Namespace Torneo
 
     Public Class ProbableMatchResult

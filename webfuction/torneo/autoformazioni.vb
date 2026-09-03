@@ -165,7 +165,7 @@ Namespace Torneo
 
         Private Function PreAnalisi(ByVal Giornata As Integer, ByVal IdTeam As Integer) As AutoFormazione.ParamenterValues
 
-            Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList()
+            Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList(Giornata)
             Dim oldparamters As New List(Of String)
 
             preanalisiphase = True
@@ -188,20 +188,25 @@ Namespace Torneo
 
         End Function
 
-        Private Function GetDefaultParametersList() As List(Of AutoFormazione.ParamenterValues)
+        Private Function GetDefaultParametersList(Giornata As Integer) As List(Of AutoFormazione.ParamenterValues)
+
+            Dim fact As Double = 1
+
+            If Giornata < 4 Then
+                fact = Giornata / 4
+            End If
 
             Dim defPara As New AutoFormazione.ParamenterValues
             Dim Parameters As New List(Of AutoFormazione.ParamenterValues)
-            Dim teamrankList As New List(Of Integer) From {14}
+            Dim teamrankList As New List(Of Integer) From {CInt(14 * fact)}
             Dim historicalList As New List(Of Integer) From {defPlayerHistory}
             Dim historicalWeightList As New List(Of Integer) From {defPara.HistoricalPlayerWeight}
             Dim historicalMatchList As New List(Of Integer) From {defMatchHistory}
             Dim matchWidthList As New List(Of Integer) From {startMatchRank, startMatchRank + 10, startMatchRank + 20}
-            Dim AvarangePointWidthList As New List(Of Integer) From {startAvgPtRank, startAvgPtRank + 10, startAvgPtRank + 20}
-            'Dim AvarangePointWidthList As New List(Of Integer) From {startAvgPtRank}
+            Dim AvarangePointWidthList As New List(Of Integer) From {CInt(startAvgPtRank * fact), CInt(startAvgPtRank * fact + 10), CInt(startAvgPtRank * fact + 20)}
             Dim LastPresenzeWidthList As New List(Of Integer) From {0, 10}
             Dim ruolorankList As New List(Of Integer) From {startRouleRank, startRouleRank + 5, startRouleRank + 10, startRouleRank + 15}
-            Dim goalrankList As New List(Of Double) From {25, 26}
+            Dim goalrankList As New List(Of Double) From {25 * fact, 26 * fact}
 
             If daydata < 35 Then
                 matchWidthList.Add(startMatchRank + 30)
@@ -596,7 +601,7 @@ Namespace Torneo
 
             Dim mt As Dictionary(Of String, Double) = GetMatchResult(Giornata, 20)
             Dim results As New System.Collections.Concurrent.ConcurrentBag(Of AutoFormazione)
-            Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList()
+            Dim Parameters As List(Of AutoFormazione.ParamenterValues) = GetDefaultParametersList(Giornata)
 
             Dim goalw As List(Of Double) = Parameters.Select(Function(x) x.GoalWidth).Distinct().ToList()
             Dim ruoliw As List(Of Integer) = Parameters.Select(Function(x) x.RuoloWidth).Distinct().ToList()
@@ -956,10 +961,14 @@ Namespace Torneo
                             If infortunatiOld.Contains(p.Nome) Then p.goodGrade -= 5
 
                             If p.Ruolo = "P" Then
-                                If p.Squadra = p.TeamA AndAlso p.PropGolSubitiMatch > 50 Then
-                                    p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * 55)
+                                If Giornata > 3 Then
+                                    If p.Squadra = p.TeamA AndAlso p.PropGolSubitiMatch > 50 Then
+                                        p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * 55)
+                                    Else
+                                        p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * 40)
+                                    End If
                                 Else
-                                    p.Rating.Rating3 = CInt(Math.Exp(-p.Gs / 2) * 40)
+                                    p.Rating.Rating3 = 0
                                 End If
                             Else
                                 Dim factavv As Double = If(Giornata > 30, 1.5, 1.6)
@@ -1012,36 +1021,6 @@ Namespace Torneo
         Public Function CalcolaScore(punti As Double, puntiMax As Double) As Double
             If puntiMax = 0 Then Return 0
             Return punti / puntiMax
-        End Function
-
-        Public Function FattoreClassifica(puntiHome As Double, puntiAway As Double, puntiMax As Double, home As Boolean) As Double
-
-            If Math.Abs(puntiHome - puntiAway) < 2 Then Return 1
-
-            Dim scoreHome As Double = CalcolaScore(puntiHome, puntiMax)
-            Dim scoreAway As Double = CalcolaScore(puntiAway, puntiMax)
-            Dim CLASSIFICA_C As Double = 0.2  ' quanto pesa la classifica (0 = niente, 1 = pieno)
-            Dim CLASSIFICA_MIN As Double = 0.95 ' minimo effetto
-            Dim CLASSIFICA_MAX As Double = 1.05 ' massimo effetto
-
-            If scoreAway = 0 Then scoreAway = 0.01 ' evita divisione per zero
-
-            If home = False Then
-                CLASSIFICA_C = 0.05
-            Else
-                CLASSIFICA_C = 0.06
-            End If
-
-            Dim F As Double = (scoreHome - 1) / (scoreAway - 1)
-            Dim Fsoft As Double = 1 + CLASSIFICA_C * (F - 1)
-
-            ' Clamp tra min e max
-            If Fsoft < CLASSIFICA_MIN Then Fsoft = CLASSIFICA_MIN
-            If Fsoft > CLASSIFICA_MAX Then Fsoft = CLASSIFICA_MAX
-
-
-            Return Fsoft
-
         End Function
 
         Private Function GetMatchResultProbability(giornata As Integer, Squadra As String, Avv As String, dicFactTeam As Dictionary(Of String, Dictionary(Of String, Double)), home As Boolean) As Double
@@ -1305,18 +1284,21 @@ Namespace Torneo
                 'calcolo rating 8 team di appartenenza'
                 Dim pteam As Double = Math.Floor(If(factTeam.Fact = 0, Parameters.TeamWidth, factTeam.Fact * (dicTeamRank("TOT")(p.Squadra) - factTeam.Min)))
 
-                If p.Ruolo = "P" Then
-                    p.Rating.Rating8 = CInt(pteam * 1)
-                ElseIf p.Ruolo = "D" Then
-                    p.Rating.Rating8 = CInt(pteam * 0.83)
-                ElseIf p.Ruolo = "C" Then
-                    p.Rating.Rating8 = CInt(pteam * 0.96)
-                Else
-                    p.Rating.Rating8 = CInt(pteam * 1)
+                If Giornata > 2 Then
+                    If p.Ruolo = "P" Then
+                        p.Rating.Rating8 = CInt(pteam * 1)
+                    ElseIf p.Ruolo = "D" Then
+                        p.Rating.Rating8 = CInt(pteam * 0.83)
+                    ElseIf p.Ruolo = "C" Then
+                        p.Rating.Rating8 = CInt(pteam * 0.96)
+                    Else
+                        p.Rating.Rating8 = CInt(pteam * 1)
+                    End If
                 End If
 
                 'calcolo rating 1'
                 p.Rating.Rating1 = CInt(p.goodGrade / 100 * Parameters.AvarangePointsWitdh)
+
                 If p.Ruolo = "P" Then
                     p.Rating.Rating1 = CInt(p.Rating.Rating1 * 1)
                 ElseIf p.Ruolo = "D" Then
@@ -1348,18 +1330,33 @@ Namespace Torneo
                             p.Rating.Rating2 = pro.ProbX + pro.Prob2
                         End If
                     End If
-                End If
-
-                If p.Ruolo = "P" Then
-                    p.Rating.Rating2 = CInt(p.PropGolSubitiMatch / 100 * Parameters.MatchWidth * 0.6)
-                Else
-                    p.Rating.Rating2 = CInt(p.PropGolFattiMatch / 100 * Parameters.MatchWidth)
-                    If p.Ruolo = "D" Then
-                        p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1.06)
-                    ElseIf p.Ruolo = "C" Then
-                        p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1)
+                    If p.Ruolo = "P" Then
+                        p.Rating.Rating2 = CInt(p.Rating.Rating2 / 100 * Parameters.MatchWidth * 0.6)
                     Else
-                        p.Rating.Rating2 = CInt(p.Rating.Rating2 * 0.89)
+                        p.Rating.Rating2 = CInt(p.Rating.Rating2 / 100 * Parameters.MatchWidth)
+                        If p.Ruolo = "D" Then
+                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1.06)
+                        ElseIf p.Ruolo = "C" Then
+                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1)
+                        Else
+                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 0.89)
+                        End If
+                    End If
+                    'If Giornata < 5 Then
+                    '    p.Rating.Rating2 *= CInt(1 + 1 / Giornata)
+                    'End If
+                Else
+                    If p.Ruolo = "P" Then
+                        p.Rating.Rating2 = CInt(p.PropGolSubitiMatch / 100 * Parameters.MatchWidth * 0.6)
+                    Else
+                        p.Rating.Rating2 = CInt(p.PropGolFattiMatch / 100 * Parameters.MatchWidth)
+                        If p.Ruolo = "D" Then
+                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1.06)
+                        ElseIf p.Ruolo = "C" Then
+                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 1)
+                        Else
+                            p.Rating.Rating2 = CInt(p.Rating.Rating2 * 0.89)
+                        End If
                     End If
                 End If
 
@@ -1558,12 +1555,12 @@ Namespace Torneo
                         val = 0.01
                     End If
 
-                    If p.Nome = "GIOVANE" Then
+                    If p.Nome = "SOULE’" Then
                         p.Nome = p.Nome
                     End If
 
                     If val < 1 AndAlso (val >= 0.5 OrElse ntit > 0) Then
-                        If ntit > 2 OrElse (ntit > 0 AndAlso ((p.Ruolo = "A" AndAlso p.Minuti > 90))) Then
+                        If ntit > 2 OrElse (ntit > 0 AndAlso p.Ruolo = "A" AndAlso (p.Minuti > 90 OrElse Giornata < 5)) Then
                             val = 1
                         Else
                             If p.Ruolo <> "P" Then
@@ -1698,19 +1695,23 @@ Namespace Torneo
                 rat += CInt(Math.Floor(If(factRuolo = 0, parameters.RuoloWidth, factRuolo * (dicRuoloRank(key) - minRuoloFact))))
             End If
 
-            Dim min As Integer = 100
+            If giornata > 4 Then
 
-            If rint = "A" OrElse rint = "APC" Then
-                min = 50
-            ElseIf rint = "AC" Then
-                min = 70
+                Dim min As Integer = 100
+
+                If rint = "A" OrElse rint = "APC" Then
+                    min = 50
+                ElseIf rint = "AC" Then
+                    min = 70
+                End If
+
+                Dim perc As Double = If(p.Minuti > min, 1, 1 - (min - p.Minuti) / (min * If(p.Rating.Rating6 < 1 AndAlso rat > parameters.RuoloWidth * 1.2, 1, 2)))
+                If perc < 0.7 AndAlso p.qIni > 15 Then perc += p.qIni / 20
+                If perc > 1 Then perc = 1
+
+                rat = CInt(rat * perc)
+
             End If
-
-            Dim perc As Double = If(p.Minuti > min, 1, 1 - (min - p.Minuti) / (min * If(p.Rating.Rating6 < 1 AndAlso rat > parameters.RuoloWidth * 1.2, 1, 2)))
-            If perc < 0.7 AndAlso p.qIni > 15 Then perc += p.qIni / 20
-            If perc > 1 Then perc = 1
-
-            rat = CInt(rat * perc)
 
             Return rat
 
