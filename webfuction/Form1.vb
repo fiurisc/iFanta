@@ -48,14 +48,14 @@ Public Class Form1
         Dim gen As New Torneo.General(appSett)
         gen.ReadSettings()
 
-        Dim t As New Torneo.PlayersRanking(appSett)
-        t.MiglioriGiocatori("D", True, 10)
+        'Dim t As New Torneo.PlayersRanking(appSett)
+        't.MiglioriGiocatori("D", True, 10)
 
         'UpdateProbableModuleTeam()
         'GetAutomaticBestHistoricalParameters()
-        GetAutomaticFormation()
+        'GetAutomaticFormation()
 
-        End
+        'End
 
     End Sub
 

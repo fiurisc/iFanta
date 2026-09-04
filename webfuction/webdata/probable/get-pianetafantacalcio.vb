@@ -1,4 +1,6 @@
 ﻿
+Imports webfuction.Torneo.CompilaData
+
 Namespace WebData
     Partial Class ProbableFormations
 
@@ -43,8 +45,7 @@ Namespace WebData
                     fileTemp = fileBakupHtml
                     If IO.File.Exists(fileBakupHtml) Then html = "ok"
                 Else
-                    html = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-fantacalcio", "UTF-8")
-                    IO.File.WriteAllText(fileTemp, html, System.Text.Encoding.Default)
+                    html = GetMatchList(fileTemp)
                 End If
 
                 If html <> "" Then
@@ -75,7 +76,7 @@ Namespace WebData
                                 sq.Clear()
                             ElseIf lines(i).Contains("<h2 class=""TeamNome"">") Then
                                 sq.Add(Functions.CheckTeamName(System.Text.RegularExpressions.Regex.Match(lines(i), "(?<=\>)\w+(?=\<\/h)").Value.ToUpper()))
-                            ElseIf lines(i).Contains("style=""text-align:center"">TITOLARI</th>") Then
+                            ElseIf lines(i).Contains("<!-- --> TITOLARI (<!-- -->11<!-- -->") Then
                                 start = True
                                 pstate = "Titolare"
                             ElseIf lines(i).Contains("th colspan=""2"">PANCHINA</th>") Then
@@ -164,6 +165,38 @@ Namespace WebData
             sr.Close()
 
             Return rmsg
+
+        End Function
+
+        Public Function GetMatchList(fileTemp As String) As String
+
+            Dim html As String = Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-fantacalcio", "UTF-8")
+            IO.File.WriteAllText(fileTemp, html, New System.Text.UTF8Encoding(False))
+
+            Dim lines() As String = IO.File.ReadAllLines(fileTemp, System.Text.Encoding.Default)
+            Dim links As New List(Of String)
+
+            For Each line As String In lines
+                If line.Contains("/probabili-formazioni-fantacalcio?") Then
+                    Dim ms As System.Text.RegularExpressions.MatchCollection = System.Text.RegularExpressions.Regex.Matches(line, "(?<=href="")(/probabili-formazioni-fantacalcio\?partita[^""]+)")
+                    For Each m As System.Text.RegularExpressions.Match In ms
+                        links.Add("https://www.pianetafanta.it" & m.Value)
+                    Next
+                End If
+            Next
+
+            Dim stringBuilder As New System.Text.StringBuilder()
+
+            For Each link As String In links
+                stringBuilder.AppendLine("<--match" & System.Text.RegularExpressions.Regex.Match(link, "partita=([a-z\-]+)").Value & "-->")
+                stringBuilder.AppendLine(Functions.GetPage(appSett, "https://www.pianetafanta.it/probabili-formazioni-fantacalcio", "UTF-8"))
+            Next
+
+            html = stringBuilder.ToString()
+
+            IO.File.WriteAllText(fileTemp, html, New System.Text.UTF8Encoding(False))
+
+            Return html
 
         End Function
     End Class

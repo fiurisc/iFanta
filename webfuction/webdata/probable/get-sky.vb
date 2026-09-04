@@ -87,7 +87,7 @@
                                     ElseIf linej.Contains("startingLineup") Then
                                         pstate = "Titolare"
                                     ElseIf linej.Contains("unavailables") Then
-                                        pstate = "Infortunati"
+                                        pstate = "Infortunato"
                                     ElseIf linej.Contains("seoName") Then
                                         team = Functions.CheckTeamName(pvalue.ToUpper())
                                     ElseIf linej.Contains("]") Then
