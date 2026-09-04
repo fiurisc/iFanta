@@ -106,7 +106,7 @@ Public Class Form1
 
     Private Sub Button8_Click(sender As Object, e As EventArgs) Handles Button8.Click
         Dim prob As New WebData.ProbableFormations(appSett)
-        prob.GetProbableFormation("pianetafantacalcio", False)
+        prob.GetProbableFormation("pianetafantacalcio", False, 3)
     End Sub
 
     Private Sub Button9_Click(sender As Object, e As EventArgs) Handles Button9.Click
@@ -376,7 +376,7 @@ Public Class Form1
 
         Dim dt As Date = Date.Now
 
-        For g As Integer = 3 To 3
+        For g As Integer = 1 To 3
 
             Dim sr1 As New IO.StreamWriter(fileLog1, True)
             Dim sr2 As New IO.StreamWriter(fileLog2, True)
@@ -482,6 +482,7 @@ Public Class Form1
                 Else
                     Dim lstUser As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Regular)
                     Dim lstTop As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Top)
+                    Dim lstFlop As List(Of Torneo.FormazioniData.Formazione) = data.GetFormazioni(g.ToString(), "-1", Torneo.FormazioniData.TipoFormazioni.Flop)
 
                     If lstUser.Count > 0 AndAlso lstTop.Count = lstUser.Count Then
 
@@ -497,7 +498,7 @@ Public Class Form1
                             Dim bestUser As Integer = PercentageBestPlayer(lstUser(i).Players)
 
                             difftot += (lstAuto.Punti - lstUser(i).Punti) / 10
-                            Dim res As String = lstAuto.Punti / 10 & vbTab & lstUser(i).Punti / 10 & vbTab & lstTop(i).Punti / 10 & vbTab & lstAuto.PlayersInCampo & vbTab & bestAuto / 10 & vbTab & bestUser / 10 & vbTab & lstAuto.BonusDifesa / 10 & vbTab & lstUser(i).BonusDifesa / 10 & vbTab & lstTop(i).BonusDifesa / 10
+                            Dim res As String = lstAuto.Punti / 10 & vbTab & lstUser(i).Punti / 10 & vbTab & lstFlop(i).Punti / 10 & vbTab & lstTop(i).Punti / 10 & vbTab & lstAuto.PlayersInCampo & vbTab & bestAuto / 10 & vbTab & bestUser / 10 & vbTab & lstAuto.BonusDifesa / 10 & vbTab & lstUser(i).BonusDifesa / 10 & vbTab & lstTop(i).BonusDifesa / 10
                             sout.AppendLine(res)
                             diff += (lstAuto.Punti - lstUser(i).Punti) / 10
                         Next
