@@ -299,6 +299,7 @@ Namespace WebData
             txt = txt.Replace("Ü", "U")
             txt = txt.Replace("Ž", "Z")
             txt = txt.Replace("Ć", "C")
+            txt = txt.Replace("Ğ", "G")
             Dim regex As New System.Text.RegularExpressions.Regex("[0-9a-zA-Z\'\s\.\-\’ª]{0,}")
             Dim newtxt As String = ""
 
